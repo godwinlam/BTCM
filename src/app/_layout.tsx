@@ -1,18 +1,80 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from 'expo-router';
-import * as SplashScreen from 'expo-splash-screen';
-import { useColorScheme } from 'react-native';
+import React from 'react';
+import { Slot } from 'expo-router';
+import { StatusBar } from 'expo-status-bar';
+import { StyleSheet, View, Platform, LogBox } from 'react-native';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 
-import { AnimatedSplashOverlay } from '@/components/animated-icon';
-import AppTabs from '@/components/app-tabs';
+// Ignore React Native Web development-only touch responder sync warnings
+LogBox.ignoreLogs([
+  'Cannot find single active touch',
+]);
 
-SplashScreen.preventAutoHideAsync();
+// Web specific mobile viewport & touch optimization
+if (Platform.OS === 'web' && typeof window !== 'undefined') {
+  const originalError = console.error;
+  console.error = (...args: any[]) => {
+    if (
+      typeof args[0] === 'string' &&
+      args[0].includes('Cannot find single active touch')
+    ) {
+      // Harmless React Native Web touch-responder desync on mobile browsers
+      return;
+    }
+    originalError.apply(console, args);
+  };
 
-export default function TabLayout() {
-  const colorScheme = useColorScheme();
+  if (typeof document !== 'undefined') {
+    // Ensure viewport meta is set properly for mobile screens
+    let metaViewport = document.querySelector('meta[name="viewport"]');
+    if (!metaViewport) {
+      metaViewport = document.createElement('meta');
+      metaViewport.setAttribute('name', 'viewport');
+      document.head.appendChild(metaViewport);
+    }
+    metaViewport.setAttribute(
+      'content',
+      'width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover'
+    );
+
+    // Inject touch-action optimization and prevent horizontal viewport overflow
+    const styleId = 'btcm-mobile-touch-fix';
+    if (!document.getElementById(styleId)) {
+      const styleEl = document.createElement('style');
+      styleEl.id = styleId;
+      styleEl.innerHTML = `
+        * {
+          -webkit-tap-highlight-color: transparent;
+          box-sizing: border-box;
+        }
+        html, body, #root {
+          width: 100%;
+          max-width: 100vw;
+          overflow-x: hidden;
+          touch-action: manipulation;
+          -webkit-overflow-scrolling: touch;
+          background-color: #0B0E14;
+        }
+      `;
+      document.head.appendChild(styleEl);
+    }
+  }
+}
+
+export default function RootLayout() {
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <AnimatedSplashOverlay />
-      <AppTabs />
-    </ThemeProvider>
+    <SafeAreaProvider>
+      <View style={styles.container}>
+        <StatusBar style="light" />
+        <Slot />
+      </View>
+    </SafeAreaProvider>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    width: '100%',
+    backgroundColor: '#0B0E14',
+  },
+});
