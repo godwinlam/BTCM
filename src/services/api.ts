@@ -1,13 +1,40 @@
 import { Platform } from 'react-native';
 
 const getApiBaseUrl = () => {
-  // If running in browser (web / mobile phone browser), dynamically use window.location.hostname
-  // so that accessing from localhost connects to localhost:5000, and LAN IP (e.g. 192.168.1.112:8081) connects to 192.168.1.112:5000
+  const envUrl = process.env.EXPO_PUBLIC_API_URL;
+
+  // If running in browser (web / mobile phone browser):
   if (typeof window !== 'undefined' && window.location && window.location.hostname) {
-    const hostname = window.location.hostname;
-    return `http://${hostname}:5000/api`;
+    const { hostname, protocol, origin } = window.location;
+    const isHttps = protocol === 'https:';
+
+    // 1. Check if running on local development (localhost, 127.0.0.1, or local LAN IP e.g. 192.168.x.x, 10.x.x.x, 172.16-31.x.x)
+    const isLocalHost =
+      hostname === 'localhost' ||
+      hostname === '127.0.0.1' ||
+      /^192\.168\./.test(hostname) ||
+      /^10\./.test(hostname) ||
+      /^172\.(1[6-9]|2[0-9]|3[0-1])\./.test(hostname);
+
+    if (isLocalHost) {
+      return `http://${hostname}:5000/api`;
+    }
+
+    // 2. If running on a public remote host (e.g. Cloudflare Workers, *.workers.dev, or custom domain):
+    // If an explicit remote EXPO_PUBLIC_API_URL is configured, use it (ensuring HTTPS to avoid Mixed Content)
+    if (envUrl && !envUrl.includes('localhost') && !envUrl.includes('127.0.0.1') && !envUrl.includes('192.168.')) {
+      if (isHttps && envUrl.startsWith('http://')) {
+        return envUrl.replace('http://', 'https://');
+      }
+      return envUrl;
+    }
+
+    // 3. Fallback for deployed production (e.g. Cloudflare Workers reverse-proxying /api on same HTTPS origin)
+    return `${origin}/api`;
   }
-  return process.env.EXPO_PUBLIC_API_URL || 'http://localhost:5000/api';
+
+  // Fallback for native runtime / SSR
+  return envUrl || 'http://localhost:5000/api';
 };
 
 class ApiService {
