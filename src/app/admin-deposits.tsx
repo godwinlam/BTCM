@@ -15,8 +15,9 @@ import { api } from '../services/api';
 import { useIsMobile } from '../hooks/useIsMobile';
 
 interface DepositItem {
-  id: number;
-  userId: number;
+  id: number | string;
+  _id?: string;
+  userId: number | string | any;
   username: string;
   email: string;
   fullName?: string;
@@ -29,7 +30,7 @@ interface DepositItem {
   proofUrl?: string;
   adminNotes?: string;
   rejectionReason?: string;
-  processedByAdminId?: number;
+  processedByAdminId?: number | string;
   processedByAdmin?: string;
   processedAt?: string;
   createdAt: string;
@@ -72,8 +73,9 @@ interface DepositConfig {
 }
 
 interface DetailedDeposit {
-  id: number;
-  userId: number;
+  id: number | string;
+  _id?: string;
+  userId: number | string | any;
   username: string;
   email: string;
   fullName?: string;
@@ -86,13 +88,13 @@ interface DetailedDeposit {
   proofUrl?: string;
   adminNotes?: string;
   rejectionReason?: string;
-  processedByAdminId?: number;
+  processedByAdminId?: number | string;
   processedByAdmin?: string;
   processedAt?: string;
   createdAt: string;
   updatedAt: string;
   user?: {
-    id: number;
+    id: number | string;
     username: string;
     email: string;
     fullName?: string;
@@ -103,7 +105,8 @@ interface DetailedDeposit {
     starRank: number;
   };
   userDepositHistory?: Array<{
-    id: number;
+    id: number | string;
+    _id?: string;
     amount: number;
     currency: string;
     network: string;
@@ -238,7 +241,7 @@ export default function AdminDepositsPage() {
         if (wRes?.stats?.pending?.count !== undefined) {
           setPendingWithdrawalCount(wRes.stats.pending.count);
         }
-      } catch (_) {}
+      } catch (_) { }
     } catch (err: any) {
       console.warn('Failed to load deposit stats:', err.message);
     }
@@ -299,20 +302,20 @@ export default function AdminDepositsPage() {
       selectedConfigCurrency === 'BTC'
         ? 'bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh'
         : selectedConfigCurrency === 'USDC'
-        ? '0x71C836642F4A4E3302293515456275153A649319'
-        : config?.address || 'TXv2nE8gQ6R4mN9kY7bL1jF5cW3pA8sD6Z',
+          ? '0x71C836642F4A4E3302293515456275153A649319'
+          : config?.address || 'TXv2nE8gQ6R4mN9kY7bL1jF5cW3pA8sD6Z',
     network:
       selectedConfigCurrency === 'BTC'
         ? 'BTC (Native SegWit Network)'
         : selectedConfigCurrency === 'USDC'
-        ? 'ERC20 (Ethereum Network)'
-        : config?.network || 'TRC20 (Tron Network)',
+          ? 'ERC20 (Ethereum Network)'
+          : config?.network || 'TRC20 (Tron Network)',
     instructions:
       selectedConfigCurrency === 'BTC'
         ? 'Transfer BTC directly to this Native SegWit address. Minimum deposit is 0.0001 BTC. Once sent, submit your transaction hash (TxHash) below.'
         : selectedConfigCurrency === 'USDC'
-        ? 'Transfer USDC only via ERC20 network. Once sent, submit your transaction hash (TxHash) below for prompt verification and balance credit.'
-        : config?.instructions || 'Transfer USDT only via TRC20 network. Once sent, submit your transaction hash (TxHash) below for prompt verification and balance credit.',
+          ? 'Transfer USDC only via ERC20 network. Once sent, submit your transaction hash (TxHash) below for prompt verification and balance credit.'
+          : config?.instructions || 'Transfer USDT only via TRC20 network. Once sent, submit your transaction hash (TxHash) below for prompt verification and balance credit.',
     updatedAt: config?.updatedAt,
     updatedBy: config?.updatedBy,
   };
@@ -461,7 +464,7 @@ export default function AdminDepositsPage() {
   };
 
   // 4. Open Inspect Modal
-  const handleInspectDeposit = async (id: number) => {
+  const handleInspectDeposit = async (id: number | string) => {
     setDetailModalVisible(true);
     setDetailLoading(true);
     try {
@@ -661,8 +664,8 @@ export default function AdminDepositsPage() {
             bannerNotice.type === 'error'
               ? styles.bannerNoticeError
               : bannerNotice.type === 'success'
-              ? styles.bannerNoticeSuccess
-              : styles.bannerNoticeInfo,
+                ? styles.bannerNoticeSuccess
+                : styles.bannerNoticeInfo,
           ]}
         >
           <Text style={styles.bannerNoticeText}>{bannerNotice.text}</Text>
@@ -857,10 +860,10 @@ export default function AdminDepositsPage() {
                       {st === 'ALL'
                         ? 'All'
                         : st === 'PENDING'
-                        ? '⏳ Pending'
-                        : st === 'APPROVED'
-                        ? (isMobile ? '🟢 Done' : '🟢 Approved')
-                        : '⛔ Rejected'}
+                          ? '⏳ Pending'
+                          : st === 'APPROVED'
+                            ? (isMobile ? '🟢 Done' : '🟢 Approved')
+                            : '⛔ Rejected'}
                     </Text>
                   </TouchableOpacity>
                 ))}
@@ -909,21 +912,25 @@ export default function AdminDepositsPage() {
           </View>
         ) : (
           <View style={styles.tableCard}>
-            {deposits.map((item) => {
+            {deposits.map((item, index) => {
+              const depositId = item.id || (item as any)._id || `dep-${index}`;
+              const displayUsername = item.username || (item.userId as any)?.username || 'user';
+              const displayEmail = item.email || (item.userId as any)?.email || '';
+              const displayFullName = item.fullName || (item.userId as any)?.fullName || '';
               return (
-                <View key={item.id} style={styles.depositRow}>
+                <View key={depositId} style={styles.depositRow}>
                   {/* Row Top: ID, Status, Timestamp */}
                   <View style={styles.rowTopBar}>
                     <View style={styles.rowIdCol}>
-                      <Text style={styles.rowIdText}>#{item.id}</Text>
+                      <Text style={styles.rowIdText}>#{depositId}</Text>
                       <View
                         style={[
                           styles.statusBadge,
                           item.status === 'PENDING'
                             ? styles.statusBadgePending
                             : item.status === 'APPROVED'
-                            ? styles.statusBadgeApproved
-                            : styles.statusBadgeRejected,
+                              ? styles.statusBadgeApproved
+                              : styles.statusBadgeRejected,
                         ]}
                       >
                         <Text
@@ -932,21 +939,21 @@ export default function AdminDepositsPage() {
                             item.status === 'PENDING'
                               ? styles.statusBadgeTextPending
                               : item.status === 'APPROVED'
-                              ? styles.statusBadgeTextApproved
-                              : styles.statusBadgeTextRejected,
+                                ? styles.statusBadgeTextApproved
+                                : styles.statusBadgeTextRejected,
                           ]}
                         >
                           {item.status === 'PENDING'
                             ? '⏳ PENDING AUDIT'
                             : item.status === 'APPROVED'
-                            ? '🟢 APPROVED & CREDITED'
-                            : '⛔ REJECTED'}
+                              ? '🟢 APPROVED & CREDITED'
+                              : '⛔ REJECTED'}
                         </Text>
                       </View>
                     </View>
 
                     <Text style={styles.rowDateText}>
-                      Submitted: {new Date(item.createdAt).toLocaleString()}
+                      Submitted: {item.createdAt ? new Date(item.createdAt).toLocaleString() : 'N/A'}
                     </Text>
                   </View>
 
@@ -955,11 +962,11 @@ export default function AdminDepositsPage() {
                     {/* User Info Column */}
                     <View style={styles.userCol}>
                       <Text style={styles.colLabel}>DEPOSITING USER</Text>
-                      <TouchableOpacity onPress={() => handleInspectDeposit(item.id)}>
-                        <Text style={styles.userNameText}>@{item.username}</Text>
+                      <TouchableOpacity onPress={() => handleInspectDeposit(depositId)}>
+                        <Text style={styles.userNameText}>@{displayUsername}</Text>
                       </TouchableOpacity>
-                      <Text style={styles.userEmailText}>{item.email}</Text>
-                      {item.fullName ? <Text style={styles.userFullNameText}>{item.fullName}</Text> : null}
+                      <Text style={styles.userEmailText}>{displayEmail}</Text>
+                      {displayFullName ? <Text style={styles.userFullNameText}>{displayFullName}</Text> : null}
                     </View>
 
                     {/* Amount Column */}
@@ -970,8 +977,8 @@ export default function AdminDepositsPage() {
                           {item.currency === 'BTC'
                             ? `${parseFloat(item.amount as any).toFixed(8)} BTC`
                             : item.currency === 'USDC'
-                            ? `$${parseFloat(item.amount as any).toLocaleString('en-US', { minimumFractionDigits: 2 })} USDC`
-                            : `$${parseFloat(item.amount as any).toLocaleString('en-US', { minimumFractionDigits: 2 })} USDT`}
+                              ? `$${parseFloat(item.amount as any).toLocaleString('en-US', { minimumFractionDigits: 2 })} USDC`
+                              : `$${parseFloat(item.amount as any).toLocaleString('en-US', { minimumFractionDigits: 2 })} USDT`}
                         </Text>
                         <View
                           style={[
@@ -1055,7 +1062,7 @@ export default function AdminDepositsPage() {
                   <View style={styles.rowActionsRow}>
                     <TouchableOpacity
                       style={styles.btnInspect}
-                      onPress={() => handleInspectDeposit(item.id)}
+                      onPress={() => handleInspectDeposit(depositId)}
                     >
                       <Text style={styles.btnInspectText}>🔍 Inspect Details</Text>
                     </TouchableOpacity>
@@ -1178,8 +1185,8 @@ export default function AdminDepositsPage() {
                   editCurrency === 'BTC'
                     ? 'e.g. bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh'
                     : editCurrency === 'USDC'
-                    ? 'e.g. 0x71C836642F4A4E3302293515456275153A649319'
-                    : 'e.g. TXv2nE8gQ6R4mN9kY7bL1jF5cW3pA8sD6Z'
+                      ? 'e.g. 0x71C836642F4A4E3302293515456275153A649319'
+                      : 'e.g. TXv2nE8gQ6R4mN9kY7bL1jF5cW3pA8sD6Z'
                 }
                 placeholderTextColor="#667085"
                 value={editAddress}
@@ -1198,8 +1205,8 @@ export default function AdminDepositsPage() {
                   editCurrency === 'BTC'
                     ? 'BTC (Native SegWit Network)'
                     : editCurrency === 'USDC'
-                    ? 'ERC20 (Ethereum Network)'
-                    : 'TRC20 (Tron Network)'
+                      ? 'ERC20 (Ethereum Network)'
+                      : 'TRC20 (Tron Network)'
                 }
                 placeholderTextColor="#667085"
                 value={editNetwork}
@@ -1497,8 +1504,8 @@ export default function AdminDepositsPage() {
                           detailedDeposit.status === 'APPROVED'
                             ? { color: '#00FF66' }
                             : detailedDeposit.status === 'REJECTED'
-                            ? { color: '#FF4757' }
-                            : { color: '#FFA726' },
+                              ? { color: '#FF4757' }
+                              : { color: '#FFA726' },
                         ]}
                       >
                         {detailedDeposit.status}
@@ -1623,8 +1630,8 @@ export default function AdminDepositsPage() {
                             hist.status === 'APPROVED'
                               ? { backgroundColor: 'rgba(0,255,102,0.15)', borderColor: '#00FF66' }
                               : hist.status === 'REJECTED'
-                              ? { backgroundColor: 'rgba(255,71,87,0.15)', borderColor: '#FF4757' }
-                              : { backgroundColor: 'rgba(255,167,38,0.15)', borderColor: '#FFA726' },
+                                ? { backgroundColor: 'rgba(255,71,87,0.15)', borderColor: '#FF4757' }
+                                : { backgroundColor: 'rgba(255,167,38,0.15)', borderColor: '#FFA726' },
                           ]}
                         >
                           <Text
@@ -1633,8 +1640,8 @@ export default function AdminDepositsPage() {
                               hist.status === 'APPROVED'
                                 ? { color: '#00FF66' }
                                 : hist.status === 'REJECTED'
-                                ? { color: '#FF4757' }
-                                : { color: '#FFA726' },
+                                  ? { color: '#FF4757' }
+                                  : { color: '#FFA726' },
                             ]}
                           >
                             {hist.status}

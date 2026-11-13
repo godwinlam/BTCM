@@ -15,8 +15,9 @@ import { api } from '../services/api';
 import { useIsMobile } from '../hooks/useIsMobile';
 
 interface WithdrawalItem {
-  id: number;
-  userId: number;
+  id: number | string;
+  _id?: string;
+  userId: number | string | any;
   username: string;
   email: string;
   fullName?: string;
@@ -29,7 +30,7 @@ interface WithdrawalItem {
   txHash?: string;
   status: 'PENDING' | 'APPROVED' | 'COMPLETED' | 'REJECTED';
   adminNotes?: string;
-  processedByAdminId?: number;
+  processedByAdminId?: number | string;
   processedByAdmin?: string;
   processedAt?: string;
   createdAt: string;
@@ -45,8 +46,9 @@ interface WithdrawalStats {
 }
 
 interface DetailedWithdrawal {
-  id: number;
-  userId: number;
+  id: number | string;
+  _id?: string;
+  userId: number | string | any;
   username: string;
   email: string;
   fullName?: string;
@@ -59,13 +61,13 @@ interface DetailedWithdrawal {
   txHash?: string;
   status: 'PENDING' | 'APPROVED' | 'COMPLETED' | 'REJECTED';
   adminNotes?: string;
-  processedByAdminId?: number;
+  processedByAdminId?: number | string;
   processedByAdmin?: string;
   processedAt?: string;
   createdAt: string;
   updatedAt: string;
   user?: {
-    id: number;
+    id: number | string;
     username: string;
     email: string;
     fullName?: string;
@@ -77,12 +79,15 @@ interface DetailedWithdrawal {
     totalInvested: number;
   };
   userWithdrawalHistory?: Array<{
-    id: number;
+    id: number | string;
+    _id?: string;
     amount: number;
     currency: string;
+    network: string;
     status: string;
-    destinationAddress: string;
     txHash?: string;
+    payoutAddress?: string;
+    destinationAddress?: string;
     createdAt: string;
   }>;
 }
@@ -133,7 +138,7 @@ export default function AdminWithdrawalsPage() {
   const [detailLoading, setDetailLoading] = useState(false);
 
   // Action in progress (e.g., direct approve)
-  const [actionLoadingId, setActionLoadingId] = useState<number | null>(null);
+  const [actionLoadingId, setActionLoadingId] = useState<number | string | null>(null);
 
   const showNotice = (msg: string, type: 'success' | 'error' | 'info' = 'info') => {
     setBannerNotice({ text: msg, type });
@@ -185,7 +190,7 @@ export default function AdminWithdrawalsPage() {
         if (dRes?.stats?.pending?.count !== undefined) {
           setPendingDepositCount(dRes.stats.pending.count);
         }
-      } catch (_) {}
+      } catch (_) { }
     } catch (err: any) {
       console.warn('Failed to load withdrawal stats:', err.message);
     }
@@ -353,7 +358,7 @@ export default function AdminWithdrawalsPage() {
   };
 
   // 4. Inspect Full Withdrawal Details
-  const handleInspectWithdrawal = async (id: number) => {
+  const handleInspectWithdrawal = async (id: number | string) => {
     setDetailModalVisible(true);
     setDetailLoading(true);
     try {
@@ -551,8 +556,8 @@ export default function AdminWithdrawalsPage() {
             bannerNotice.type === 'error'
               ? styles.bannerNoticeError
               : bannerNotice.type === 'success'
-              ? styles.bannerNoticeSuccess
-              : styles.bannerNoticeInfo,
+                ? styles.bannerNoticeSuccess
+                : styles.bannerNoticeInfo,
           ]}
         >
           <Text style={styles.bannerNoticeText}>{bannerNotice.text}</Text>
@@ -671,12 +676,12 @@ export default function AdminWithdrawalsPage() {
                       {st === 'ALL'
                         ? 'All'
                         : st === 'PENDING'
-                        ? '⏳ Pending'
-                        : st === 'APPROVED'
-                        ? '🔵 Approved'
-                        : st === 'COMPLETED'
-                        ? (isMobile ? '🟢 Done' : '🟢 Completed')
-                        : '⛔ Rejected'}
+                          ? '⏳ Pending'
+                          : st === 'APPROVED'
+                            ? '🔵 Approved'
+                            : st === 'COMPLETED'
+                              ? (isMobile ? '🟢 Done' : '🟢 Completed')
+                              : '⛔ Rejected'}
                     </Text>
                   </TouchableOpacity>
                 ))}
@@ -726,24 +731,28 @@ export default function AdminWithdrawalsPage() {
           </View>
         ) : (
           <View style={styles.tableCard}>
-            {withdrawals.map((item) => {
-              const isActionLoading = actionLoadingId === item.id;
+            {withdrawals.map((item, index) => {
+              const withdrawalId = item.id || (item as any)._id || `with-${index}`;
+              const isActionLoading = actionLoadingId === item.id || actionLoadingId === (item as any)._id;
+              const displayUsername = item.username || (item.userId as any)?.username || 'user';
+              const displayEmail = item.email || (item.userId as any)?.email || '';
+              const displayFullName = item.fullName || (item.userId as any)?.fullName || '';
               return (
-                <View key={item.id} style={styles.withdrawalRow}>
+                <View key={withdrawalId} style={styles.withdrawalRow}>
                   {/* Row Top: ID, Status, Timestamp */}
                   <View style={styles.rowTopBar}>
                     <View style={styles.rowIdCol}>
-                      <Text style={styles.rowIdText}>#{item.id}</Text>
+                      <Text style={styles.rowIdText}>#{withdrawalId}</Text>
                       <View
                         style={[
                           styles.statusBadge,
                           item.status === 'PENDING'
                             ? styles.statusBadgePending
                             : item.status === 'APPROVED'
-                            ? styles.statusBadgeApproved
-                            : item.status === 'COMPLETED'
-                            ? styles.statusBadgeCompleted
-                            : styles.statusBadgeRejected,
+                              ? styles.statusBadgeApproved
+                              : item.status === 'COMPLETED'
+                                ? styles.statusBadgeCompleted
+                                : styles.statusBadgeRejected,
                         ]}
                       >
                         <Text
@@ -752,25 +761,25 @@ export default function AdminWithdrawalsPage() {
                             item.status === 'PENDING'
                               ? styles.statusBadgeTextPending
                               : item.status === 'APPROVED'
-                              ? styles.statusBadgeTextApproved
-                              : item.status === 'COMPLETED'
-                              ? styles.statusBadgeTextCompleted
-                              : styles.statusBadgeTextRejected,
+                                ? styles.statusBadgeTextApproved
+                                : item.status === 'COMPLETED'
+                                  ? styles.statusBadgeTextCompleted
+                                  : styles.statusBadgeTextRejected,
                           ]}
                         >
                           {item.status === 'PENDING'
                             ? '⏳ PENDING AUDIT'
                             : item.status === 'APPROVED'
-                            ? '🔵 APPROVED'
-                            : item.status === 'COMPLETED'
-                            ? '🟢 COMPLETED'
-                            : '⛔ REJECTED / REFUNDED'}
+                              ? '🔵 APPROVED'
+                              : item.status === 'COMPLETED'
+                                ? '🟢 COMPLETED'
+                                : '⛔ REJECTED / REFUNDED'}
                         </Text>
                       </View>
                     </View>
 
                     <Text style={styles.rowDateText}>
-                      Requested: {new Date(item.createdAt).toLocaleString()}
+                      Requested: {item.createdAt ? new Date(item.createdAt).toLocaleString() : 'N/A'}
                     </Text>
                   </View>
 
@@ -779,11 +788,11 @@ export default function AdminWithdrawalsPage() {
                     {/* User Info Column */}
                     <View style={styles.userCol}>
                       <Text style={styles.colLabel}>REQUESTING USER</Text>
-                      <TouchableOpacity onPress={() => handleInspectWithdrawal(item.id)}>
-                        <Text style={styles.userNameText}>@{item.username}</Text>
+                      <TouchableOpacity onPress={() => handleInspectWithdrawal(withdrawalId)}>
+                        <Text style={styles.userNameText}>@{displayUsername}</Text>
                       </TouchableOpacity>
-                      <Text style={styles.userEmailText}>{item.email}</Text>
-                      {item.fullName ? <Text style={styles.userFullNameText}>{item.fullName}</Text> : null}
+                      <Text style={styles.userEmailText}>{displayEmail}</Text>
+                      {displayFullName ? <Text style={styles.userFullNameText}>{displayFullName}</Text> : null}
                     </View>
 
                     {/* Amount & Currency Column */}
@@ -868,7 +877,7 @@ export default function AdminWithdrawalsPage() {
                   <View style={styles.rowActionsRow}>
                     <TouchableOpacity
                       style={styles.btnInspect}
-                      onPress={() => handleInspectWithdrawal(item.id)}
+                      onPress={() => handleInspectWithdrawal(withdrawalId)}
                     >
                       <Text style={styles.btnInspectText}>🔍 Inspect Details</Text>
                     </TouchableOpacity>
@@ -1212,8 +1221,8 @@ export default function AdminWithdrawalsPage() {
                           detailedWithdrawal.status === 'COMPLETED'
                             ? { color: '#00FF66' }
                             : detailedWithdrawal.status === 'REJECTED'
-                            ? { color: '#FF4757' }
-                            : { color: '#FFA726' },
+                              ? { color: '#FF4757' }
+                              : { color: '#FFA726' },
                         ]}
                       >
                         {detailedWithdrawal.status}
@@ -1352,7 +1361,7 @@ export default function AdminWithdrawalsPage() {
                             #{hist.id} • {hist.amount} {hist.currency}
                           </Text>
                           <Text style={styles.historyRowSub}>
-                            {new Date(hist.createdAt).toLocaleDateString()} • {hist.destinationAddress.slice(0, 16)}...
+                            {new Date(hist.createdAt).toLocaleDateString()} • {(hist.destinationAddress || hist.payoutAddress || '').slice(0, 16)}...
                           </Text>
                         </View>
                         <View
@@ -1361,8 +1370,8 @@ export default function AdminWithdrawalsPage() {
                             hist.status === 'COMPLETED'
                               ? { backgroundColor: 'rgba(0,255,102,0.15)', borderColor: '#00FF66' }
                               : hist.status === 'REJECTED'
-                              ? { backgroundColor: 'rgba(255,71,87,0.15)', borderColor: '#FF4757' }
-                              : { backgroundColor: 'rgba(255,167,38,0.15)', borderColor: '#FFA726' },
+                                ? { backgroundColor: 'rgba(255,71,87,0.15)', borderColor: '#FF4757' }
+                                : { backgroundColor: 'rgba(255,167,38,0.15)', borderColor: '#FFA726' },
                           ]}
                         >
                           <Text
@@ -1371,8 +1380,8 @@ export default function AdminWithdrawalsPage() {
                               hist.status === 'COMPLETED'
                                 ? { color: '#00FF66' }
                                 : hist.status === 'REJECTED'
-                                ? { color: '#FF4757' }
-                                : { color: '#FFA726' },
+                                  ? { color: '#FF4757' }
+                                  : { color: '#FFA726' },
                             ]}
                           >
                             {hist.status}

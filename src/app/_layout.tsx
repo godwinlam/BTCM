@@ -3,6 +3,7 @@ import { Slot } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, View, Platform, LogBox } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import '../i18n';
 
 // Ignore React Native Web development-only touch responder sync warnings
 LogBox.ignoreLogs([
@@ -13,11 +14,13 @@ LogBox.ignoreLogs([
 if (Platform.OS === 'web' && typeof window !== 'undefined') {
   const originalError = console.error;
   console.error = (...args: any[]) => {
+    const msg = typeof args[0] === 'string' ? args[0] : '';
     if (
-      typeof args[0] === 'string' &&
-      args[0].includes('Cannot find single active touch')
+      msg.includes('Cannot find single active touch') ||
+      msg.includes('defaultProps will be removed') ||
+      msg.includes('Encountered two children with the same key')
     ) {
-      // Harmless React Native Web touch-responder desync on mobile browsers
+      // Harmless dev warnings filtered from breaking mobile/web rendering
       return;
     }
     originalError.apply(console, args);

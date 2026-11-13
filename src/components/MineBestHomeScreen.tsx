@@ -8,6 +8,7 @@ import {
   Platform,
   Image,
 } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { useIsMobile } from '@/hooks/useIsMobile';
 
 const DatacenterImg = require('../../assets/images/facility_datacenter.jpg');
@@ -51,6 +52,7 @@ export const MineBestHomeScreen: React.FC<MineBestHomeScreenProps> = ({
   btcPriceUsd = 82420,
 }) => {
   const isMobile = useIsMobile();
+  const { t } = useTranslation();
 
   const [selectedPlanTier, setSelectedPlanTier] = useState<number>(1000);
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(0);
@@ -62,24 +64,24 @@ export const MineBestHomeScreen: React.FC<MineBestHomeScreenProps> = ({
 
   const faqs = [
     {
-      q: 'Do I need to buy any physical equipment or know how to code?',
-      a: 'No! That is the beauty of cloud mining. MineBest owns, hosts, and maintains all industrial ASIC rigs in certified data centers. You simply choose your computing power, and our automated system deposits Bitcoin directly to your wallet every day.',
+      q: t('home.faqQ1'),
+      a: t('home.faqA1'),
     },
     {
-      q: 'How long do mining contracts last?',
-      a: 'Every cloud mining contract runs for 1,500 consecutive days. After a 48-hour hardware diagnostics and burn-in period, automated daily Bitcoin mining distributions begin without requiring manual harvest.',
+      q: t('home.faqQ2'),
+      a: t('home.faqA2'),
     },
     {
-      q: 'How does the 10% Direct Bonus and Binary Pairing work?',
-      a: 'When someone joins using your referral link and activates a mining package, you instantly earn a 10% cash reward credited in USDT. In addition, our binary pairing engine pairs Leg A and Leg B volume every night at 23:59, awarding 100 USDT per 1,000 pair volume.',
+      q: t('home.faqQ3'),
+      a: t('home.faqA3'),
     },
     {
-      q: 'Which cryptocurrencies can I deposit and withdraw?',
-      a: 'We support USDT (TRC-20 & ERC-20), USDC, and native Bitcoin (BTC). Deposits credit automatically upon blockchain confirmation, and withdrawals can be requested anytime from your dashboard.',
+      q: t('home.faqQ4'),
+      a: t('home.faqA4'),
     },
     {
-      q: 'Who is MineBest and where are the data centers located?',
-      a: 'MineBest was founded in 2017 by Eyal Avramovich and is headquartered in Warsaw, Poland. The company operates over 300+ MW of high-density cryptographic data centers in Kazakhstan (Ekibastuz mega-hub) and Poland, partnering directly with MicroBT and Bitmain.',
+      q: t('home.faqQ5'),
+      a: t('home.faqA5'),
     },
   ];
 
@@ -89,22 +91,21 @@ export const MineBestHomeScreen: React.FC<MineBestHomeScreenProps> = ({
       <View style={[styles.heroSection, isMobile && styles.heroSectionMobile]}>
         <View style={styles.heroBadgeRow}>
           <View style={styles.heroPill}>
-            <Text style={styles.heroPillText}>⚡ MINEBEST POWERED CLOUD MINING</Text>
+            <Text style={styles.heroPillText}>{t('home.badge')}</Text>
           </View>
           <View style={styles.heroPillGreen}>
             <View style={styles.statusDotGreen} />
-            <Text style={styles.heroPillGreenText}>99.98% INFRASTRUCTURE UPTIME</Text>
+            <Text style={styles.heroPillGreenText}>{t('home.uptime')}</Text>
           </View>
         </View>
 
         <Text style={[styles.heroHeadline, isMobile && styles.heroHeadlineMobile]}>
-          Bitcoin Mining,{'\n'}
-          <Text style={styles.heroHighlight}>Made Simple & Powerful.</Text>
+          {t('home.heroHeadline')}{'\n'}
+          <Text style={styles.heroHighlight}>{t('home.heroHighlight')}</Text>
         </Text>
 
         <Text style={styles.heroSubhead}>
-          Harness enterprise-grade ASIC computing power hosted in MineBest's world-class data centers.
-          Earn automated daily Bitcoin rewards for 1,500 days with zero hardware setup or electricity headaches.
+          {t('home.heroSubhead')}
         </Text>
 
         {/* Hero Action Buttons */}
@@ -114,7 +115,7 @@ export const MineBestHomeScreen: React.FC<MineBestHomeScreenProps> = ({
               style={styles.ctaPrimaryBtn}
               onPress={() => onNavigateTab('packages')}
             >
-              <Text style={styles.ctaPrimaryBtnText}>🚀 Open Mining Dashboard ➔</Text>
+              <Text style={styles.ctaPrimaryBtnText}>{t('home.openDashboard')}</Text>
             </TouchableOpacity>
           ) : (
             <>
@@ -122,13 +123,13 @@ export const MineBestHomeScreen: React.FC<MineBestHomeScreenProps> = ({
                 style={styles.ctaPrimaryBtn}
                 onPress={onSignUp}
               >
-                <Text style={styles.ctaPrimaryBtnText}>🚀 Create Free Account</Text>
+                <Text style={styles.ctaPrimaryBtnText}>{t('home.createAccount')}</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.ctaSecondaryBtn}
                 onPress={onSignIn}
               >
-                <Text style={styles.ctaSecondaryBtnText}>⚡ Member Sign In</Text>
+                <Text style={styles.ctaSecondaryBtnText}>{t('home.memberSignIn')}</Text>
               </TouchableOpacity>
             </>
           )}
@@ -137,30 +138,30 @@ export const MineBestHomeScreen: React.FC<MineBestHomeScreenProps> = ({
             style={styles.ctaOutlineBtn}
             onPress={() => onNavigateTab('packages')}
           >
-            <Text style={styles.ctaOutlineBtnText}>📦 View 1,500-Day Packages</Text>
+            <Text style={styles.ctaOutlineBtnText}>{t('home.viewPackages')}</Text>
           </TouchableOpacity>
         </View>
 
         {/* Hero Trust Proof Numbers */}
         <View style={[styles.heroTrustGrid, isMobile && styles.heroTrustGridMobile]}>
           <View style={styles.trustItem}>
-            <Text style={styles.trustVal}>1,500</Text>
-            <Text style={styles.trustLabel}>Days of Automated Yield</Text>
+            <Text style={styles.trustVal}>{t('home.trustDays')}</Text>
+            <Text style={styles.trustLabel}>{t('home.trustDaysLabel')}</Text>
           </View>
           <View style={[styles.trustDivider, isMobile && styles.trustDividerMobile]} />
           <View style={styles.trustItem}>
-            <Text style={styles.trustVal}>300+ MW</Text>
-            <Text style={styles.trustLabel}>Data Center Capacity</Text>
+            <Text style={styles.trustVal}>{t('home.trustMw')}</Text>
+            <Text style={styles.trustLabel}>{t('home.trustMwLabel')}</Text>
           </View>
           <View style={[styles.trustDivider, isMobile && styles.trustDividerMobile]} />
           <View style={styles.trustItem}>
-            <Text style={styles.trustVal}>1.85 EH/s</Text>
-            <Text style={styles.trustLabel}>Global Fleet Hashrate</Text>
+            <Text style={styles.trustVal}>{t('home.trustHash')}</Text>
+            <Text style={styles.trustLabel}>{t('home.trustHashLabel')}</Text>
           </View>
           <View style={[styles.trustDivider, isMobile && styles.trustDividerMobile]} />
           <View style={styles.trustItem}>
-            <Text style={styles.trustVal}>10% + 10%</Text>
-            <Text style={styles.trustLabel}>Direct & Binary Rewards</Text>
+            <Text style={styles.trustVal}>{t('home.trustRewards')}</Text>
+            <Text style={styles.trustLabel}>{t('home.trustRewardsLabel')}</Text>
           </View>
         </View>
 
@@ -171,17 +172,17 @@ export const MineBestHomeScreen: React.FC<MineBestHomeScreenProps> = ({
             <View style={[styles.heroBannerTopRow, isMobile && styles.heroBannerTopRowMobile]}>
               <View style={styles.heroBannerPill}>
                 <View style={styles.statusDotGreen} />
-                <Text style={styles.heroBannerPillText}>LIVE INFRASTRUCTURE • 300+ MW FLEET</Text>
+                <Text style={styles.heroBannerPillText}>{t('home.liveInfra')}</Text>
               </View>
-              <Text style={styles.heroBannerCoord}>48.0196° N, 66.9237° E • TIER-III STANDARD</Text>
+              <Text style={styles.heroBannerCoord}>{t('home.coord')}</Text>
             </View>
             <View style={[styles.heroBannerBottomRow, isMobile && styles.heroBannerBottomRowMobile]}>
               <View style={styles.heroBannerBottomLeft}>
-                <Text style={styles.heroBannerTitle}>MineBest Enterprise High-Density Mining Cluster</Text>
-                <Text style={styles.heroBannerSubtitle}>84,000+ Online ASIC Units • Cold-Climate Evaporative Airflow • 99.98% Uptime</Text>
+                <Text style={styles.heroBannerTitle}>{t('home.clusterTitle')}</Text>
+                <Text style={styles.heroBannerSubtitle}>{t('home.clusterSubtitle')}</Text>
               </View>
               <TouchableOpacity style={styles.heroBannerBtn} onPress={() => onNavigateTab('packages')}>
-                <Text style={styles.heroBannerBtnText}>Explore Hardware ➔</Text>
+                <Text style={styles.heroBannerBtnText}>{t('home.exploreHardware')}</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -191,50 +192,50 @@ export const MineBestHomeScreen: React.FC<MineBestHomeScreenProps> = ({
       {/* 2. HOW IT WORKS (3 SIMPLE STEPS) */}
       <View style={[styles.sectionWrap, isMobile && styles.sectionWrapMobile]}>
         <View style={styles.sectionHeadingBox}>
-          <Text style={styles.sectionOverline}>HOW IT WORKS</Text>
-          <Text style={styles.sectionTitle}>Start Mining Bitcoin in 3 Simple Steps</Text>
+          <Text style={styles.sectionOverline}>{t('home.howItWorksOverline')}</Text>
+          <Text style={styles.sectionTitle}>{t('home.howItWorksTitle')}</Text>
           <Text style={styles.sectionSubtitle}>
-            We've removed all the technical friction of crypto mining so anyone can participate effortlessly.
+            {t('home.howItWorksSubtitle')}
           </Text>
         </View>
 
         <View style={[styles.stepsGrid, isMobile && styles.stepsGridMobile]}>
           <View style={[styles.stepCard, isMobile && styles.stepCardMobile]}>
             <View style={styles.stepBadge}>
-              <Text style={styles.stepBadgeText}>STEP 1</Text>
+              <Text style={styles.stepBadgeText}>{t('home.step1Badge')}</Text>
             </View>
             <View style={styles.stepIconBubble}>
               <Text style={{ fontSize: 28 }}>📦</Text>
             </View>
-            <Text style={styles.stepCardTitle}>Pick a Mining Plan</Text>
+            <Text style={styles.stepCardTitle}>{t('home.step1Title')}</Text>
             <Text style={styles.stepCardText}>
-              Select the computing package that fits your goals, from starter $100 contracts up to $30,000 industrial tiers.
+              {t('home.step1Desc')}
             </Text>
           </View>
 
           <View style={[styles.stepCard, isMobile && styles.stepCardMobile]}>
             <View style={styles.stepBadge}>
-              <Text style={styles.stepBadgeText}>STEP 2</Text>
+              <Text style={styles.stepBadgeText}>{t('home.step2Badge')}</Text>
             </View>
             <View style={[styles.stepIconBubble, { backgroundColor: 'rgba(56, 189, 248, 0.15)' }]}>
               <Text style={{ fontSize: 28 }}>⚙️</Text>
             </View>
-            <Text style={styles.stepCardTitle}>We Power the Hardware</Text>
+            <Text style={styles.stepCardTitle}>{t('home.step2Title')}</Text>
             <Text style={styles.stepCardText}>
-              MineBest engineers deploy and configure top-tier ASIC miners in our climate-optimized, 24/7 guarded data centers.
+              {t('home.step2Desc')}
             </Text>
           </View>
 
           <View style={[styles.stepCard, isMobile && styles.stepCardMobile]}>
             <View style={styles.stepBadge}>
-              <Text style={styles.stepBadgeText}>STEP 3</Text>
+              <Text style={styles.stepBadgeText}>{t('home.step3Badge')}</Text>
             </View>
             <View style={[styles.stepIconBubble, { backgroundColor: 'rgba(0, 230, 118, 0.15)' }]}>
               <Text style={{ fontSize: 28 }}>💰</Text>
             </View>
-            <Text style={styles.stepCardTitle}>Receive Daily Bitcoin</Text>
+            <Text style={styles.stepCardTitle}>{t('home.step3Title')}</Text>
             <Text style={styles.stepCardText}>
-              Enjoy automated daily Bitcoin distributions straight to your wallet for up to 1,500 consecutive days.
+              {t('home.step3Desc')}
             </Text>
           </View>
         </View>
@@ -243,10 +244,10 @@ export const MineBestHomeScreen: React.FC<MineBestHomeScreenProps> = ({
       {/* 3. KEY PROJECT FEATURES (FRIENDLY 4-GRID) */}
       <View style={[styles.sectionWrap, isMobile && styles.sectionWrapMobile]}>
         <View style={styles.sectionHeadingBox}>
-          <Text style={styles.sectionOverline}>WHY CHOOSE BTCM</Text>
-          <Text style={styles.sectionTitle}>Engineered for Transparency & Performance</Text>
+          <Text style={styles.sectionOverline}>{t('home.whyChooseOverline')}</Text>
+          <Text style={styles.sectionTitle}>{t('home.whyChooseTitle')}</Text>
           <Text style={styles.sectionSubtitle}>
-            A modern, user-first cloud mining ecosystem built on audited hardware and predictable reward systems.
+            {t('home.whyChooseSubtitle')}
           </Text>
         </View>
 
@@ -255,9 +256,9 @@ export const MineBestHomeScreen: React.FC<MineBestHomeScreenProps> = ({
             <View style={styles.featureIconBox}>
               <Text style={{ fontSize: 26 }}>⚡</Text>
             </View>
-            <Text style={styles.featureTitle}>100% Automated System</Text>
+            <Text style={styles.featureTitle}>{t('home.feat1Title')}</Text>
             <Text style={styles.featureDesc}>
-              Forget manual clicking or complex software setups. After contract activation and 48h hardware calibration, daily Bitcoin yield is credited automatically every 24 hours.
+              {t('home.feat1Desc')}
             </Text>
           </View>
 
@@ -265,9 +266,9 @@ export const MineBestHomeScreen: React.FC<MineBestHomeScreenProps> = ({
             <View style={[styles.featureIconBox, { backgroundColor: 'rgba(247, 147, 26, 0.15)' }]}>
               <Text style={{ fontSize: 26 }}>🛡️</Text>
             </View>
-            <Text style={styles.featureTitle}>1,500-Day Contract Life</Text>
+            <Text style={styles.featureTitle}>{t('home.feat2Title')}</Text>
             <Text style={styles.featureDesc}>
-              One of the longest contract lifecycles in the entire crypto industry. Your ASIC computing capacity continues mining through all seasons, backed by full hardware maintenance.
+              {t('home.feat2Desc')}
             </Text>
           </View>
 
@@ -275,9 +276,9 @@ export const MineBestHomeScreen: React.FC<MineBestHomeScreenProps> = ({
             <View style={[styles.featureIconBox, { backgroundColor: 'rgba(0, 230, 118, 0.15)' }]}>
               <Text style={{ fontSize: 26 }}>🤝</Text>
             </View>
-            <Text style={styles.featureTitle}>10% Direct Referral Bonus</Text>
+            <Text style={styles.featureTitle}>{t('home.feat3Title')}</Text>
             <Text style={styles.featureDesc}>
-              Share your personal link and earn an instant 10% cash reward credited directly to your USDT balance whenever your downline purchases a mining package.
+              {t('home.feat3Desc')}
             </Text>
           </View>
 
@@ -285,9 +286,9 @@ export const MineBestHomeScreen: React.FC<MineBestHomeScreenProps> = ({
             <View style={[styles.featureIconBox, { backgroundColor: 'rgba(168, 85, 247, 0.15)' }]}>
               <Text style={{ fontSize: 26 }}>🌲</Text>
             </View>
-            <Text style={styles.featureTitle}>23:59 Dual Binary Pairing</Text>
+            <Text style={styles.featureTitle}>{t('home.feat4Title')}</Text>
             <Text style={styles.featureDesc}>
-              Pair volume from your Left (A) and Right (B) legs. Every 1,000 USDT matched volume earns you 100 USDT, automatically settled every single night at 23:59 server time.
+              {t('home.feat4Desc')}
             </Text>
           </View>
         </View>
@@ -296,10 +297,10 @@ export const MineBestHomeScreen: React.FC<MineBestHomeScreenProps> = ({
       {/* 4. INDUSTRIAL EQUIPMENT & FACILITY SHOWCASE */}
       <View style={[styles.sectionWrap, isMobile && styles.sectionWrapMobile]}>
         <View style={styles.sectionHeadingBox}>
-          <Text style={styles.sectionOverline}>INFRASTRUCTURE & DEVICES</Text>
-          <Text style={styles.sectionTitle}>Real Mining Equipment. Audited Facilities.</Text>
+          <Text style={styles.sectionOverline}>{t('home.infraOverline')}</Text>
+          <Text style={styles.sectionTitle}>{t('home.infraTitle')}</Text>
           <Text style={styles.sectionSubtitle}>
-            Our cloud contracts are underpinned by physical, high-performance ASIC rigs operating in Tier-III data centers with institutional-grade power management.
+            {t('home.infraSubtitle')}
           </Text>
         </View>
 
@@ -309,22 +310,22 @@ export const MineBestHomeScreen: React.FC<MineBestHomeScreenProps> = ({
             <View style={styles.imageFrame}>
               <Image source={DatacenterImg} style={styles.cardImage} resizeMode="cover" />
               <View style={styles.imageOverlayBadge}>
-                <Text style={styles.imageBadgeText}>🏢 DATA CENTER HALL</Text>
+                <Text style={styles.imageBadgeText}>{t('home.card1Badge')}</Text>
               </View>
               <View style={styles.imageStatusPill}>
                 <View style={styles.statusDotGreen} />
-                <Text style={styles.imageStatusText}>ACTIVE 24/7</Text>
+                <Text style={styles.imageStatusText}>{t('home.card1Status')}</Text>
               </View>
             </View>
             <View style={styles.imageCardBody}>
-              <Text style={styles.imageCardTitle}>Hyperscale Mining Aisles</Text>
+              <Text style={styles.imageCardTitle}>{t('home.card1Title')}</Text>
               <Text style={styles.imageCardDesc}>
-                Thousands of high-density ASIC units in engineered hot/cold aisle containment, monitored by real-time IoT thermal sensors with automated exhaust.
+                {t('home.card1Desc')}
               </Text>
               <View style={styles.specChipsRow}>
-                <View style={styles.specChip}><Text style={styles.specChipText}>84,000+ ASICs</Text></View>
-                <View style={styles.specChip}><Text style={styles.specChipText}>PUE 1.08</Text></View>
-                <View style={styles.specChip}><Text style={styles.specChipText}>Tier III Standard</Text></View>
+                <View style={styles.specChip}><Text style={styles.specChipText}>{t('home.card1Tag1')}</Text></View>
+                <View style={styles.specChip}><Text style={styles.specChipText}>{t('home.card1Tag2')}</Text></View>
+                <View style={styles.specChip}><Text style={styles.specChipText}>{t('home.card1Tag3')}</Text></View>
               </View>
             </View>
           </View>
@@ -334,21 +335,21 @@ export const MineBestHomeScreen: React.FC<MineBestHomeScreenProps> = ({
             <View style={styles.imageFrame}>
               <Image source={AsicHardwareImg} style={styles.cardImage} resizeMode="cover" />
               <View style={styles.imageOverlayBadge}>
-                <Text style={styles.imageBadgeText}>⚡ ASIC HARDWARE RIGS</Text>
+                <Text style={styles.imageBadgeText}>{t('home.card2Badge')}</Text>
               </View>
               <View style={[styles.imageStatusPill, { backgroundColor: 'rgba(247, 147, 26, 0.85)' }]}>
-                <Text style={styles.imageStatusText}>TOP EFFICIENCY</Text>
+                <Text style={styles.imageStatusText}>{t('home.card2Status')}</Text>
               </View>
             </View>
             <View style={styles.imageCardBody}>
-              <Text style={styles.imageCardTitle}>MicroBT & Bitmain ASIC Nodes</Text>
+              <Text style={styles.imageCardTitle}>{t('home.card2Title')}</Text>
               <Text style={styles.imageCardDesc}>
-                Custom-tuned WhatsMiner M30S+ and Antminer S19 Pro units with dual high-CFM cooling fans and 5nm/7nm silicon for maximum hash consistency.
+                {t('home.card2Desc')}
               </Text>
               <View style={styles.specChipsRow}>
-                <View style={styles.specChip}><Text style={styles.specChipText}>MicroBT & Bitmain</Text></View>
-                <View style={styles.specChip}><Text style={styles.specChipText}>Dual 6,500 RPM Fans</Text></View>
-                <View style={styles.specChip}><Text style={styles.specChipText}>34 J/TH</Text></View>
+                <View style={styles.specChip}><Text style={styles.specChipText}>{t('home.card2Tag1')}</Text></View>
+                <View style={styles.specChip}><Text style={styles.specChipText}>{t('home.card2Tag2')}</Text></View>
+                <View style={styles.specChip}><Text style={styles.specChipText}>{t('home.card2Tag3')}</Text></View>
               </View>
             </View>
           </View>
@@ -358,21 +359,21 @@ export const MineBestHomeScreen: React.FC<MineBestHomeScreenProps> = ({
             <View style={styles.imageFrame}>
               <Image source={PowerInfraImg} style={styles.cardImage} resizeMode="cover" />
               <View style={styles.imageOverlayBadge}>
-                <Text style={styles.imageBadgeText}>🔌 POWER SUBSTATION</Text>
+                <Text style={styles.imageBadgeText}>{t('home.card3Badge')}</Text>
               </View>
               <View style={[styles.imageStatusPill, { backgroundColor: 'rgba(56, 189, 248, 0.85)' }]}>
-                <Text style={styles.imageStatusText}>300+ MW GRID</Text>
+                <Text style={styles.imageStatusText}>{t('home.card3Status')}</Text>
               </View>
             </View>
             <View style={styles.imageCardBody}>
-              <Text style={styles.imageCardTitle}>High-Voltage Power Distribution</Text>
+              <Text style={styles.imageCardTitle}>{t('home.card3Title')}</Text>
               <Text style={styles.imageCardDesc}>
-                Direct 110kV-to-10kV step-down transformers connected to wholesale power plants, securing ultra-low electricity tariffs and 99.98% operational uptime.
+                {t('home.card3Desc')}
               </Text>
               <View style={styles.specChipsRow}>
-                <View style={styles.specChip}><Text style={styles.specChipText}>110kV Substation</Text></View>
-                <View style={styles.specChip}><Text style={styles.specChipText}>Eco-Efficient</Text></View>
-                <View style={styles.specChip}><Text style={styles.specChipText}>Redundant Transformers</Text></View>
+                <View style={styles.specChip}><Text style={styles.specChipText}>{t('home.card3Tag1')}</Text></View>
+                <View style={styles.specChip}><Text style={styles.specChipText}>{t('home.card3Tag2')}</Text></View>
+                <View style={styles.specChip}><Text style={styles.specChipText}>{t('home.card3Tag3')}</Text></View>
               </View>
             </View>
           </View>
@@ -384,37 +385,37 @@ export const MineBestHomeScreen: React.FC<MineBestHomeScreenProps> = ({
         <View style={[styles.companyCard, isMobile && styles.companyCardMobile]}>
           <View style={styles.companyLeft}>
             <View style={styles.companyTagRow}>
-              <Text style={styles.companyTag}>COMPANY BACKGROUND</Text>
-              <Text style={styles.companyEst}>EST. 2017 • WARSAW, POLAND</Text>
+              <Text style={styles.companyTag}>{t('home.aboutTag')}</Text>
+              <Text style={styles.companyEst}>{t('home.aboutEst')}</Text>
             </View>
-            <Text style={styles.companyTitle}>About MineBest</Text>
+            <Text style={styles.companyTitle}>{t('home.aboutTitle')}</Text>
             <Text style={styles.companyText}>
-              Founded in 2017 by tech visionary <Text style={{ color: '#F7931A', fontWeight: '800' }}>Eyal Avramovich</Text>, MineBest has grown into one of the world's most trusted operators of industrial-scale cryptocurrency mining data centers.
+              {t('home.aboutP1')}
             </Text>
             <Text style={styles.companyText}>
-              Headquartered in Warsaw, Poland, MineBest engineers proprietary 20ft and 40ft all-weather high-density mobile mining containers. These units operate in strategic low-cost energy zones with cold-climate natural cooling, achieving an industry-leading Power Usage Effectiveness (PUE) of 1.08.
+              {t('home.aboutP2')}
             </Text>
             <Text style={styles.companyText}>
-              Through official procurement partnerships with <Text style={{ color: '#38BDF8', fontWeight: '800' }}>MicroBT (WhatsMiner)</Text> and <Text style={{ color: '#00E676', fontWeight: '800' }}>Bitmain (Antminer)</Text>, MineBest delivers reliable, institutional-grade hashpower directly to BTCM members.
+              {t('home.aboutP3')}
             </Text>
 
             {/* Credibility Pills */}
             <View style={styles.credPillsRow}>
               <View style={styles.credPill}>
                 <Text style={styles.credPillIcon}>📜</Text>
-                <Text style={styles.credPillText}>ISO 9001:2015 Certified</Text>
+                <Text style={styles.credPillText}>{t('home.pillIso')}</Text>
               </View>
               <View style={styles.credPill}>
                 <Text style={styles.credPillIcon}>🏛️</Text>
-                <Text style={styles.credPillText}>Tier III Data Center Standards</Text>
+                <Text style={styles.credPillText}>{t('home.pillTier')}</Text>
               </View>
               <View style={styles.credPill}>
                 <Text style={styles.credPillIcon}>🔒</Text>
-                <Text style={styles.credPillText}>24/7 Armed Security & CCTV</Text>
+                <Text style={styles.credPillText}>{t('home.pillSecurity')}</Text>
               </View>
               <View style={styles.credPill}>
                 <Text style={styles.credPillIcon}>🌱</Text>
-                <Text style={styles.credPillText}>Eco Evaporative Cooling</Text>
+                <Text style={styles.credPillText}>{t('home.pillEco')}</Text>
               </View>
             </View>
           </View>
@@ -427,15 +428,15 @@ export const MineBestHomeScreen: React.FC<MineBestHomeScreenProps> = ({
                 <View style={styles.facHeader}>
                   <Text style={{ fontSize: 26 }}>🇰🇿</Text>
                   <View style={{ flex: 1 }}>
-                    <Text style={styles.facTitle}>Kazakhstan Mega Center</Text>
-                    <Text style={styles.facLocation}>Ekibastuz, Pavlodar Region</Text>
+                    <Text style={styles.facTitle}>{t('home.kazakhTitle')}</Text>
+                    <Text style={styles.facLocation}>{t('home.kazakhLoc')}</Text>
                   </View>
                   <View style={styles.facPill}>
                     <Text style={styles.facPillText}>200 MW</Text>
                   </View>
                 </View>
                 <Text style={styles.facDesc}>
-                  Direct high-voltage substation grid powering over 84,000 ASIC miners across 80 proprietary containers. Naturally cooled by sub-zero winter temperatures.
+                  {t('home.kazakhDesc')}
                 </Text>
               </View>
             </View>
@@ -446,15 +447,15 @@ export const MineBestHomeScreen: React.FC<MineBestHomeScreenProps> = ({
                 <View style={styles.facHeader}>
                   <Text style={{ fontSize: 26 }}>🇵🇱</Text>
                   <View style={{ flex: 1 }}>
-                    <Text style={styles.facTitle}>Poland European Tech Hub</Text>
-                    <Text style={styles.facLocation}>Warsaw Innovation Campus</Text>
+                    <Text style={styles.facTitle}>{t('home.polandTitle')}</Text>
+                    <Text style={styles.facLocation}>{t('home.polandLoc')}</Text>
                   </View>
                   <View style={styles.facPill}>
                     <Text style={styles.facPillText}>60 MW</Text>
                   </View>
                 </View>
                 <Text style={styles.facDesc}>
-                  Engineering headquarters designing custom 40ft Smart Containers, remote telemetry IoT boards, and AI-driven thermal airflow management.
+                  {t('home.polandDesc')}
                 </Text>
               </View>
             </View>
@@ -466,10 +467,10 @@ export const MineBestHomeScreen: React.FC<MineBestHomeScreenProps> = ({
       <View style={[styles.sectionWrap, isMobile && styles.sectionWrapMobile]}>
         <View style={styles.calculatorCard}>
           <View style={styles.calcHeader}>
-            <Text style={styles.sectionOverline}>ESTIMATE YOUR REWARDS</Text>
-            <Text style={styles.calcTitle}>Interactive Mining Yield Estimator</Text>
+            <Text style={styles.sectionOverline}>{t('home.calcOverline')}</Text>
+            <Text style={styles.calcTitle}>{t('home.calcTitle')}</Text>
             <Text style={styles.calcSubtitle}>
-              Select a package to see projected computing power and automated 1,500-day Bitcoin output calculated at ${btcPriceUsd.toLocaleString()} / BTC.
+              {t('home.calcSubtitle')}
             </Text>
           </View>
 
@@ -507,19 +508,19 @@ export const MineBestHomeScreen: React.FC<MineBestHomeScreenProps> = ({
           {/* Results Summary Box */}
           <View style={[styles.calcResultsBox, isMobile && styles.calcResultsBoxMobile]}>
             <View style={styles.calcStat}>
-              <Text style={styles.calcStatLabel}>Selected Package</Text>
+              <Text style={styles.calcStatLabel}>{t('home.calcPackageLabel')}</Text>
               <Text style={styles.calcStatValueGold}>{selectedPlan.name} (${selectedPlan.tier})</Text>
-              <Text style={styles.calcStatSub}>{selectedPlan.ths} TH/s Hashpower</Text>
+              <Text style={styles.calcStatSub}>{t('home.calcHashpower', { ths: selectedPlan.ths })}</Text>
             </View>
 
             <View style={styles.calcStat}>
-              <Text style={styles.calcStatLabel}>Estimated Daily Yield</Text>
+              <Text style={styles.calcStatLabel}>{t('home.calcDailyYieldLabel')}</Text>
               <Text style={styles.calcStatValueGreen}>₿ {selectedPlan.dailyBtc.toFixed(8)} BTC</Text>
               <Text style={styles.calcStatSub}>≈ ${dailyYieldUsd.toFixed(2)} USDT / day</Text>
             </View>
 
             <View style={styles.calcStat}>
-              <Text style={styles.calcStatLabel}>1,500-Day Total Output</Text>
+              <Text style={styles.calcStatLabel}>{t('home.calcTotalOutputLabel')}</Text>
               <Text style={styles.calcStatValueWhite}>₿ {totalBtc1500.toFixed(6)} BTC</Text>
               <Text style={styles.calcStatSub}>≈ ${totalUsd1500.toFixed(2)} USDT cumulative</Text>
             </View>
@@ -529,7 +530,7 @@ export const MineBestHomeScreen: React.FC<MineBestHomeScreenProps> = ({
                 style={styles.calcCtaBtn}
                 onPress={() => onNavigateTab('packages')}
               >
-                <Text style={styles.calcCtaBtnText}>Activate ${selectedPlan.tier} Plan ➔</Text>
+                <Text style={styles.calcCtaBtnText}>{t('home.calcActivateBtn', { tier: `$${selectedPlan.tier}` })}</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -539,10 +540,10 @@ export const MineBestHomeScreen: React.FC<MineBestHomeScreenProps> = ({
       {/* 6. FREQUENTLY ASKED QUESTIONS */}
       <View style={[styles.sectionWrap, isMobile && styles.sectionWrapMobile]}>
         <View style={styles.sectionHeadingBox}>
-          <Text style={styles.sectionOverline}>FREQUENTLY ASKED QUESTIONS</Text>
-          <Text style={styles.sectionTitle}>Everything You Need to Know</Text>
+          <Text style={styles.sectionOverline}>{t('home.faqOverline')}</Text>
+          <Text style={styles.sectionTitle}>{t('home.faqTitle')}</Text>
           <Text style={styles.sectionSubtitle}>
-            Clear answers to common questions about cloud mining, rewards, and our infrastructure.
+            {t('home.faqSubtitle')}
           </Text>
         </View>
 
@@ -577,9 +578,9 @@ export const MineBestHomeScreen: React.FC<MineBestHomeScreenProps> = ({
 
       {/* 7. BOTTOM CALL TO ACTION BANNER */}
       <View style={styles.bottomCtaBanner}>
-        <Text style={styles.bottomCtaTitle}>Ready to Power Your Bitcoin Future?</Text>
+        <Text style={styles.bottomCtaTitle}>{t('home.bottomCtaTitle')}</Text>
         <Text style={styles.bottomCtaSubtitle}>
-          Join thousands of miners worldwide utilizing MineBest's institutional computing containers with guaranteed 1,500-day automated payouts.
+          {t('home.bottomCtaSubtitle')}
         </Text>
         <View style={styles.bottomCtaButtons}>
           {isLoggedIn ? (
@@ -587,7 +588,7 @@ export const MineBestHomeScreen: React.FC<MineBestHomeScreenProps> = ({
               style={styles.bottomCtaPrimary}
               onPress={() => onNavigateTab('packages')}
             >
-              <Text style={styles.bottomCtaPrimaryText}>⚡ Open Mining Dashboard</Text>
+              <Text style={styles.bottomCtaPrimaryText}>{t('home.bottomCtaDashboard')}</Text>
             </TouchableOpacity>
           ) : (
             <>
@@ -595,13 +596,13 @@ export const MineBestHomeScreen: React.FC<MineBestHomeScreenProps> = ({
                 style={styles.bottomCtaPrimary}
                 onPress={onSignUp}
               >
-                <Text style={styles.bottomCtaPrimaryText}>🚀 Get Started Free</Text>
+                <Text style={styles.bottomCtaPrimaryText}>{t('home.bottomCtaGetStarted')}</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.bottomCtaSecondary}
                 onPress={onSignIn}
               >
-                <Text style={styles.bottomCtaSecondaryText}>⚡ Member Sign In</Text>
+                <Text style={styles.bottomCtaSecondaryText}>{t('home.bottomCtaSignIn')}</Text>
               </TouchableOpacity>
             </>
           )}
@@ -619,41 +620,41 @@ export const MineBestHomeScreen: React.FC<MineBestHomeScreenProps> = ({
               <Text style={styles.footerBrandText}>BTCM // CLOUD MINING</Text>
             </View>
             <Text style={styles.footerDesc}>
-              Institutional-grade Bitcoin cloud mining powered by MineBest data centers. 1,500-day hardware lifecycles with daily automated payouts.
+              {t('home.footerDesc')}
             </Text>
           </View>
 
           <View style={styles.footerLinksGroup}>
-            <Text style={styles.footerGroupTitle}>Platform Navigation</Text>
+            <Text style={styles.footerGroupTitle}>{t('home.footerNavTitle')}</Text>
             <TouchableOpacity onPress={() => onNavigateTab('packages')}>
-              <Text style={styles.footerLink}>⚡ View 1,500-Day Packages</Text>
+              <Text style={styles.footerLink}>{t('home.footerNavPackages')}</Text>
             </TouchableOpacity>
             <TouchableOpacity onPress={() => onNavigateTab('binary')}>
-              <Text style={styles.footerLink}>🌲 Binary Placement Tree</Text>
+              <Text style={styles.footerLink}>{t('home.footerNavBinary')}</Text>
             </TouchableOpacity>
             <TouchableOpacity onPress={() => onNavigateTab('referrals')}>
-              <Text style={styles.footerLink}>👥 Direct Referrals & 10% Bonus</Text>
+              <Text style={styles.footerLink}>{t('home.footerNavReferrals')}</Text>
             </TouchableOpacity>
           </View>
 
           <View style={styles.footerLinksGroup}>
-            <Text style={styles.footerGroupTitle}>Account & Access</Text>
+            <Text style={styles.footerGroupTitle}>{t('home.footerAccountTitle')}</Text>
             <TouchableOpacity onPress={onSignIn}>
-              <Text style={styles.footerLink}>⚡ Member Sign In</Text>
+              <Text style={styles.footerLink}>{t('home.footerAccountSignIn')}</Text>
             </TouchableOpacity>
             <TouchableOpacity onPress={onSignUp}>
-              <Text style={styles.footerLink}>🚀 Create New Account</Text>
+              <Text style={styles.footerLink}>{t('home.footerAccountRegister')}</Text>
             </TouchableOpacity>
             <View style={styles.footerStatusPill}>
               <View style={styles.statusDotGreen} />
-              <Text style={styles.footerStatusText}>All Mining Containers Online</Text>
+              <Text style={styles.footerStatusText}>{t('home.footerContainersOnline')}</Text>
             </View>
           </View>
         </View>
 
         <View style={styles.footerBottomBar}>
           <Text style={styles.footerCopyright}>
-            © 2017 – 2026 MineBest & BTCM Hashrate Core. All rights reserved.
+            {t('home.footerCopyright')}
           </Text>
         </View>
       </View>

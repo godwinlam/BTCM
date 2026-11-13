@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { StarRankIndicator } from './StarRankIndicator';
 
 interface TreeNode {
@@ -33,10 +34,12 @@ export const BinaryTreeVisualizer: React.FC<BinaryTreeVisualizerProps> = ({
   tree,
   onSelectNode,
 }) => {
+  const { t } = useTranslation();
+
   if (!tree) {
     return (
       <View style={styles.emptyContainer}>
-        <Text style={styles.emptyText}>Loading Binary MLM Placement Tree...</Text>
+        <Text style={styles.emptyText}>{t('binary.loadingTree', 'Loading Binary MLM Placement Tree...')}</Text>
       </View>
     );
   }
@@ -54,8 +57,8 @@ export const BinaryTreeVisualizer: React.FC<BinaryTreeVisualizerProps> = ({
           <View style={styles.emptySlotCircle}>
             <Text style={styles.emptySlotCircleText}>{label}</Text>
           </View>
-          <Text style={styles.emptySlotText}>Slot {label}</Text>
-          <Text style={styles.emptySlotSub}>Empty Slot</Text>
+          <Text style={styles.emptySlotText}>{t('binary.slot', 'Slot')} {label}</Text>
+          <Text style={styles.emptySlotSub}>{t('binary.emptySlot', 'Empty Slot')}</Text>
         </View>
       );
     }
@@ -66,10 +69,10 @@ export const BinaryTreeVisualizer: React.FC<BinaryTreeVisualizerProps> = ({
     const isTopActualRoot = isRoot && !node.binaryPosition;
     const isTopLeaf = isRoot && Boolean(node.binaryPosition);
     const nodeRoleTag = isTopActualRoot
-      ? 'ROOT'
+      ? t('binary.rootNode', 'ROOT')
       : node.binaryPosition
-        ? `LEAF ${node.binaryPosition}`
-        : `LEAF ${label}`;
+        ? `${t('binary.leafUser', 'LEAF')} ${node.binaryPosition}`
+        : `${t('binary.leafUser', 'LEAF')} ${label}`;
 
     const nodeRank = Number(node.starRank || 0);
     const isStarQualified = !!(node.isStarQualified || nodeRank >= 1);
@@ -110,7 +113,7 @@ export const BinaryTreeVisualizer: React.FC<BinaryTreeVisualizerProps> = ({
           )}
           {node.pairsCount > 0 && (
             <View style={styles.pairCountBadge}>
-              <Text style={styles.pairCountText}>{node.pairsCount} Pairs</Text>
+              <Text style={styles.pairCountText}>{node.pairsCount} {t('binary.pairs', 'Pairs')}</Text>
             </View>
           )}
         </View>
@@ -129,7 +132,7 @@ export const BinaryTreeVisualizer: React.FC<BinaryTreeVisualizerProps> = ({
         {isStarQualified && (
           <View style={[styles.starStatusBanner, isTwoStar && styles.starStatusBannerRank2, isThreeStar && styles.starStatusBannerRank3, isFourStar && styles.starStatusBannerRank4, isFiveStar && styles.starStatusBannerRank5, isSixStar && styles.starStatusBannerRank6, isSevenStar && styles.starStatusBannerRank7, isCrown && styles.starStatusBannerCrown, isTwoCrown && styles.starStatusBannerTwoCrown, isThreeCrown && styles.starStatusBannerThreeCrown]}>
             <Text style={[styles.starStatusBannerText, isTwoStar && styles.starStatusBannerTextRank2, isThreeStar && styles.starStatusBannerTextRank3, isFourStar && styles.starStatusBannerTextRank4, isFiveStar && styles.starStatusBannerTextRank5, isSixStar && styles.starStatusBannerTextRank6, isSevenStar && styles.starStatusBannerTextRank7, isCrown && styles.starStatusBannerTextCrown, isTwoCrown && styles.starStatusBannerTextTwoCrown, isThreeCrown && styles.starStatusBannerTextThreeCrown]}>
-              {isThreeCrown ? '3-CROWN: 18 Pairs/Day (23:59)' : isTwoCrown ? '2-CROWN: 15 Pairs/Day (23:59)' : isCrown ? 'CROWN: 13 Pairs/Day (23:59)' : isSevenStar ? '7-STAR: 11 Pairs/Day (23:59)' : isSixStar ? '6-STAR: 9 Pairs/Day (23:59)' : isFiveStar ? '5-STAR: 7 Pairs/Day (23:59)' : isFourStar ? '4-STAR: 6 Pairs/Day (23:59)' : isThreeStar ? '3-STAR: 4 Pairs/Day (23:59)' : isTwoStar ? '2-STAR: 2 Pairs/Day (23:59)' : '1-STAR: 1 Pair/Day (23:59)'}
+              {isThreeCrown ? `3-CROWN: 18 ${t('binary.timesPerDay', 'Pairs/Day')} (23:59)` : isTwoCrown ? `2-CROWN: 15 ${t('binary.timesPerDay', 'Pairs/Day')} (23:59)` : isCrown ? `CROWN: 13 ${t('binary.timesPerDay', 'Pairs/Day')} (23:59)` : isSevenStar ? `7-STAR: 11 ${t('binary.timesPerDay', 'Pairs/Day')} (23:59)` : isSixStar ? `6-STAR: 9 ${t('binary.timesPerDay', 'Pairs/Day')} (23:59)` : isFiveStar ? `5-STAR: 7 ${t('binary.timesPerDay', 'Pairs/Day')} (23:59)` : isFourStar ? `4-STAR: 6 ${t('binary.timesPerDay', 'Pairs/Day')} (23:59)` : isThreeStar ? `3-STAR: 4 ${t('binary.timesPerDay', 'Pairs/Day')} (23:59)` : isTwoStar ? `2-STAR: 2 ${t('binary.timesPerDay', 'Pairs/Day')} (23:59)` : `1-STAR: 1 ${t('binary.timePerDay', 'Pair/Day')} (23:59)`}
             </Text>
           </View>
         )}
@@ -140,28 +143,28 @@ export const BinaryTreeVisualizer: React.FC<BinaryTreeVisualizerProps> = ({
           </Text>
           <View style={[styles.qualBadge, isQualified ? styles.qualBadgeActive : styles.qualBadgeInactive]}>
             <Text style={[styles.qualBadgeText, isQualified ? styles.qualBadgeTextActive : styles.qualBadgeTextInactive]}>
-              {isQualified ? '✓ QUALIFIED' : 'UNQUALIFIED'}
+              {isQualified ? `✓ ${t('binary.qualified', 'QUALIFIED')}` : t('binary.unqualified', 'UNQUALIFIED')}
             </Text>
           </View>
         </View>
 
         <View style={styles.volumeSplit}>
           <View style={[styles.legBox, styles.legBoxLeft]}>
-            <Text style={styles.legLabel}>LEG A</Text>
+            <Text style={styles.legLabel}>{t('binary.legA', 'LEG A')}</Text>
             <Text style={styles.legCurrent}>{node.legACurrent || 0}</Text>
-            <Text style={styles.legTotal}>Tot: {node.legATotal || 0}</Text>
+            <Text style={styles.legTotal}>{t('binary.tot', 'Tot')}: {node.legATotal || 0}</Text>
           </View>
           <View style={[styles.legBox, styles.legBoxRight]}>
-            <Text style={styles.legLabel}>LEG B</Text>
+            <Text style={styles.legLabel}>{t('binary.legB', 'LEG B')}</Text>
             <Text style={styles.legCurrent}>{node.legBCurrent || 0}</Text>
-            <Text style={styles.legTotal}>Tot: {node.legBTotal || 0}</Text>
+            <Text style={styles.legTotal}>{t('binary.tot', 'Tot')}: {node.legBTotal || 0}</Text>
           </View>
         </View>
 
         {isPairedReady && (
           <View style={[styles.pairReadyBanner, !isQualified && styles.pairUnqualifiedBanner]}>
             <Text style={[styles.pairReadyText, !isQualified && styles.pairUnqualifiedText]}>
-              {isQualified ? '⚡ Ready for 1000 Pairing!' : '⚠️ 1000 Paired (Buy Service to Claim 100 USDT)'}
+              {isQualified ? t('binary.readyForPairing', '⚡ Ready for 1000 Pairing!') : t('binary.pairedBuyService', '⚠️ 1000 Paired (Buy Service to Claim 100 USDT)')}
             </Text>
           </View>
         )}
@@ -169,7 +172,7 @@ export const BinaryTreeVisualizer: React.FC<BinaryTreeVisualizerProps> = ({
         {!isTopActualRoot && (
           <View style={styles.drillDownPill}>
             <Text style={styles.drillDownPillText}>
-              {isRoot ? `🔍 Focused Leaf ${node.binaryPosition || 'A'} Slots` : '🎯 Tap: Focus A/B Slots'}
+              {isRoot ? `${t('binary.focusedLeaf', '🔍 Focused Leaf')} ${node.binaryPosition || 'A'} ${t('binary.slots', 'Slots')}` : t('binary.tapToFocus', '🎯 Tap: Focus A/B Slots')}
             </Text>
           </View>
         )}

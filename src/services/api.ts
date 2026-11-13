@@ -39,11 +39,21 @@ const getApiBaseUrl = () => {
 
 class ApiService {
   private token: string | null = null;
+  private currentLanguage: string = 'en';
 
   constructor() {
     if (Platform.OS === 'web' && typeof window !== 'undefined' && window.localStorage) {
       this.token = window.localStorage.getItem('btcm_token');
+      this.currentLanguage = window.localStorage.getItem('@btcm_language') || 'en';
     }
+  }
+
+  setLanguage(lang: string) {
+    this.currentLanguage = lang;
+  }
+
+  getLanguage(): string {
+    return this.currentLanguage;
   }
 
   setToken(token: string | null) {
@@ -68,6 +78,7 @@ class ApiService {
   private async request(endpoint: string, options: RequestInit = {}) {
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
+      'Accept-Language': this.currentLanguage,
       ...(options.headers as Record<string, string>),
     };
 
@@ -133,6 +144,7 @@ class ApiService {
       positionParent?: string;
       positionUsername?: string;
       placementLeg?: 'A' | 'B';
+      preferredLanguage?: string;
     },
     options?: { keepCurrentSession?: boolean }
   ) {
@@ -170,6 +182,7 @@ class ApiService {
     usdtErc20PayoutAddress?: string;
     usdcPayoutAddress?: string;
     defaultPlacementLeg?: string;
+    preferredLanguage?: string;
     address?: string;
     bio?: string;
     country?: string;
@@ -179,6 +192,14 @@ class ApiService {
     return this.request('/auth/profile', {
       method: 'PUT',
       body: JSON.stringify(formData),
+    });
+  }
+
+  async updateUserLanguage(language: string) {
+    this.setLanguage(language);
+    return this.request('/auth/language', {
+      method: 'PUT',
+      body: JSON.stringify({ language }),
     });
   }
 

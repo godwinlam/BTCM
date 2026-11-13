@@ -7,14 +7,18 @@ import {
   Platform,
 } from 'react-native';
 import { useRouter } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { api } from '@/services/api';
 import { MineBestHomeScreen } from '@/components/MineBestHomeScreen';
 import { StarRankIndicator } from '@/components/StarRankIndicator';
+import { LanguageSelector } from '@/components/LanguageSelector';
 import { useIsMobile } from '@/hooks/useIsMobile';
+import { setAppLanguage } from '@/i18n';
 
 export default function MainHomePage() {
   const router = useRouter();
   const isMobile = useIsMobile();
+  const { t } = useTranslation();
 
   const [user, setUser] = useState<any>(null);
   const [loadingUser, setLoadingUser] = useState(true);
@@ -46,6 +50,9 @@ export default function MainHomePage() {
         const res = await api.getMe();
         if (res?.user) {
           setUser(res.user);
+          if (res.user.preferredLanguage) {
+            setAppLanguage(res.user.preferredLanguage).catch(() => {});
+          }
         } else {
           api.setToken(null);
           setUser(null);
@@ -79,31 +86,34 @@ export default function MainHomePage() {
                   <Text style={styles.btcLogoChar}>₿</Text>
                 </View>
                 <View>
-                  <Text style={styles.brandTitleMobile}>BTCM // CLOUD MINING</Text>
-                  <Text style={styles.brandSubtitleMobile}>MineBest Industrial Infrastructure</Text>
+                  <Text style={styles.brandTitleMobile}>{t('common.appName')}</Text>
+                  <Text style={styles.brandSubtitleMobile}>{t('common.industrialInfra')}</Text>
                 </View>
               </View>
 
-              {user ? (
-                <TouchableOpacity style={styles.mobileSignOutBtn} onPress={handleLogout}>
-                  <Text style={styles.mobileSignOutBtnText}>Sign Out</Text>
-                </TouchableOpacity>
-              ) : (
-                <View style={{ flexDirection: 'row', gap: 6 }}>
-                  <TouchableOpacity
-                    style={styles.mobileSignInBtn}
-                    onPress={() => router.push('/login' as any)}
-                  >
-                    <Text style={styles.mobileSignInBtnText}>Sign In</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                <LanguageSelector compact />
+                {user ? (
+                  <TouchableOpacity style={styles.mobileSignOutBtn} onPress={handleLogout}>
+                    <Text style={styles.mobileSignOutBtnText}>{t('common.logout')}</Text>
                   </TouchableOpacity>
-                  <TouchableOpacity
-                    style={styles.mobileSignUpBtn}
-                    onPress={() => router.push('/register' as any)}
-                  >
-                    <Text style={styles.mobileSignUpBtnText}>Sign Up</Text>
-                  </TouchableOpacity>
-                </View>
-              )}
+                ) : (
+                  <View style={{ flexDirection: 'row', gap: 6 }}>
+                    <TouchableOpacity
+                      style={styles.mobileSignInBtn}
+                      onPress={() => router.push('/login' as any)}
+                    >
+                      <Text style={styles.mobileSignInBtnText}>{t('common.login')}</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={styles.mobileSignUpBtn}
+                      onPress={() => router.push('/register' as any)}
+                    >
+                      <Text style={styles.mobileSignUpBtnText}>{t('common.register')}</Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
+              </View>
             </View>
 
             {/* Row 2: Live BTC Price Ticker & User Profile Badge */}
@@ -140,7 +150,7 @@ export default function MainHomePage() {
                 style={styles.mobileOpenDashboardBtn}
                 onPress={() => router.push('/dashboard' as any)}
               >
-                <Text style={styles.mobileOpenDashboardBtnText}>🚀 Open Mining Dashboard ➔</Text>
+                <Text style={styles.mobileOpenDashboardBtnText}>🚀 {t('common.dashboard')} ➔</Text>
               </TouchableOpacity>
             )}
           </View>
@@ -153,13 +163,15 @@ export default function MainHomePage() {
                 <Text style={styles.btcLogoChar}>₿</Text>
               </View>
               <View>
-                <Text style={styles.brandTitle}>BTCM // CLOUD MINING</Text>
-                <Text style={styles.brandSubtitle}>MineBest Industrial Infrastructure</Text>
+                <Text style={styles.brandTitle}>{t('common.appName')}</Text>
+                <Text style={styles.brandSubtitle}>{t('common.industrialInfra')}</Text>
               </View>
             </View>
 
             {/* Right Header Navigation & Actions */}
             <View style={styles.headerRightActions}>
+              <LanguageSelector />
+
               {/* Live Bitcoin Market Ticker */}
               <View style={styles.marketPill}>
                 <View style={styles.liveDot} />
@@ -191,11 +203,11 @@ export default function MainHomePage() {
                     style={styles.openDashboardBtn}
                     onPress={() => router.push('/dashboard' as any)}
                   >
-                    <Text style={styles.openDashboardBtnText}>🚀 Open Dashboard ➔</Text>
+                    <Text style={styles.openDashboardBtnText}>🚀 {t('common.dashboard')} ➔</Text>
                   </TouchableOpacity>
 
                   <TouchableOpacity style={styles.signOutBtn} onPress={handleLogout}>
-                    <Text style={styles.signOutBtnText}>Sign Out</Text>
+                    <Text style={styles.signOutBtnText}>{t('common.logout')}</Text>
                   </TouchableOpacity>
                 </View>
               ) : (
@@ -204,14 +216,14 @@ export default function MainHomePage() {
                     style={styles.signInBtn}
                     onPress={() => router.push('/login' as any)}
                   >
-                    <Text style={styles.signInBtnText}>⚡ Sign In</Text>
+                    <Text style={styles.signInBtnText}>⚡ {t('common.login')}</Text>
                   </TouchableOpacity>
 
                   <TouchableOpacity
                     style={styles.signUpBtn}
                     onPress={() => router.push('/register' as any)}
                   >
-                    <Text style={styles.signUpBtnText}>🚀 Sign Up</Text>
+                    <Text style={styles.signUpBtnText}>🚀 {t('common.register')}</Text>
                   </TouchableOpacity>
                 </View>
               )}

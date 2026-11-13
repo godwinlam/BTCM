@@ -12,8 +12,10 @@ import {
   Modal,
 } from 'react-native';
 import { useRouter } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { api } from '../services/api';
 import { StarRankIndicator } from '../components/StarRankIndicator';
+import { LanguageSelector } from '../components/LanguageSelector';
 import { useIsMobile } from '../hooks/useIsMobile';
 
 type TradeAction = 'BUY' | 'SELL';
@@ -39,6 +41,7 @@ interface TradeHistoryItem {
 export default function TradeScreen() {
   const router = useRouter();
   const isMobile = useIsMobile();
+  const { t } = useTranslation();
 
   // Active Trade Mode
   const [action, setAction] = useState<TradeAction>('BUY');
@@ -210,32 +213,32 @@ export default function TradeScreen() {
   // Pre-confirmation Check
   const handleInitiateTrade = () => {
     if (!user) {
-      showToast('Please sign in to execute live Bitcoin trades', 'error');
+      showToast(t('trade.pleaseSignIn'), 'error');
       router.push('/login' as any);
       return;
     }
 
     if (numInput <= 0 || isNaN(numInput)) {
-      showToast('Please enter a valid amount to trade', 'error');
+      showToast(t('trade.enterValidAmount'), 'error');
       return;
     }
 
     if (action === 'BUY') {
       if (numInput < 10) {
-        showToast('Minimum purchase amount is 10 USDT', 'error');
+        showToast(t('trade.minPurchase10'), 'error');
         return;
       }
       if (!hasSufficientBalance) {
-        showToast(`Insufficient USDT balance. You have $${availableUsdt.toFixed(2)} USDT`, 'error');
+        showToast(t('trade.insufficientUsdt', { amount: availableUsdt.toFixed(2) }), 'error');
         return;
       }
     } else {
       if (numInput < 0.00005) {
-        showToast('Minimum sell amount is 0.00005 BTC', 'error');
+        showToast(t('trade.minSellBtc'), 'error');
         return;
       }
       if (!hasSufficientBalance) {
-        showToast(`Insufficient BTC balance. You have ₿${availableBtc.toFixed(8)} BTC`, 'error');
+        showToast(t('trade.insufficientBtc', { amount: availableBtc.toFixed(8) }), 'error');
         return;
       }
     }
@@ -250,7 +253,7 @@ export default function TradeScreen() {
       const res = await api.executeTrade(action, numInput);
 
       if (res && res.success) {
-        showToast(res.message || 'Trade executed successfully!');
+        showToast(t('trade.tradeSuccess'));
         if (res.wallet) {
           setUser((prev: any) => ({
             ...prev,
@@ -268,10 +271,10 @@ export default function TradeScreen() {
         loadTradeHistory();
         loadUserData();
       } else {
-        showToast(res.message || 'Trade execution failed', 'error');
+        showToast(res.message || t('trade.tradeFailed'), 'error');
       }
     } catch (err: any) {
-      showToast(err.message || 'Trade execution failed', 'error');
+      showToast(err.message || t('trade.tradeFailed'), 'error');
     } finally {
       setSubmitting(false);
     }
@@ -297,17 +300,18 @@ export default function TradeScreen() {
             {/* Row 1: Back to Dashboard & Brand */}
             <View style={styles.mobileNavRow1}>
               <TouchableOpacity onPress={() => router.replace('/dashboard' as any)} style={styles.backBtnMobile}>
-                <Text style={styles.backBtnText}>← Dashboard</Text>
+                <Text style={styles.backBtnText}>← {t('common.dashboard')}</Text>
               </TouchableOpacity>
               <View style={styles.brandRowMobile}>
                 <View style={styles.btcIconBadgeSmall}>
                   <Text style={styles.btcIconBadgeTextSmall}>₿</Text>
                 </View>
                 <View>
-                  <Text style={styles.brandTitleMobile}>BTCM // TRADING</Text>
-                  <Text style={styles.brandSubtitleMobile}>Real-Time Spot Desk</Text>
+                  <Text style={styles.brandTitleMobile}>BTCM // {t('common.trade').toUpperCase()}</Text>
+                  <Text style={styles.brandSubtitleMobile}>{t('trade.title')}</Text>
                 </View>
               </View>
+              <LanguageSelector compact />
             </View>
 
             {/* Row 2: Live BTC Price & Profile */}
@@ -344,20 +348,21 @@ export default function TradeScreen() {
           <>
             <View style={styles.navLeft}>
               <TouchableOpacity onPress={() => router.replace('/dashboard' as any)} style={styles.backBtn}>
-                <Text style={styles.backBtnText}>← Dashboard</Text>
+                <Text style={styles.backBtnText}>← {t('common.dashboard')}</Text>
               </TouchableOpacity>
               <View style={styles.brandRow}>
                 <View style={styles.btcIconBadge}>
                   <Text style={styles.btcIconBadgeText}>₿</Text>
                 </View>
                 <View>
-                  <Text style={styles.brandTitle}>BTCM // BITCOIN TRADING DESK</Text>
-                  <Text style={styles.brandSubtitle}>Instant BUY / SELL BTC at Real-Time Institutional Spot Rates</Text>
+                  <Text style={styles.brandTitle}>BTCM // {t('trade.title').toUpperCase()}</Text>
+                  <Text style={styles.brandSubtitle}>{t('trade.subtitle')}</Text>
                 </View>
               </View>
             </View>
 
             <View style={styles.navRight}>
+              <LanguageSelector compact />
               <View style={styles.livePricePill}>
                 <View style={styles.liveDot} />
                 <Text style={styles.livePriceText}>BTC/USDT ${btcPrice.toLocaleString()}</Text>
@@ -406,38 +411,38 @@ export default function TradeScreen() {
       {loadingUser ? (
         <View style={styles.loadingBox}>
           <ActivityIndicator size="large" color="#F7931A" />
-          <Text style={styles.loadingText}>Syncing Bitcoin Spot Rates & Balances...</Text>
+          <Text style={styles.loadingText}>{t('trade.syncingData')}</Text>
         </View>
       ) : (
         <ScrollView style={styles.scrollArea} contentContainerStyle={styles.scrollContent}>
           {/* Market Telemetry Ticker Strip */}
           <View style={[styles.tickerStrip, isMobile && styles.tickerStripMobile]}>
             <View style={styles.tickerItem}>
-              <Text style={styles.tickerLabel}>SPOT INDEX</Text>
+              <Text style={styles.tickerLabel}>{t('trade.spotIndex')}</Text>
               <Text style={styles.tickerValueBtc}>${btcPrice.toLocaleString()}</Text>
             </View>
             <View style={styles.tickerDivider} />
             <View style={styles.tickerItem}>
-              <Text style={styles.tickerLabel}>24H CHANGE</Text>
+              <Text style={styles.tickerLabel}>{t('trade.change24h')}</Text>
               <Text style={[styles.tickerValue, { color: change24h >= 0 ? '#10B981' : '#F43F5E' }]}>
                 {change24h >= 0 ? `+${change24h}%` : `${change24h}%`}
               </Text>
             </View>
             <View style={styles.tickerDivider} />
             <View style={styles.tickerItem}>
-              <Text style={styles.tickerLabel}>24H HIGH</Text>
+              <Text style={styles.tickerLabel}>{t('trade.high24h')}</Text>
               <Text style={styles.tickerValue}>${high24h.toLocaleString()}</Text>
             </View>
             <View style={styles.tickerDivider} />
             <View style={styles.tickerItem}>
-              <Text style={styles.tickerLabel}>24H LOW</Text>
+              <Text style={styles.tickerLabel}>{t('trade.low24h')}</Text>
               <Text style={styles.tickerValue}>${low24h.toLocaleString()}</Text>
             </View>
             <View style={styles.tickerDivider} />
             <View style={styles.tickerItem}>
-              <Text style={styles.tickerLabel}>TRADING FEE</Text>
+              <Text style={styles.tickerLabel}>{t('trade.tradingFee')}</Text>
               <View style={styles.feePill}>
-                <Text style={styles.feePillText}>{feePercentage.toFixed(2)}% PLATFORM FEE</Text>
+                <Text style={styles.feePillText}>{t('trade.platformFee', { percent: feePercentage.toFixed(2) })}</Text>
               </View>
             </View>
             <TouchableOpacity
@@ -448,7 +453,7 @@ export default function TradeScreen() {
               {loadingPrice ? (
                 <ActivityIndicator size="small" color="#F7931A" />
               ) : (
-                <Text style={styles.refreshBtnText}>🔄 Refresh Rate</Text>
+                <Text style={styles.refreshBtnText}>🔄 {t('trade.refreshRate')}</Text>
               )}
             </TouchableOpacity>
           </View>
@@ -462,14 +467,14 @@ export default function TradeScreen() {
                   <Text style={styles.coinIconText}>₮</Text>
                 </View>
                 <View>
-                  <Text style={styles.coinTitle}>AVAILABLE USDT</Text>
-                  <Text style={styles.coinSubtitle}>Cash / Commission Capital</Text>
+                  <Text style={styles.coinTitle}>{t('trade.availableUsdt')}</Text>
+                  <Text style={styles.coinSubtitle}>{t('trade.usdtSub')}</Text>
                 </View>
               </View>
               <Text style={styles.balanceAmountGreen}>
                 ${availableUsdt.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USDT
               </Text>
-              <Text style={styles.balanceSubtext}>Use to instantly Buy Bitcoin at Spot Price</Text>
+              <Text style={styles.balanceSubtext}>{t('trade.subtitle')}</Text>
             </View>
 
             {/* BTC Balance Card */}
@@ -479,15 +484,15 @@ export default function TradeScreen() {
                   <Text style={styles.coinIconText}>₿</Text>
                 </View>
                 <View>
-                  <Text style={styles.coinTitle}>AVAILABLE BITCOIN</Text>
-                  <Text style={styles.coinSubtitle}>1,500-Day Cloud Mining Yields</Text>
+                  <Text style={styles.coinTitle}>{t('trade.availableBtc')}</Text>
+                  <Text style={styles.coinSubtitle}>{t('trade.btcSub')}</Text>
                 </View>
               </View>
               <Text style={styles.balanceAmountOrange}>
                 ₿ {availableBtc.toFixed(8)} BTC
               </Text>
               <Text style={styles.balanceSubtext}>
-                ≈ ${(availableBtc * btcPrice).toFixed(2)} USDT at live market rate
+                ≈ ${(availableBtc * btcPrice).toFixed(2)} USDT
               </Text>
             </View>
           </View>
@@ -509,7 +514,7 @@ export default function TradeScreen() {
                     action === 'BUY' && styles.tradeModeBtnTextActive,
                   ]}
                 >
-                  🟢 BUY BITCOIN (USDT → BTC)
+                  {t('trade.buyTab')}
                 </Text>
               </TouchableOpacity>
 
@@ -526,7 +531,7 @@ export default function TradeScreen() {
                     action === 'SELL' && styles.tradeModeBtnTextActive,
                   ]}
                 >
-                  🔴 SELL BITCOIN (BTC → USDT)
+                  {t('trade.sellTab')}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -537,14 +542,14 @@ export default function TradeScreen() {
               <View style={styles.inputGroup}>
                 <View style={styles.inputLabelRow}>
                   <Text style={styles.inputLabel}>
-                    {action === 'BUY' ? 'YOU SPEND (USDT)' : 'YOU SELL (BTC)'}
+                    {action === 'BUY' ? t('trade.youSpend') : t('trade.youSell')}
                   </Text>
                   <TouchableOpacity
                     onPress={() => handleSelectPercent(1)}
                     style={styles.maxBtn}
                   >
                     <Text style={styles.maxBtnText}>
-                      MAX: {action === 'BUY' ? `$${availableUsdt.toFixed(2)}` : `₿${availableBtc.toFixed(8)}`}
+                      {t('trade.max')}: {action === 'BUY' ? `$${availableUsdt.toFixed(2)}` : `₿${availableBtc.toFixed(8)}`}
                     </Text>
                   </TouchableOpacity>
                 </View>
@@ -552,7 +557,7 @@ export default function TradeScreen() {
                 <View style={styles.inputWrapper}>
                   <TextInput
                     style={styles.textInput}
-                    placeholder={action === 'BUY' ? 'Min 10 USDT' : 'Min 0.00005 BTC'}
+                    placeholder={action === 'BUY' ? t('trade.minUsdt') : t('trade.minBtc')}
                     placeholderTextColor="#64748B"
                     keyboardType="numeric"
                     value={inputAmount}
@@ -585,7 +590,7 @@ export default function TradeScreen() {
                           percentSelected === pct && styles.percentBtnTextActive,
                         ]}
                       >
-                        {pct === 1.0 ? 'MAX' : `${pct * 100}%`}
+                        {pct === 1.0 ? t('trade.maxLabel') : `${pct * 100}%`}
                       </Text>
                     </TouchableOpacity>
                   ))}
@@ -604,7 +609,7 @@ export default function TradeScreen() {
               {/* Estimated Output Result */}
               <View style={styles.outputGroup}>
                 <Text style={styles.outputLabel}>
-                  {action === 'BUY' ? 'YOU RECEIVE (ESTIMATED BITCOIN)' : 'YOU RECEIVE (ESTIMATED USDT)'}
+                  {action === 'BUY' ? t('trade.youReceiveBtc') : t('trade.youReceiveUsdt')}
                 </Text>
                 <View style={styles.outputWrapper}>
                   <Text style={action === 'BUY' ? styles.outputValueOrange : styles.outputValueGreen}>
@@ -623,41 +628,41 @@ export default function TradeScreen() {
               {/* Trade Parameter Summary Box */}
               <View style={styles.tradeParamBox}>
                 <View style={styles.paramRow}>
-                  <Text style={styles.paramLabel}>Execution Spot Price</Text>
+                  <Text style={styles.paramLabel}>{t('trade.executionSpotPrice')}</Text>
                   <Text style={styles.paramValue}>1 BTC = ${btcPrice.toLocaleString()} USDT</Text>
                 </View>
                 <View style={styles.paramRow}>
-                  <Text style={styles.paramLabel}>Platform Trading Fee (2%)</Text>
+                  <Text style={styles.paramLabel}>{t('trade.platformFeeParam')}</Text>
                   <Text style={styles.paramValueAmber}>
-                    {feePercentage.toFixed(2)}% ({numInput > 0 ? `$${feeUsdt.toFixed(2)} USDT` : 'Standard'})
+                    {feePercentage.toFixed(2)}% ({numInput > 0 ? `$${feeUsdt.toFixed(2)} USDT` : t('trade.standardFee')})
                   </Text>
                 </View>
                 {action === 'BUY' && numInput > 0 && (
                   <View style={styles.paramRow}>
-                    <Text style={styles.paramLabel}>Net Capital Converted</Text>
+                    <Text style={styles.paramLabel}>{t('trade.netCapitalConverted')}</Text>
                     <Text style={styles.paramValue}>${netUsdt.toFixed(2)} USDT</Text>
                   </View>
                 )}
                 <View style={styles.paramRow}>
-                  <Text style={styles.paramLabel}>Slippage Tolerance</Text>
-                  <Text style={styles.paramValue}>0.00% (Guaranteed Exec)</Text>
+                  <Text style={styles.paramLabel}>{t('trade.slippageTolerance')}</Text>
+                  <Text style={styles.paramValue}>{t('trade.guaranteedExec')}</Text>
                 </View>
                 <View style={styles.paramRow}>
-                  <Text style={styles.paramLabel}>Settlement Speed</Text>
-                  <Text style={styles.paramValue}>⚡ Instant On-Ledger</Text>
+                  <Text style={styles.paramLabel}>{t('trade.settlementSpeed')}</Text>
+                  <Text style={styles.paramValue}>{t('trade.instantOnLedger')}</Text>
                 </View>
 
                 {numInput > 0 && (
                   <View style={styles.balancePreviewBox}>
-                    <Text style={styles.balancePreviewTitle}>ESTIMATED POST-TRADE BALANCES:</Text>
+                    <Text style={styles.balancePreviewTitle}>{t('trade.estimatedPostTradeBalances')}</Text>
                     <View style={styles.paramRow}>
-                      <Text style={styles.paramLabel}>New USDT Balance:</Text>
+                      <Text style={styles.paramLabel}>{t('trade.newUsdtBalance')}</Text>
                       <Text style={styles.paramValue}>
                         ${(action === 'BUY' ? Math.max(0, availableUsdt - numInput) : availableUsdt + calculatedOutput).toFixed(2)} USDT
                       </Text>
                     </View>
                     <View style={styles.paramRow}>
-                      <Text style={styles.paramLabel}>New BTC Balance:</Text>
+                      <Text style={styles.paramLabel}>{t('trade.newBtcBalance')}</Text>
                       <Text style={styles.paramValueOrange}>
                         ₿ {(action === 'BUY' ? availableBtc + calculatedOutput : Math.max(0, availableBtc - numInput)).toFixed(8)} BTC
                       </Text>
@@ -679,13 +684,13 @@ export default function TradeScreen() {
                 <Text style={styles.submitBtnText}>
                   {!minRequirementMet && numInput > 0
                     ? action === 'BUY'
-                      ? 'MINIMUM 10 USDT REQUIRED'
-                      : 'MINIMUM 0.00005 BTC REQUIRED'
+                      ? t('trade.min10UsdtRequired')
+                      : t('trade.minBtcRequired')
                     : !hasSufficientBalance
-                      ? 'INSUFFICIENT BALANCE'
+                      ? t('trade.insufficientBalance')
                       : action === 'BUY'
-                        ? `⚡ INSTANT BUY ₿ ${calculatedOutput.toFixed(8)} BTC`
-                        : `⚡ INSTANT SELL FOR $${calculatedOutput.toFixed(2)} USDT`}
+                        ? t('trade.instantBuyBtn', { amount: calculatedOutput.toFixed(8) })
+                        : t('trade.instantSellBtn', { amount: calculatedOutput.toFixed(2) })}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -695,8 +700,8 @@ export default function TradeScreen() {
           <View style={styles.historySection}>
             <View style={styles.historyHeader}>
               <View>
-                <Text style={styles.historyTitle}>📜 Recent Buy & Sell Orders</Text>
-                <Text style={styles.historySubtitle}>On-chain synchronized instant spot settlements</Text>
+                <Text style={styles.historyTitle}>📜 {t('trade.historyTitle')}</Text>
+                <Text style={styles.historySubtitle}>{t('trade.subtitle')}</Text>
               </View>
 
               <View style={styles.filterRow}>
@@ -707,7 +712,7 @@ export default function TradeScreen() {
                     onPress={() => setTradeFilter(flt)}
                   >
                     <Text style={[styles.filterBtnText, tradeFilter === flt && styles.filterBtnTextActive]}>
-                      {flt}
+                      {flt === 'ALL' ? t('trade.filters.all') : flt === 'BUY' ? t('trade.filters.buy') : t('trade.filters.sell')}
                     </Text>
                   </TouchableOpacity>
                 ))}
@@ -717,14 +722,14 @@ export default function TradeScreen() {
             {loadingTrades ? (
               <View style={styles.historyLoadingBox}>
                 <ActivityIndicator size="small" color="#F7931A" />
-                <Text style={styles.historyLoadingText}>Loading trading ledger...</Text>
+                <Text style={styles.historyLoadingText}>{t('trade.loadingLedger')}</Text>
               </View>
             ) : filteredTrades.length === 0 ? (
               <View style={styles.emptyHistoryBox}>
                 <Text style={styles.emptyHistoryEmoji}>🪙</Text>
-                <Text style={styles.emptyHistoryTitle}>No Trade Orders Found</Text>
+                <Text style={styles.emptyHistoryTitle}>{t('trade.noOrdersFound')}</Text>
                 <Text style={styles.emptyHistorySub}>
-                  Execute your first Buy or Sell order above to acquire Bitcoin or liquidate mining earnings.
+                  {t('trade.emptyOrdersSub')}
                 </Text>
               </View>
             ) : (
@@ -741,11 +746,11 @@ export default function TradeScreen() {
                       <View style={styles.orderMobileTopRow}>
                         <View style={[styles.actionTag, isBuy ? styles.actionTagBuy : styles.actionTagSell]}>
                           <Text style={[styles.actionTagText, isBuy ? styles.actionTagTextBuy : styles.actionTagTextSell]}>
-                            {isBuy ? 'BUY BTC' : 'SELL BTC'}
+                            {isBuy ? t('trade.buyBtcTag') : t('trade.sellBtcTag')}
                           </Text>
                         </View>
                         <View style={styles.statusCompletedPill}>
-                          <Text style={styles.statusCompletedText}>COMPLETED</Text>
+                          <Text style={styles.statusCompletedText}>{t('trade.statusCompleted')}</Text>
                         </View>
                       </View>
 
@@ -773,7 +778,7 @@ export default function TradeScreen() {
                       <View style={styles.rowLeft}>
                         <View style={[styles.actionTag, isBuy ? styles.actionTagBuy : styles.actionTagSell]}>
                           <Text style={[styles.actionTagText, isBuy ? styles.actionTagTextBuy : styles.actionTagTextSell]}>
-                            {isBuy ? 'BUY BTC' : 'SELL BTC'}
+                            {isBuy ? t('trade.buyBtcTag') : t('trade.sellBtcTag')}
                           </Text>
                         </View>
                         <View style={{ flex: 1, minWidth: 0 }}>
@@ -790,7 +795,7 @@ export default function TradeScreen() {
                           <Text style={styles.rowRate}>@ ${meta.executionPrice.toLocaleString()}/BTC</Text>
                         )}
                         <View style={styles.statusCompletedPill}>
-                          <Text style={styles.statusCompletedText}>COMPLETED</Text>
+                          <Text style={styles.statusCompletedText}>{t('trade.statusCompleted')}</Text>
                         </View>
                       </View>
                     </View>
@@ -813,54 +818,54 @@ export default function TradeScreen() {
           <View style={[styles.modalCard, isMobile && styles.modalCardMobile]}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>
-                {action === 'BUY' ? 'Confirm Instant Bitcoin Purchase' : 'Confirm Instant Bitcoin Sale'}
+                {action === 'BUY' ? t('trade.modalBuyTitle') : t('trade.modalSellTitle')}
               </Text>
-              <Text style={styles.modalSubtitle}>Zero Slippage Institutional Spot Trade</Text>
+              <Text style={styles.modalSubtitle}>{t('trade.modalSubtitle')}</Text>
             </View>
 
             <View style={styles.modalBody}>
               <View style={styles.modalSummaryBox}>
                 <View style={styles.modalSummaryRow}>
-                  <Text style={styles.modalLabel}>Action:</Text>
+                  <Text style={styles.modalLabel}>{t('trade.modalAction')}</Text>
                   <Text style={[styles.modalValueBold, { color: action === 'BUY' ? '#10B981' : '#F43F5E' }]}>
-                    {action === 'BUY' ? 'BUY BITCOIN' : 'SELL BITCOIN'}
+                    {action === 'BUY' ? t('trade.modalBuyAction') : t('trade.modalSellAction')}
                   </Text>
                 </View>
 
                 <View style={styles.modalSummaryRow}>
-                  <Text style={styles.modalLabel}>You Spend:</Text>
+                  <Text style={styles.modalLabel}>{t('trade.modalYouSpend')}</Text>
                   <Text style={styles.modalValue}>
                     {action === 'BUY' ? `$${numInput.toFixed(2)} USDT` : `₿ ${numInput.toFixed(8)} BTC`}
                   </Text>
                 </View>
 
                 <View style={styles.modalSummaryRow}>
-                  <Text style={styles.modalLabel}>You Receive:</Text>
+                  <Text style={styles.modalLabel}>{t('trade.modalYouReceive')}</Text>
                   <Text style={[styles.modalValueBold, { color: action === 'BUY' ? '#F7931A' : '#10B981' }]}>
                     {action === 'BUY' ? `₿ ${calculatedOutput.toFixed(8)} BTC` : `$${calculatedOutput.toFixed(2)} USDT`}
                   </Text>
                 </View>
 
                 <View style={styles.modalSummaryRow}>
-                  <Text style={styles.modalLabel}>Spot Execution Price:</Text>
+                  <Text style={styles.modalLabel}>{t('trade.modalSpotPrice')}</Text>
                   <Text style={styles.modalValue}>1 BTC = ${btcPrice.toLocaleString()} USDT</Text>
                 </View>
 
                 <View style={styles.modalSummaryRow}>
-                  <Text style={styles.modalLabel}>Platform Trading Fee (2%):</Text>
+                  <Text style={styles.modalLabel}>{t('trade.modalTradingFee')}</Text>
                   <Text style={styles.modalValueAmber}>${feeUsdt.toFixed(2)} USDT</Text>
                 </View>
 
                 {action === 'BUY' && (
                   <View style={styles.modalSummaryRow}>
-                    <Text style={styles.modalLabel}>Net Capital Converted:</Text>
+                    <Text style={styles.modalLabel}>{t('trade.modalNetCapital')}</Text>
                     <Text style={styles.modalValue}>${netUsdt.toFixed(2)} USDT</Text>
                   </View>
                 )}
               </View>
 
               <Text style={styles.modalDisclaimer}>
-                ⚠️ Please verify order details carefully. Funds will be atomically deducted and Bitcoin/USDT credited to your wallet immediately upon confirmation.
+                {t('trade.modalDisclaimer')}
               </Text>
             </View>
 
@@ -870,7 +875,7 @@ export default function TradeScreen() {
                 onPress={() => setConfirmModalVisible(false)}
                 disabled={submitting}
               >
-                <Text style={styles.modalCancelBtnText}>Cancel</Text>
+                <Text style={styles.modalCancelBtnText}>{t('trade.cancelBtn')}</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -885,7 +890,7 @@ export default function TradeScreen() {
                   <ActivityIndicator color="#FFFFFF" size="small" />
                 ) : (
                   <Text style={styles.modalConfirmBtnText}>
-                    {action === 'BUY' ? 'Confirm & Buy BTC' : 'Confirm & Sell BTC'}
+                    {action === 'BUY' ? t('trade.confirmBuyBtn') : t('trade.confirmSellBtn')}
                   </Text>
                 )}
               </TouchableOpacity>

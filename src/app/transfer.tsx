@@ -12,8 +12,10 @@ import {
   Modal,
 } from 'react-native';
 import { useRouter } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { api } from '../services/api';
 import { StarRankIndicator } from '../components/StarRankIndicator';
+import { LanguageSelector } from '../components/LanguageSelector';
 import { useIsMobile } from '../hooks/useIsMobile';
 
 type TransferMode = 'transfer' | 'withdraw';
@@ -46,6 +48,7 @@ const PAGE_SIZE = 15;
 export default function TransferScreen() {
   const router = useRouter();
   const isMobile = useIsMobile();
+  const { t } = useTranslation();
 
   // Active view states
   const [mode, setMode] = useState<TransferMode>('transfer');
@@ -163,10 +166,10 @@ export default function TransferScreen() {
         setVerifiedRecipient(res.user);
         setRecipientError('');
       } else {
-        setRecipientError(res.message || 'Recipient not found');
+        setRecipientError(res.message || t('transfer.pleaseVerifyRecipient'));
       }
     } catch (err: any) {
-      setRecipientError(err.message || 'Recipient not found or cannot transfer to yourself');
+      setRecipientError(err.message || t('transfer.cannotTransferToSelf'));
     } finally {
       setCheckingRecipient(false);
     }
@@ -194,22 +197,22 @@ export default function TransferScreen() {
     if (currency === 'USDT') {
       if (withdrawNetwork === 'ERC20' && (user.usdtErc20PayoutAddress || user.usdtPayoutAddress)) {
         setWithdrawAddress(user.usdtErc20PayoutAddress || user.usdtPayoutAddress);
-        showToast('Filled saved USDT (ERC20) payout address from your profile!');
+        showToast('USDT (ERC20): ' + (user.usdtErc20PayoutAddress || user.usdtPayoutAddress));
       } else if (withdrawNetwork === 'TRC20' && (user.usdtTrc20PayoutAddress || user.usdtPayoutAddress)) {
         setWithdrawAddress(user.usdtTrc20PayoutAddress || user.usdtPayoutAddress);
-        showToast('Filled saved USDT (TRC20) payout address from your profile!');
+        showToast('USDT (TRC20): ' + (user.usdtTrc20PayoutAddress || user.usdtPayoutAddress));
       } else if (user.usdtTrc20PayoutAddress || user.usdtPayoutAddress || user.usdtErc20PayoutAddress) {
         setWithdrawAddress(user.usdtTrc20PayoutAddress || user.usdtPayoutAddress || user.usdtErc20PayoutAddress);
-        showToast('Filled saved USDT payout address from your profile!');
+        showToast('USDT: ' + (user.usdtTrc20PayoutAddress || user.usdtPayoutAddress || user.usdtErc20PayoutAddress));
       } else {
-        showToast('No USDT address saved in profile. You can save one in Profile settings.', 'error');
+        showToast(t('transfer.enterValidAddress'), 'error');
       }
     } else {
       if (user.btcPayoutAddress) {
         setWithdrawAddress(user.btcPayoutAddress);
-        showToast('Filled saved Bitcoin payout address from your profile!');
+        showToast('BTC: ' + user.btcPayoutAddress);
       } else {
-        showToast('No BTC address saved in profile. You can save one in Profile settings.', 'error');
+        showToast(t('transfer.enterValidAddress'), 'error');
       }
     }
   };
@@ -219,16 +222,24 @@ export default function TransferScreen() {
     if (mode === 'transfer') {
       const amt = parseFloat(transferAmount);
       if (!verifiedRecipient) {
-        showToast('Please verify the recipient before proceeding with transfer', 'error');
+        showToast(t('transfer.pleaseVerifyRecipient'), 'error');
         return;
       }
       if (isNaN(amt) || amt <= 0) {
-        showToast('Please enter a valid transfer amount greater than 0', 'error');
+        showToast(t('transfer.invalidAmount'), 'error');
+        return;
+      }
+      if (currency === 'USDT' && amt < 5) {
+        showToast(t('transfer.minTransferUsdt'), 'error');
+        return;
+      }
+      if (currency === 'BTC' && amt < 0.00005) {
+        showToast(t('transfer.minTransferBtc'), 'error');
         return;
       }
       const available = currency === 'USDT' ? (user?.wallet?.usdBalance || 0) : (user?.wallet?.btcBalance || 0);
       if (amt > available) {
-        showToast(`Insufficient balance. You have ${available} ${currency}`, 'error');
+        showToast(t('transfer.insufficientFunds', { currency }), 'error');
         return;
       }
       setConfirmModalVisible(true);
@@ -236,24 +247,24 @@ export default function TransferScreen() {
       const amt = parseFloat(withdrawAmount);
       const addr = withdrawAddress.trim();
       if (!addr || addr.length < 15) {
-        showToast('Please enter a valid destination cryptocurrency wallet address', 'error');
+        showToast(t('transfer.enterValidAddress'), 'error');
         return;
       }
       if (isNaN(amt) || amt <= 0) {
-        showToast('Please enter a valid withdrawal amount greater than 0', 'error');
+        showToast(t('transfer.invalidAmount'), 'error');
         return;
       }
       if (currency === 'USDT' && amt < 10) {
-        showToast('Minimum withdrawal amount is 10 USDT', 'error');
+        showToast(t('transfer.minWithdrawUsdt'), 'error');
         return;
       }
       if (currency === 'BTC' && amt < 0.0001) {
-        showToast('Minimum withdrawal amount is 0.00010000 BTC', 'error');
+        showToast(t('transfer.minWithdrawBtc'), 'error');
         return;
       }
       const available = currency === 'USDT' ? (user?.wallet?.usdBalance || 0) : (user?.wallet?.btcBalance || 0);
       if (amt > available) {
-        showToast(`Insufficient balance. You have ${available} ${currency}`, 'error');
+        showToast(t('transfer.insufficientFunds', { currency }), 'error');
         return;
       }
       setConfirmModalVisible(true);
@@ -274,7 +285,7 @@ export default function TransferScreen() {
         });
 
         if (res.success) {
-          showToast(res.message || 'Transfer completed successfully!');
+          showToast(t('transfer.transferSuccess'));
           setConfirmModalVisible(false);
           setTransferAmount('');
           setTransferNote('');
@@ -295,7 +306,7 @@ export default function TransferScreen() {
         });
 
         if (res.success) {
-          showToast(res.message || 'Withdrawal dispatched successfully!');
+          showToast(t('transfer.withdrawSuccess'));
           setConfirmModalVisible(false);
           setWithdrawAmount('');
           setWithdrawAddress('');
@@ -306,7 +317,7 @@ export default function TransferScreen() {
         }
       }
     } catch (err: any) {
-      showToast(err.message || 'Transaction failed', 'error');
+      showToast(err.message || t('transfer.txFailed'), 'error');
     } finally {
       setSubmitting(false);
     }
@@ -315,7 +326,7 @@ export default function TransferScreen() {
   const copyToClipboard = (text: string, label: string) => {
     if (Platform.OS === 'web' && typeof navigator !== 'undefined' && navigator.clipboard) {
       navigator.clipboard.writeText(text);
-      showToast(`${label} copied to clipboard!`);
+      showToast(t('transfer.copied', { label }));
     } else {
       showToast(`${label}: ${text}`);
     }
@@ -364,21 +375,22 @@ export default function TransferScreen() {
       <View style={[styles.navbar, isMobile && styles.navbarMobile]}>
         <View style={styles.navLeft}>
           <TouchableOpacity onPress={() => router.replace('/dashboard' as any)} style={styles.backBtn}>
-            <Text style={styles.backBtnText}>← Dashboard</Text>
+            <Text style={styles.backBtnText}>← {t('common.dashboard')}</Text>
           </TouchableOpacity>
           <View style={styles.brandRow}>
             <View style={styles.btcBadge}>
               <Text style={styles.btcBadgeText}>⇄</Text>
             </View>
             <View>
-              <Text style={styles.brandTitle}>BTCM // ASSET DISPATCH</Text>
-              <Text style={styles.brandSubtitle}>P2P Internal Transfers & Crypto Withdrawals</Text>
+              <Text style={styles.brandTitle}>{t('transfer.title')}</Text>
+              <Text style={styles.brandSubtitle}>{t('transfer.subtitle')}</Text>
             </View>
           </View>
         </View>
 
-        {user && (
-          <View style={[styles.navRight, isMobile && styles.navRightMobile]}>
+        <View style={[styles.navRight, isMobile && styles.navRightMobile]}>
+          <LanguageSelector compact />
+          {user && (
             <TouchableOpacity
               style={styles.profileBadgeBtn}
               onPress={() => router.push('/profile' as any)}
@@ -390,8 +402,8 @@ export default function TransferScreen() {
                 )}
               </View>
             </TouchableOpacity>
-          </View>
-        )}
+          )}
+        </View>
       </View>
 
       {/* Toast Notice */}
@@ -412,7 +424,7 @@ export default function TransferScreen() {
       {loadingUser ? (
         <View style={styles.loadingBox}>
           <ActivityIndicator size="large" color="#F7931A" />
-          <Text style={styles.loadingText}>Connecting to Node Financial Ledger...</Text>
+          <Text style={styles.loadingText}>{t('transfer.connectingLedger')}</Text>
         </View>
       ) : (
         <ScrollView style={styles.scrollArea} contentContainerStyle={styles.scrollContent}>
@@ -432,16 +444,16 @@ export default function TransferScreen() {
                   <Text style={styles.coinIconText}>₮</Text>
                 </View>
                 <View>
-                  <Text style={styles.coinTitle}>USDT (TETHER)</Text>
-                  <Text style={styles.coinSubtitle}>Mining Capital & Commission</Text>
+                  <Text style={styles.coinTitle}>{t('transfer.usdtTitle')}</Text>
+                  <Text style={styles.coinSubtitle}>{t('transfer.usdtSub')}</Text>
                 </View>
-                {currency === 'USDT' && <View style={styles.activePill}><Text style={styles.activePillText}>SELECTED</Text></View>}
+                {currency === 'USDT' && <View style={styles.activePill}><Text style={styles.activePillText}>{t('transfer.selected')}</Text></View>}
               </View>
               <Text style={styles.balanceAmountGreen}>
                 {availableUsdt.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USDT
               </Text>
               <Text style={styles.balanceSubtext}>
-                Direct + Binary affiliate rewards included
+                {t('transfer.usdtNote')}
               </Text>
             </TouchableOpacity>
 
@@ -459,16 +471,16 @@ export default function TransferScreen() {
                   <Text style={styles.coinIconText}>₿</Text>
                 </View>
                 <View>
-                  <Text style={styles.coinTitle}>BITCOIN (ROI)</Text>
-                  <Text style={styles.coinSubtitle}>Daily Mined Cloud Hashrate</Text>
+                  <Text style={styles.coinTitle}>{t('transfer.btcTitle')}</Text>
+                  <Text style={styles.coinSubtitle}>{t('transfer.btcSub')}</Text>
                 </View>
-                {currency === 'BTC' && <View style={styles.activePillGold}><Text style={styles.activePillTextGold}>SELECTED</Text></View>}
+                {currency === 'BTC' && <View style={styles.activePillGold}><Text style={styles.activePillTextGold}>{t('transfer.selected')}</Text></View>}
               </View>
               <Text style={styles.balanceAmountGold}>
                 ₿ {availableBtc.toFixed(8)} BTC
               </Text>
               <Text style={styles.balanceSubtext}>
-                ≈ {(availableBtc * BTC_PRICE_USD).toFixed(2)} USDT market value
+                {t('transfer.btcMarketVal', { amount: (availableBtc * BTC_PRICE_USD).toFixed(2) })}
               </Text>
             </TouchableOpacity>
           </View>
@@ -483,9 +495,9 @@ export default function TransferScreen() {
               }}
             >
               <Text style={[styles.modeTabText, mode === 'transfer' && styles.modeTabTextActive]}>
-                ⇄ Internal Member Transfer
+                {t('transfer.tabTransfer')}
               </Text>
-              <Text style={styles.modeTabSub}>Instant Settlement • 0% Fee</Text>
+              <Text style={styles.modeTabSub}>{t('transfer.tabTransferSub')}</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -493,9 +505,9 @@ export default function TransferScreen() {
               onPress={() => setMode('withdraw')}
             >
               <Text style={[styles.modeTabText, mode === 'withdraw' && styles.modeTabTextActive]}>
-                ⏏ External Crypto Withdrawal
+                {t('transfer.tabWithdraw')}
               </Text>
-              <Text style={styles.modeTabSub}>On-Chain Wallet Address Dispatch</Text>
+              <Text style={styles.modeTabSub}>{t('transfer.tabWithdrawSub')}</Text>
             </TouchableOpacity>
           </View>
 
@@ -505,12 +517,12 @@ export default function TransferScreen() {
             <View style={styles.cardTopHeader}>
               <View>
                 <Text style={styles.cardHeaderTitle}>
-                  {mode === 'transfer' ? 'Send Assets to Registered Member' : 'Withdraw to Crypto Wallet Address'}
+                  {mode === 'transfer' ? t('transfer.sendToMember') : t('transfer.withdrawToWallet')}
                 </Text>
                 <Text style={styles.cardHeaderSub}>
                   {mode === 'transfer'
-                    ? 'Transfer USDT or BTC instantly to any member node via username, email, or referral code.'
-                    : 'Dispatch funds to your external cold storage, hardware wallet, or exchange address.'}
+                    ? t('transfer.transferDesc')
+                    : t('transfer.withdrawDesc')}
                 </Text>
               </View>
 
@@ -540,11 +552,11 @@ export default function TransferScreen() {
               <View style={styles.formContainer}>
                 {/* Recipient Input */}
                 <View style={styles.inputGroup}>
-                  <Text style={styles.inputLabel}>RECIPIENT USERNAME / EMAIL / REFERRAL CODE</Text>
+                  <Text style={styles.inputLabel}>{t('transfer.recipientLabel')}</Text>
                   <View style={styles.searchRow}>
                     <TextInput
                       style={[styles.textInput, styles.inputFlex]}
-                      placeholder="e.g. alice, bob, or BTCMASTER1"
+                      placeholder={t('transfer.recipientPlaceholder')}
                       placeholderTextColor="#4B5563"
                       value={recipientInput}
                       onChangeText={(val) => {
@@ -562,7 +574,7 @@ export default function TransferScreen() {
                       {checkingRecipient ? (
                         <ActivityIndicator color="#0B0E14" size="small" />
                       ) : (
-                        <Text style={styles.verifyBtnText}>Verify Member</Text>
+                        <Text style={styles.verifyBtnText}>{t('transfer.verifyMember')}</Text>
                       )}
                     </TouchableOpacity>
                   </View>
@@ -581,7 +593,7 @@ export default function TransferScreen() {
                           )}
                         </View>
                         <Text style={styles.verifiedCode}>
-                          Node Referral Code: {verifiedRecipient.referralCode} • Active Node
+                          {t('transfer.nodeReferralCode', { code: verifiedRecipient.referralCode })}
                         </Text>
                       </View>
                     </View>
@@ -594,7 +606,7 @@ export default function TransferScreen() {
                   {/* Quick suggestions if user has a sponsor */}
                   {Boolean(user?.sponsor?.username && !verifiedRecipient) ? (
                     <View style={styles.suggestionRow}>
-                      <Text style={styles.suggestionLabel}>Quick suggestion:</Text>
+                      <Text style={styles.suggestionLabel}>{t('transfer.quickSuggestion')}</Text>
                       <TouchableOpacity
                         style={styles.suggestionPill}
                         onPress={() => {
@@ -603,7 +615,7 @@ export default function TransferScreen() {
                         }}
                       >
                         <Text style={styles.suggestionText}>
-                          Sponsor: @{user.sponsor.username}
+                          {t('transfer.sponsor', { username: user.sponsor.username })}
                         </Text>
                       </TouchableOpacity>
                     </View>
@@ -613,9 +625,9 @@ export default function TransferScreen() {
                 {/* Amount Input */}
                 <View style={styles.inputGroup}>
                   <View style={styles.amountLabelRow}>
-                    <Text style={styles.inputLabel}>TRANSFER AMOUNT ({currency})</Text>
+                    <Text style={styles.inputLabel}>{t('transfer.transferAmountLabel', { currency })}</Text>
                     <Text style={styles.availableLabel}>
-                      Available: {currentAvailable.toLocaleString()} {currency}
+                      {t('transfer.available', { amount: currentAvailable.toLocaleString(), currency })}
                     </Text>
                   </View>
 
@@ -660,17 +672,17 @@ export default function TransferScreen() {
                       style={[styles.percentBtn, transferPercent === 100 && styles.percentBtnActive]}
                       onPress={() => handleSelectPercentage(1)}
                     >
-                      <Text style={[styles.percentBtnText, transferPercent === 100 && styles.percentBtnTextActive]}>MAX (100%)</Text>
+                      <Text style={[styles.percentBtnText, transferPercent === 100 && styles.percentBtnTextActive]}>{t('transfer.maxPercent')}</Text>
                     </TouchableOpacity>
                   </View>
                 </View>
 
                 {/* Optional Note */}
                 <View style={styles.inputGroup}>
-                  <Text style={styles.inputLabel}>MEMO / TRANSFER NOTE (OPTIONAL)</Text>
+                  <Text style={styles.inputLabel}>{t('transfer.memoLabel')}</Text>
                   <TextInput
                     style={styles.textInput}
-                    placeholder="e.g. Hashrate settlement, member assistance"
+                    placeholder={t('transfer.memoPlaceholder')}
                     placeholderTextColor="#4B5563"
                     value={transferNote}
                     onChangeText={setTransferNote}
@@ -680,29 +692,29 @@ export default function TransferScreen() {
                 {/* Transfer Breakdown Box */}
                 <View style={styles.breakdownBox}>
                   <View style={styles.breakdownRow}>
-                    <Text style={styles.breakdownLabel}>Recipient Node:</Text>
+                    <Text style={styles.breakdownLabel}>{t('transfer.recipientNode')}</Text>
                     <Text style={styles.breakdownValCyan}>
-                      {verifiedRecipient ? `@${verifiedRecipient.username}` : 'Not verified yet'}
+                      {verifiedRecipient ? `@${verifiedRecipient.username}` : t('transfer.notVerifiedYet')}
                     </Text>
                   </View>
                   <View style={styles.breakdownRow}>
-                    <Text style={styles.breakdownLabel}>Transfer Amount:</Text>
+                    <Text style={styles.breakdownLabel}>{t('transfer.transferAmount')}</Text>
                     <Text style={styles.breakdownValWhite}>
                       {transferAmount || '0'} {currency}
                     </Text>
                   </View>
                   <View style={styles.breakdownRow}>
-                    <Text style={styles.breakdownLabel}>Estimated Value:</Text>
+                    <Text style={styles.breakdownLabel}>{t('transfer.estimatedValue')}</Text>
                     <Text style={styles.breakdownValSub}>
                       ≈ {currentValuation.toFixed(2)} USDT
                     </Text>
                   </View>
                   <View style={styles.breakdownRow}>
-                    <Text style={styles.breakdownLabel}>Internal Network Fee:</Text>
-                    <Text style={styles.breakdownValGreen}>0.00 {currency} (Free)</Text>
+                    <Text style={styles.breakdownLabel}>{t('transfer.internalFee')}</Text>
+                    <Text style={styles.breakdownValGreen}>{t('transfer.freeFee', { currency })}</Text>
                   </View>
                   <View style={[styles.breakdownRow, styles.breakdownRowTotal]}>
-                    <Text style={styles.breakdownTotalLabel}>Total Deducted:</Text>
+                    <Text style={styles.breakdownTotalLabel}>{t('transfer.totalDeducted')}</Text>
                     <Text style={styles.breakdownTotalVal}>
                       {transferAmount || '0'} {currency}
                     </Text>
@@ -716,7 +728,7 @@ export default function TransferScreen() {
                   disabled={!verifiedRecipient}
                 >
                   <Text style={styles.actionSubmitBtnText}>
-                    Confirm & Send {transferAmount || '0'} {currency}
+                    {t('transfer.confirmSendBtn', { amount: transferAmount || '0', currency })}
                   </Text>
                 </TouchableOpacity>
               </View>
@@ -727,7 +739,7 @@ export default function TransferScreen() {
               <View style={styles.formContainer}>
                 {/* Network Selection */}
                 <View style={styles.inputGroup}>
-                  <Text style={styles.inputLabel}>CHOOSE SETTLEMENT NETWORK</Text>
+                  <Text style={styles.inputLabel}>{t('transfer.chooseNetwork')}</Text>
                   {currency === 'USDT' ? (
                     <View style={styles.networkSelectRow}>
                       <TouchableOpacity
@@ -737,7 +749,7 @@ export default function TransferScreen() {
                         <Text style={[styles.networkBtnText, withdrawNetwork === 'TRC20' && styles.networkBtnTextActive]}>
                           TRC20 (Tron)
                         </Text>
-                        <Text style={styles.networkBadge}>Recommended</Text>
+                        <Text style={styles.networkBadge}>{t('transfer.recommended')}</Text>
                       </TouchableOpacity>
                       <TouchableOpacity
                         style={[styles.networkBtn, withdrawNetwork === 'ERC20' && styles.networkBtnActive]}
@@ -765,7 +777,7 @@ export default function TransferScreen() {
                         <Text style={[styles.networkBtnText, withdrawNetwork === 'Native SegWit' && styles.networkBtnTextActive]}>
                           Native SegWit (bc1)
                         </Text>
-                        <Text style={styles.networkBadge}>Fastest</Text>
+                        <Text style={styles.networkBadge}>{t('transfer.fastest')}</Text>
                       </TouchableOpacity>
                       <TouchableOpacity
                         style={[styles.networkBtn, withdrawNetwork === 'Taproot' && styles.networkBtnActive]}
@@ -790,30 +802,30 @@ export default function TransferScreen() {
                 {/* Destination Wallet Address Input */}
                 <View style={styles.inputGroup}>
                   <View style={styles.amountLabelRow}>
-                    <Text style={styles.inputLabel}>DESTINATION {currency} WALLET ADDRESS</Text>
+                    <Text style={styles.inputLabel}>{t('transfer.destAddressLabel', { currency })}</Text>
                     <TouchableOpacity onPress={handleUseSavedAddress}>
-                      <Text style={styles.savedAddressLink}>⚡ Use Profile Saved Address</Text>
+                      <Text style={styles.savedAddressLink}>{t('transfer.useSavedAddress')}</Text>
                     </TouchableOpacity>
                   </View>
                   <TextInput
                     style={[styles.textInput, styles.monoInput]}
-                    placeholder={`Paste external ${currency} wallet address...`}
+                    placeholder={t('transfer.addressPlaceholder', { currency })}
                     placeholderTextColor="#4B5563"
                     value={withdrawAddress}
                     onChangeText={setWithdrawAddress}
                     autoCapitalize="none"
                   />
                   <Text style={styles.fieldHint}>
-                    Please double-check your destination address. Transactions on blockchain networks cannot be reversed.
+                    {t('transfer.addressHint')}
                   </Text>
                 </View>
 
                 {/* Amount Input */}
                 <View style={styles.inputGroup}>
                   <View style={styles.amountLabelRow}>
-                    <Text style={styles.inputLabel}>WITHDRAW AMOUNT ({currency})</Text>
+                    <Text style={styles.inputLabel}>{t('transfer.withdrawAmountLabel', { currency })}</Text>
                     <Text style={styles.availableLabel}>
-                      Available: {currentAvailable.toLocaleString()} {currency}
+                      {t('transfer.available', { amount: currentAvailable.toLocaleString(), currency })}
                     </Text>
                   </View>
 
@@ -858,7 +870,7 @@ export default function TransferScreen() {
                       style={[styles.percentBtn, withdrawPercent === 100 && styles.percentBtnActive]}
                       onPress={() => handleSelectPercentage(1)}
                     >
-                      <Text style={[styles.percentBtnText, withdrawPercent === 100 && styles.percentBtnTextActive]}>MAX (100%)</Text>
+                      <Text style={[styles.percentBtnText, withdrawPercent === 100 && styles.percentBtnTextActive]}>{t('transfer.maxPercent')}</Text>
                     </TouchableOpacity>
                   </View>
                 </View>
@@ -866,29 +878,29 @@ export default function TransferScreen() {
                 {/* Withdrawal Breakdown */}
                 <View style={styles.breakdownBox}>
                   <View style={styles.breakdownRow}>
-                    <Text style={styles.breakdownLabel}>Selected Network:</Text>
+                    <Text style={styles.breakdownLabel}>{t('transfer.selectedNetwork')}</Text>
                     <Text style={styles.breakdownValCyan}>{withdrawNetwork}</Text>
                   </View>
                   <View style={styles.breakdownRow}>
-                    <Text style={styles.breakdownLabel}>Destination Address:</Text>
+                    <Text style={styles.breakdownLabel}>{t('transfer.destinationAddress')}</Text>
                     <Text style={styles.breakdownValWhite} numberOfLines={1}>
                       {withdrawAddress
                         ? `${withdrawAddress.slice(0, 10)}...${withdrawAddress.slice(-6)}`
-                        : 'None keyed in'}
+                        : t('transfer.noneKeyedIn')}
                     </Text>
                   </View>
                   <View style={styles.breakdownRow}>
-                    <Text style={styles.breakdownLabel}>Withdrawal Amount:</Text>
+                    <Text style={styles.breakdownLabel}>{t('transfer.withdrawalAmount')}</Text>
                     <Text style={styles.breakdownValWhite}>
                       {withdrawAmount || '0'} {currency}
                     </Text>
                   </View>
                   <View style={styles.breakdownRow}>
-                    <Text style={styles.breakdownLabel}>Pool Subsidy Network Fee:</Text>
-                    <Text style={styles.breakdownValGreen}>0.00 {currency} (Covered)</Text>
+                    <Text style={styles.breakdownLabel}>{t('transfer.poolSubsidyFee')}</Text>
+                    <Text style={styles.breakdownValGreen}>{t('transfer.coveredFee', { currency })}</Text>
                   </View>
                   <View style={[styles.breakdownRow, styles.breakdownRowTotal]}>
-                    <Text style={styles.breakdownTotalLabel}>Net Amount Dispatched:</Text>
+                    <Text style={styles.breakdownTotalLabel}>{t('transfer.netAmountDispatched')}</Text>
                     <Text style={styles.breakdownTotalValGold}>
                       {withdrawAmount || '0'} {currency}
                     </Text>
@@ -902,7 +914,7 @@ export default function TransferScreen() {
                   disabled={!withdrawAddress || !withdrawAmount}
                 >
                   <Text style={styles.actionSubmitBtnText}>
-                    Dispatched On-Chain Withdrawal ({withdrawAmount || '0'} {currency})
+                    {t('transfer.dispatchWithdrawBtn', { amount: withdrawAmount || '0', currency })}
                   </Text>
                 </TouchableOpacity>
               </View>
@@ -914,10 +926,14 @@ export default function TransferScreen() {
             <View style={styles.ledgerHeaderRow}>
               <View>
                 <Text style={styles.ledgerTitle}>
-                  Transaction & Transfer Ledger ({filteredTransactions.length})
+                  {t('transfer.ledgerTitle', { count: filteredTransactions.length })}
                 </Text>
                 <Text style={styles.ledgerSubtitle}>
-                  Showing {filteredTransactions.length > 0 ? (effectivePage - 1) * PAGE_SIZE + 1 : 0} - {Math.min(effectivePage * PAGE_SIZE, filteredTransactions.length)} of {filteredTransactions.length} records • 15 per page
+                  {t('transfer.ledgerShowing', {
+                    start: filteredTransactions.length > 0 ? (effectivePage - 1) * PAGE_SIZE + 1 : 0,
+                    end: Math.min(effectivePage * PAGE_SIZE, filteredTransactions.length),
+                    total: filteredTransactions.length,
+                  })}
                 </Text>
               </View>
 
@@ -926,19 +942,19 @@ export default function TransferScreen() {
                   style={[styles.ledgerFilterBtn, txFilter === 'ALL' && styles.ledgerFilterBtnActive]}
                   onPress={() => handleSetFilter('ALL')}
                 >
-                  <Text style={[styles.ledgerFilterText, txFilter === 'ALL' && styles.ledgerFilterTextActive]}>All</Text>
+                  <Text style={[styles.ledgerFilterText, txFilter === 'ALL' && styles.ledgerFilterTextActive]}>{t('transfer.filterAll')}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={[styles.ledgerFilterBtn, txFilter === 'TRANSFER' && styles.ledgerFilterBtnActive]}
                   onPress={() => handleSetFilter('TRANSFER')}
                 >
-                  <Text style={[styles.ledgerFilterText, txFilter === 'TRANSFER' && styles.ledgerFilterTextActive]}>Transfers</Text>
+                  <Text style={[styles.ledgerFilterText, txFilter === 'TRANSFER' && styles.ledgerFilterTextActive]}>{t('transfer.filterTransfers')}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={[styles.ledgerFilterBtn, txFilter === 'WITHDRAWAL' && styles.ledgerFilterBtnActive]}
                   onPress={() => handleSetFilter('WITHDRAWAL')}
                 >
-                  <Text style={[styles.ledgerFilterText, txFilter === 'WITHDRAWAL' && styles.ledgerFilterTextActive]}>Withdrawals</Text>
+                  <Text style={[styles.ledgerFilterText, txFilter === 'WITHDRAWAL' && styles.ledgerFilterTextActive]}>{t('transfer.filterWithdrawals')}</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -948,9 +964,9 @@ export default function TransferScreen() {
             ) : filteredTransactions.length === 0 ? (
               <View style={styles.emptyLedgerBox}>
                 <Text style={styles.emptyLedgerIcon}>📂</Text>
-                <Text style={styles.emptyLedgerTitle}>No Transfer History Found</Text>
+                <Text style={styles.emptyLedgerTitle}>{t('transfer.noHistoryFound')}</Text>
                 <Text style={styles.emptyLedgerSub}>
-                  When you send funds to members or withdraw to external wallets, your audit trail will appear here.
+                  {t('transfer.noHistorySub')}
                 </Text>
               </View>
             ) : (
@@ -974,30 +990,30 @@ export default function TransferScreen() {
                     switch (type) {
                       case 'TRANSFER_SENT':
                       case 'TRANSFER_OUT':
-                        return 'Internal Member Transfer';
+                        return t('transfer.txTypes.transferSent');
                       case 'TRANSFER_RECEIVED':
                       case 'TRANSFER_IN':
-                        return 'Internal Transfer Received';
+                        return t('transfer.txTypes.transferReceived');
                       case 'WITHDRAWAL':
-                        return 'External Blockchain Withdrawal';
+                        return t('transfer.txTypes.withdrawal');
                       case 'WITHDRAWAL_REFUND':
-                        return 'Withdrawal Refund';
+                        return t('transfer.txTypes.withdrawalRefund');
                       case 'BINARY_PAIRING_BONUS':
-                        return '10% Binary Pairing Commission';
+                        return t('transfer.txTypes.binaryBonus');
                       case 'MINING_DAILY_YIELD':
                       case 'MINING_YIELD':
-                        return 'Daily Cloud Mining Yield';
+                        return t('transfer.txTypes.miningYield');
                       case 'SERVICE_PURCHASE':
                       case 'PACKAGE_PURCHASE':
-                        return 'Mining Service Purchase';
+                        return t('transfer.txTypes.servicePurchase');
                       case 'BINARY_PAIRING_CONFISCATED':
-                        return 'Binary Pairing Confiscated (Daily Limit Exceeded)';
+                        return t('transfer.txTypes.binaryConfiscated');
                       case 'DIRECT_REFERRAL_BONUS':
-                        return '10% Direct Referral Bonus';
+                        return t('transfer.txTypes.referralBonus');
                       case 'WALLET_DEPOSIT':
-                        return 'Wallet Deposit';
+                        return t('transfer.txTypes.walletDeposit');
                       case 'ADMIN_ADJUSTMENT':
-                        return 'Admin Adjustment';
+                        return t('transfer.txTypes.adminAdjustment');
                       default:
                         return String(type).replace(/_/g, ' ');
                     }
@@ -1046,16 +1062,16 @@ export default function TransferScreen() {
                         </Text>
                         <View style={[styles.statusPill, isConfiscated ? { backgroundColor: 'rgba(239, 68, 68, 0.2)', borderColor: 'rgba(239, 68, 68, 0.5)' } : null]}>
                           <Text style={[styles.statusPillText, isConfiscated ? { color: '#EF4444' } : null]}>
-                            {isConfiscated ? 'CONFISCATED' : 'COMPLETED'}
+                            {isConfiscated ? t('transfer.statusConfiscated') : t('transfer.statusCompleted')}
                           </Text>
                         </View>
 
                         {txHash ? (
                           <TouchableOpacity
                             style={styles.copyHashBtn}
-                            onPress={() => copyToClipboard(txHash, 'Transaction Hash')}
+                            onPress={() => copyToClipboard(txHash, t('transfer.copyTxHash'))}
                           >
-                            <Text style={styles.copyHashText}>Copy TX Hash</Text>
+                            <Text style={styles.copyHashText}>{t('transfer.copyTxHash')}</Text>
                           </TouchableOpacity>
                         ) : null}
                       </View>
@@ -1074,7 +1090,7 @@ export default function TransferScreen() {
                   disabled={effectivePage === 1}
                 >
                   <Text style={[styles.pageNavBtnText, effectivePage === 1 && styles.pageNavBtnTextDisabled]}>
-                    ← Previous
+                    {t('transfer.previous')}
                   </Text>
                 </TouchableOpacity>
 
@@ -1105,7 +1121,7 @@ export default function TransferScreen() {
                   disabled={effectivePage === totalPages}
                 >
                   <Text style={[styles.pageNavBtnText, effectivePage === totalPages && styles.pageNavBtnTextDisabled]}>
-                    Next →
+                    {t('transfer.next')}
                   </Text>
                 </TouchableOpacity>
               </View>
@@ -1125,7 +1141,7 @@ export default function TransferScreen() {
           <View style={[styles.modalCard, isMobile && styles.modalCardMobile]}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>
-                {mode === 'transfer' ? '🛡️ Confirm Member Transfer' : '🌐 Confirm Blockchain Withdrawal'}
+                {mode === 'transfer' ? t('transfer.confirmTransferTitle') : t('transfer.confirmWithdrawTitle')}
               </Text>
               <TouchableOpacity onPress={() => setConfirmModalVisible(false)}>
                 <Text style={styles.modalCloseText}>✕</Text>
@@ -1134,20 +1150,20 @@ export default function TransferScreen() {
 
             <View style={styles.modalContent}>
               <Text style={styles.modalNotice}>
-                Please carefully verify the details below before authorizing this asset transaction:
+                {t('transfer.confirmNotice')}
               </Text>
 
               <View style={styles.modalDetailBox}>
                 <View style={styles.modalDetailRow}>
-                  <Text style={styles.modalDetailLabel}>Transaction Type:</Text>
+                  <Text style={styles.modalDetailLabel}>{t('transfer.txType')}</Text>
                   <Text style={styles.modalDetailValCyan}>
-                    {mode === 'transfer' ? 'Internal Member Transfer' : 'External Crypto Withdrawal'}
+                    {mode === 'transfer' ? t('transfer.internalTransferType') : t('transfer.externalWithdrawType')}
                   </Text>
                 </View>
 
                 {mode === 'transfer' ? (
                   <View style={styles.modalDetailRow}>
-                    <Text style={styles.modalDetailLabel}>Recipient:</Text>
+                    <Text style={styles.modalDetailLabel}>{t('transfer.recipient')}</Text>
                     <Text style={styles.modalDetailValWhite}>
                       @{verifiedRecipient?.username} ({verifiedRecipient?.fullName || 'Node'})
                     </Text>
@@ -1155,11 +1171,11 @@ export default function TransferScreen() {
                 ) : (
                   <>
                     <View style={styles.modalDetailRow}>
-                      <Text style={styles.modalDetailLabel}>Network:</Text>
+                      <Text style={styles.modalDetailLabel}>{t('transfer.network')}</Text>
                       <Text style={styles.modalDetailValWhite}>{withdrawNetwork}</Text>
                     </View>
                     <View style={styles.modalDetailRow}>
-                      <Text style={styles.modalDetailLabel}>Destination Address:</Text>
+                      <Text style={styles.modalDetailLabel}>{t('transfer.destinationAddress')}</Text>
                       <Text style={styles.modalDetailValWhite} numberOfLines={2}>
                         {withdrawAddress}
                       </Text>
@@ -1168,19 +1184,19 @@ export default function TransferScreen() {
                 )}
 
                 <View style={styles.modalDetailRow}>
-                  <Text style={styles.modalDetailLabel}>Asset Currency:</Text>
+                  <Text style={styles.modalDetailLabel}>{t('transfer.assetCurrency')}</Text>
                   <Text style={styles.modalDetailValGold}>{currency}</Text>
                 </View>
 
                 <View style={styles.modalDetailRow}>
-                  <Text style={styles.modalDetailLabel}>Authorized Amount:</Text>
+                  <Text style={styles.modalDetailLabel}>{t('transfer.authorizedAmount')}</Text>
                   <Text style={styles.modalDetailValLarge}>
                     {mode === 'transfer' ? transferAmount : withdrawAmount} {currency}
                   </Text>
                 </View>
 
                 <View style={styles.modalDetailRow}>
-                  <Text style={styles.modalDetailLabel}>Estimated Valuation:</Text>
+                  <Text style={styles.modalDetailLabel}>{t('transfer.estimatedValuation')}</Text>
                   <Text style={styles.modalDetailValSub}>≈ {currentValuation.toFixed(2)} USDT</Text>
                 </View>
               </View>
@@ -1191,7 +1207,7 @@ export default function TransferScreen() {
                   onPress={() => setConfirmModalVisible(false)}
                   disabled={submitting}
                 >
-                  <Text style={styles.modalCancelBtnText}>Cancel</Text>
+                  <Text style={styles.modalCancelBtnText}>{t('common.cancel')}</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity
@@ -1203,7 +1219,7 @@ export default function TransferScreen() {
                     <ActivityIndicator color="#0B0E14" />
                   ) : (
                     <Text style={styles.modalConfirmBtnText}>
-                      ✓ Authorize & Dispatch
+                      {t('transfer.authorizeDispatchBtn')}
                     </Text>
                   )}
                 </TouchableOpacity>

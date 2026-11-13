@@ -11,9 +11,11 @@ import {
   Platform,
 } from 'react-native';
 import { useRouter } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { api } from '@/services/api';
 import { StarRankIndicator } from '@/components/StarRankIndicator';
 import { QRCodeView, generateQrDataUri } from '@/components/QRCodeView';
+import { LanguageSelector } from '@/components/LanguageSelector';
 import { useIsMobile } from '@/hooks/useIsMobile';
 
 interface KycInfo {
@@ -76,6 +78,7 @@ interface UserProfile {
 export default function UserProfileScreen() {
   const router = useRouter();
   const isMobile = useIsMobile();
+  const { t } = useTranslation();
 
   const [activeTab, setActiveTab] = useState<'info' | 'kyc' | 'payout' | 'mlm' | 'security' | 'stats'>('info');
   const [loading, setLoading] = useState(true);
@@ -347,31 +350,29 @@ export default function UserProfileScreen() {
       <View style={[styles.navbar, isMobile && styles.navbarMobile]}>
         <View style={styles.navLeft}>
           <TouchableOpacity onPress={() => router.replace('/dashboard' as any)} style={styles.backBtn}>
-            <Text style={styles.backBtnText}>← Dashboard</Text>
+            <Text style={styles.backBtnText}>← {t('common.dashboard')}</Text>
           </TouchableOpacity>
           <View style={styles.brandRow}>
             <View style={styles.btcBadge}>
               <Text style={styles.btcBadgeText}>₿</Text>
             </View>
             <View>
-              <Text style={styles.brandTitle}>BTCM // MINER PROFILE</Text>
-              <Text style={styles.brandSubtitle}>Node Identity & Wallet Settings</Text>
+              <Text style={styles.brandTitle}>BTCM // {t('profile.title').toUpperCase()}</Text>
+              <Text style={styles.brandSubtitle}>{t('profile.subtitle')}</Text>
             </View>
           </View>
         </View>
 
         {/* Actions */}
         <View style={[styles.navRight, isMobile && styles.navRightMobile]}>
+          <LanguageSelector compact />
           {user?.role === 'admin' && (
             <TouchableOpacity style={styles.adminBtn} onPress={() => router.push('/admin' as any)}>
-              <Text style={styles.adminBtnText}>🛡️ Admin Panel</Text>
+              <Text style={styles.adminBtnText}>🛡️ {t('common.admin')}</Text>
             </TouchableOpacity>
           )}
-          <TouchableOpacity style={styles.transferBtn} onPress={() => router.push('/transfer' as any)}>
-            <Text style={styles.transferBtnText}>⇄ Transfer / Withdraw</Text>
-          </TouchableOpacity>
           <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>
-            <Text style={styles.logoutBtnText}>Sign Out</Text>
+            <Text style={styles.logoutBtnText}>{t('common.logout')}</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -414,22 +415,22 @@ export default function UserProfileScreen() {
                   )}
                   <View style={styles.statusPill}>
                     <View style={styles.statusDot} />
-                    <Text style={styles.statusPillText}>ACTIVE MINER</Text>
+                    <Text style={styles.statusPillText}>{t('common.active')}</Text>
                   </View>
                   {user?.kyc?.status === 'VERIFIED' ? (
                     <View style={[styles.statusPill, { backgroundColor: 'rgba(16, 185, 129, 0.2)', borderColor: '#10B981' }]}>
                       <Text style={{ fontSize: 10 }}>🛡️</Text>
-                      <Text style={[styles.statusPillText, { color: '#10B981' }]}>KYC VERIFIED</Text>
+                      <Text style={[styles.statusPillText, { color: '#10B981' }]}>{t('profile.kycVerified')}</Text>
                     </View>
                   ) : user?.kyc?.status === 'PENDING' ? (
                     <View style={[styles.statusPill, { backgroundColor: 'rgba(247, 147, 26, 0.2)', borderColor: '#F7931A' }]}>
                       <Text style={{ fontSize: 10 }}>⏳</Text>
-                      <Text style={[styles.statusPillText, { color: '#F7931A' }]}>KYC PENDING</Text>
+                      <Text style={[styles.statusPillText, { color: '#F7931A' }]}>{t('profile.kycPending')}</Text>
                     </View>
                   ) : user?.kyc?.status === 'REJECTED' ? (
                     <View style={[styles.statusPill, { backgroundColor: 'rgba(239, 68, 68, 0.2)', borderColor: '#EF4444' }]}>
                       <Text style={{ fontSize: 10 }}>❌</Text>
-                      <Text style={[styles.statusPillText, { color: '#EF4444' }]}>KYC REJECTED</Text>
+                      <Text style={[styles.statusPillText, { color: '#EF4444' }]}>{t('common.error')}</Text>
                     </View>
                   ) : (
                     <TouchableOpacity
@@ -437,7 +438,7 @@ export default function UserProfileScreen() {
                       onPress={() => setActiveTab('kyc')}
                     >
                       <Text style={{ fontSize: 10 }}>⚠️</Text>
-                      <Text style={[styles.statusPillText, { color: '#94A3B8' }]}>KYC UNVERIFIED</Text>
+                      <Text style={[styles.statusPillText, { color: '#94A3B8' }]}>{t('profile.kycUnverified')}</Text>
                     </TouchableOpacity>
                   )}
                 </View>

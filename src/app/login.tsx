@@ -11,12 +11,16 @@ import {
   Platform,
 } from 'react-native';
 import { useRouter } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { api } from '@/services/api';
 import { useIsMobile } from '@/hooks/useIsMobile';
+import { LanguageSelector } from '@/components/LanguageSelector';
+import { setAppLanguage } from '@/i18n';
 
 export default function SignInScreen() {
   const router = useRouter();
   const isMobile = useIsMobile();
+  const { t } = useTranslation();
 
   const [loginId, setLoginId] = useState('');
   const [password, setPassword] = useState('');
@@ -30,7 +34,7 @@ export default function SignInScreen() {
     const pass = passToUse ?? password;
 
     if (!id || !pass) {
-      setErrorMessage('Please provide both your Username/Email and Password.');
+      setErrorMessage(t('auth.usernameOrEmail') + ' & ' + t('auth.password') + ' ' + t('common.error'));
       return;
     }
 
@@ -40,6 +44,9 @@ export default function SignInScreen() {
     try {
       const res = await api.login(id, pass);
       if (res.token) {
+        if (res.user?.preferredLanguage) {
+          setAppLanguage(res.user.preferredLanguage).catch(() => {});
+        }
         setSuccessMessage(`Welcome back, ${res.user?.fullName || res.user?.username || 'Miner'}! Redirecting...`);
         setTimeout(() => {
           router.replace('/dashboard' as any);
@@ -62,19 +69,22 @@ export default function SignInScreen() {
       <ScrollView contentContainerStyle={styles.scrollContent}>
         {/* Brand Header */}
         <View style={styles.brandContainer}>
+          <View style={{ width: '100%', flexDirection: 'row', justifyContent: 'flex-end', marginBottom: 10 }}>
+            <LanguageSelector compact />
+          </View>
           <TouchableOpacity onPress={() => router.replace('/')} style={styles.logoBadge}>
             <Text style={styles.logoChar}>₿</Text>
           </TouchableOpacity>
-          <Text style={styles.brandTitle}>BTCM // CLOUD MINING</Text>
-          <Text style={styles.brandSubtitle}>Binary Hashrate Infrastructure & Mining BTC Portal</Text>
+          <Text style={styles.brandTitle}>{t('common.appName')}</Text>
+          <Text style={styles.brandSubtitle}>{t('auth.welcomeSub')}</Text>
         </View>
 
         {/* Sign In Card */}
         <View style={[styles.card, isMobile && styles.cardMobile]}>
           <View style={styles.cardHeader}>
-            <Text style={styles.cardTitle}>Account Sign In</Text>
+            <Text style={styles.cardTitle}>{t('auth.signInTab')}</Text>
             <Text style={styles.cardSubtitle}>
-              Log in to manage your active mining contracts, binary placement tree, and daily Bitcoin yields.
+              {t('auth.welcomeTitle')}
             </Text>
           </View>
 
@@ -93,7 +103,7 @@ export default function SignInScreen() {
 
           {/* Form Fields */}
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>USERNAME OR EMAIL</Text>
+            <Text style={styles.label}>{t('auth.usernameOrEmail')}</Text>
             <View style={styles.inputWrapper}>
               <TextInput
                 style={styles.input}
@@ -112,7 +122,7 @@ export default function SignInScreen() {
 
           <View style={styles.inputGroup}>
             <View style={styles.labelRow}>
-              <Text style={styles.label}>PASSWORD</Text>
+              <Text style={styles.label}>{t('auth.password')}</Text>
               <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
                 <Text style={styles.showPassToggle}>
                   {showPassword ? 'Hide' : 'Show'}
@@ -122,7 +132,7 @@ export default function SignInScreen() {
             <View style={styles.inputWrapper}>
               <TextInput
                 style={styles.input}
-                placeholder="Enter your account password"
+                placeholder="••••••••••••"
                 placeholderTextColor="#64748B"
                 value={password}
                 onChangeText={(val) => {
@@ -144,25 +154,25 @@ export default function SignInScreen() {
             {loading ? (
               <ActivityIndicator color="#0B0E14" />
             ) : (
-              <Text style={styles.submitBtnText}>Sign In to Node ⚡</Text>
+              <Text style={styles.submitBtnText}>{t('auth.signInBtn')} ⚡</Text>
             )}
           </TouchableOpacity>
 
           {/* Links */}
           <View style={styles.cardFooter}>
-            <Text style={styles.footerPrompt}>Don&apos;t have a mining account yet?</Text>
+            <Text style={styles.footerPrompt}>{t('auth.needAccount')}</Text>
             <TouchableOpacity
               style={styles.registerLinkBtn}
               onPress={() => router.push('/register' as any)}
             >
-              <Text style={styles.registerLinkText}>Create New Account / Join Network →</Text>
+              <Text style={styles.registerLinkText}>{t('auth.createAccountTab')} →</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
               style={styles.backLinkBtn}
               onPress={() => router.replace('/')}
             >
-              <Text style={styles.backLinkText}>← Return to MineBest Home Page</Text>
+              <Text style={styles.backLinkText}>← {t('common.appName')}</Text>
             </TouchableOpacity>
           </View>
         </View>

@@ -15,7 +15,10 @@ import { useRouter } from 'expo-router';
 import { api } from '@/services/api';
 import { BinaryTreeVisualizer } from '@/components/BinaryTreeVisualizer';
 import { StarRankIndicator } from '@/components/StarRankIndicator';
+import { LanguageSelector } from '@/components/LanguageSelector';
+import { useTranslation } from 'react-i18next';
 import { useIsMobile } from '@/hooks/useIsMobile';
+import { setAppLanguage } from '@/i18n';
 
 const DatacenterImg = require('../../assets/images/facility_datacenter.jpg');
 const AsicHardwareImg = require('../../assets/images/asic_hardware.jpg');
@@ -252,6 +255,7 @@ export const OFFICIAL_MINING_PACKAGES: Package[] = [
 export default function BitcoinMiningApp() {
   const router = useRouter();
   const isMobile = useIsMobile();
+  const { t, i18n } = useTranslation();
 
   const [activeTab, setActiveTab] = useState<'packages' | 'binary' | 'referrals' | 'contracts'>('packages');
   const [loading, setLoading] = useState(true);
@@ -412,16 +416,23 @@ export default function BitcoinMiningApp() {
   const binarySettlementMsLeft = Math.max(0, next2359TargetMs - nowMs);
   const isBinarySettlementDue = binarySettlementMsLeft <= 1500;
 
-  // 100% Automated Daily Settlement Engine:
-  // Auto-implement strictly at 23:59:59 daily (NOT instant when pairs exist or qualified for 10% pairing)
+  // 100% Automated 10% Binary Pairing Engine:
+  // Pairs remain in { PENDING AT 23:59 } throughout the day.
+  // When 23:59:59 is reached (isBinarySettlementDue), daily pairing auto-executes without manual clicks!
   const lastBinaryAutoSettleRef = useRef<number>(0);
   useEffect(() => {
     if (!api.getToken() || settlingBinary) return;
-    const now = Date.now();
-    // Auto-implement ONLY at 23:59:59 daily cycle
-    const canAutoSettleAtMidnight = isBinarySettlementDue && (now - lastBinaryAutoSettleRef.current) > 30000;
 
-    if (canAutoSettleAtMidnight) {
+    // Strict condition: ONLY execute when clock reaches 23:59:59!
+    if (!isBinarySettlementDue) return;
+
+    const isQualified = (user?.wallet?.totalInvested || 0) > 0;
+    const hasPairsReady =
+      (summary?.leftLeg?.currentVolume || 0) >= 1000 &&
+      (summary?.rightLeg?.currentVolume || 0) >= 1000;
+
+    const now = Date.now();
+    if (isQualified && hasPairsReady && (now - lastBinaryAutoSettleRef.current) > 30000) {
       lastBinaryAutoSettleRef.current = now;
       setSettlingBinary(true);
       api.settleDailyBinary()
@@ -430,7 +441,7 @@ export default function BitcoinMiningApp() {
             refreshAllData();
             const { pairsPaid, rewardUsd, pairsConfiscated, starName } = res.result;
             showNotification(
-              `⚡ Daily 23:59:59 Automated Settlement Complete: +${rewardUsd} USDT credited automatically to your wallet! ${pairsConfiscated > 0 ? `• [${pairsConfiscated} capped under ${starName || 'Star'}]` : ''}`,
+              `⭐ Daily 23:59 Settlement Complete: +${rewardUsd} USDT credited automatically to your wallet! ${pairsConfiscated > 0 ? `• [${pairsConfiscated} pair(s) confiscated under ${starName || 'Star'} Rule]` : ''}`,
               'success'
             );
           } else {
@@ -438,13 +449,13 @@ export default function BitcoinMiningApp() {
           }
         })
         .catch((e) => {
-          console.error('23:59:59 automated daily binary settlement error:', e);
+          console.error('Automated binary pairing settlement error at 23:59:', e);
         })
         .finally(() => {
           setSettlingBinary(false);
         });
     }
-  }, [isBinarySettlementDue]);
+  }, [isBinarySettlementDue, summary?.leftLeg?.currentVolume, summary?.rightLeg?.currentVolume, user?.wallet?.totalInvested]);
 
   // Initial load
   useEffect(() => {
@@ -474,6 +485,9 @@ export default function BitcoinMiningApp() {
           const check = await api.getMe();
           if (check?.user) {
             setUser(check.user);
+            if (check.user.preferredLanguage && check.user.preferredLanguage !== i18n.language) {
+              setAppLanguage(check.user.preferredLanguage).catch(() => {});
+            }
           } else {
             api.setToken(null);
             setUser(null);
@@ -595,9 +609,9 @@ export default function BitcoinMiningApp() {
       const res = await api.settleDailyBinary();
       await refreshAllData();
       if (res.result?.settled) {
-        const { pairsPaid, rewardUsd, pairsConfiscated, confiscatedVolume } = res.result;
+        const { pairsPaid, rewardUsd, pairsConfiscated, confiscatedVolume, starName } = res.result;
         showNotification(
-          `⭐ Daily 23:59 Settlement Complete: ${pairsPaid} pair paid (+${rewardUsd} USDT). ${pairsConfiscated > 0 ? `⚠️ ${pairsConfiscated} pair (${confiscatedVolume} USDT volume) confiscated under 1-Star Rule (limit: 1 pair/day).` : 'No excess pairings confiscated.'}`
+          `⭐ Daily 23:59 Settlement Complete: ${pairsPaid} pair paid (+${rewardUsd} USDT). ${pairsConfiscated > 0 ? `⚠️ ${pairsConfiscated} pair (${confiscatedVolume} USDT volume) confiscated under ${starName || 'Star'} Rule (limit: ${summary?.starRanking?.maxDailyPairs || 1} pair/day).` : 'No excess pairings confiscated.'}`
         );
       } else {
         showNotification(`⭐ Settlement Notice: ${res.message || 'No ready pairing to settle.'}`);
@@ -664,6 +678,28 @@ export default function BitcoinMiningApp() {
     }
   };
 
+  const getDepositNetwork = () => {
+    const net = activeCurrencyConfig.network;
+    const isStandard = !net || net.includes('TRC20') || net.includes('SegWit') || net.includes('ERC20');
+    if (isStandard) {
+      return t(`depositModal.networks.${depositCurrency}`);
+    }
+    return net;
+  };
+
+  const getDepositInstructions = () => {
+    const custom = activeCurrencyConfig.instructions;
+    const isStandard =
+      !custom ||
+      custom.includes('Transfer USDT only') ||
+      custom.includes('Transfer BTC directly') ||
+      custom.includes('Transfer USDC only');
+    if (isStandard) {
+      return t(`depositModal.instructions.${depositCurrency}`);
+    }
+    return custom;
+  };
+
   const handleCopyDepositAddress = () => {
     const addr = activeCurrencyConfig.depositAddress;
     try {
@@ -672,7 +708,7 @@ export default function BitcoinMiningApp() {
       }
     } catch (_) { }
     setDepositAddressCopied(true);
-    showNotification(`${depositCurrency} deposit wallet address copied to clipboard!`, 'success');
+    showNotification(t('depositModal.addressCopied', { currency: depositCurrency }), 'success');
     setTimeout(() => setDepositAddressCopied(false), 3000);
   };
 
@@ -680,7 +716,7 @@ export default function BitcoinMiningApp() {
     const amt = parseFloat(depositAmount);
     const minAmt = activeCurrencyConfig.minDeposit;
     if (!amt || amt <= 0 || amt < minAmt) {
-      showNotification(`Please enter a valid deposit amount (min ${minAmt} ${depositCurrency}).`, 'error');
+      showNotification(t('depositModal.enterValidAmount', { min: minAmt, currency: depositCurrency }), 'error');
       return;
     }
     setIsSubmittingDeposit(true);
@@ -692,14 +728,14 @@ export default function BitcoinMiningApp() {
         depositCurrency
       );
       showNotification(
-        res.message || `Deposit request for ${amt} ${depositCurrency} submitted! Awaiting Admin review.`,
+        res.message || t('depositModal.depositSubmitted', { amount: amt, currency: depositCurrency }),
         'success'
       );
       setDepositTxHash('');
       await loadDepositDetails();
       await refreshAllData();
     } catch (err: any) {
-      showNotification(`Deposit error: ${err.message}`, 'error');
+      showNotification(t('depositModal.depositError', { error: err.message }), 'error');
     } finally {
       setIsSubmittingDeposit(false);
     }
@@ -901,26 +937,29 @@ export default function BitcoinMiningApp() {
                 </View>
               </TouchableOpacity>
 
-              {user ? (
-                <TouchableOpacity style={styles.mobileSignOutBtn} onPress={handleLogout}>
-                  <Text style={styles.mobileSignOutBtnText}>Sign Out</Text>
-                </TouchableOpacity>
-              ) : (
-                <View style={{ flexDirection: 'row', gap: 6 }}>
-                  <TouchableOpacity
-                    style={styles.mobileSignInBtn}
-                    onPress={() => router.push('/login' as any)}
-                  >
-                    <Text style={styles.mobileSignInBtnText}>Sign In</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                <LanguageSelector compact />
+                {user ? (
+                  <TouchableOpacity style={styles.mobileSignOutBtn} onPress={handleLogout}>
+                    <Text style={styles.mobileSignOutBtnText}>Sign Out</Text>
                   </TouchableOpacity>
-                  <TouchableOpacity
-                    style={styles.mobileSignUpBtn}
-                    onPress={() => router.push('/register' as any)}
-                  >
-                    <Text style={styles.mobileSignUpBtnText}>Sign Up</Text>
-                  </TouchableOpacity>
-                </View>
-              )}
+                ) : (
+                  <View style={{ flexDirection: 'row', gap: 6 }}>
+                    <TouchableOpacity
+                      style={styles.mobileSignInBtn}
+                      onPress={() => router.push('/login' as any)}
+                    >
+                      <Text style={styles.mobileSignInBtnText}>Sign In</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={styles.mobileSignUpBtn}
+                      onPress={() => router.push('/register' as any)}
+                    >
+                      <Text style={styles.mobileSignUpBtnText}>Sign Up</Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
+              </View>
             </View>
 
             {/* Row 2: Live BTC Price Pill & User Profile Badge */}
@@ -1001,6 +1040,7 @@ export default function BitcoinMiningApp() {
             </TouchableOpacity>
 
             <View style={styles.headerRightActions}>
+              <LanguageSelector />
               <View style={styles.marketPill}>
                 <View style={styles.liveDot} />
                 <Text style={styles.marketLabel}>BTC/USDT</Text>
@@ -1053,14 +1093,14 @@ export default function BitcoinMiningApp() {
                         style={styles.adminConsoleBtn}
                         onPress={() => router.push('/admin' as any)}
                       >
-                        <Text style={styles.adminConsoleBtnText}>🛡️ Admin Panel</Text>
+                        <Text style={styles.adminConsoleBtnText}>🛡️ {t('common.admin')}</Text>
                       </TouchableOpacity>
                     )}
                     <TouchableOpacity
                       style={styles.authBtnDanger}
                       onPress={handleLogout}
                     >
-                      <Text style={styles.authBtnDangerText}>Sign Out</Text>
+                      <Text style={styles.authBtnDangerText}>{t('common.logout')}</Text>
                     </TouchableOpacity>
                   </View>
                 ) : (
@@ -1069,13 +1109,13 @@ export default function BitcoinMiningApp() {
                       style={styles.authBtnPrimary}
                       onPress={() => router.push('/login' as any)}
                     >
-                      <Text style={styles.authBtnPrimaryText}>⚡ Sign In</Text>
+                      <Text style={styles.authBtnPrimaryText}>⚡ {t('common.login')}</Text>
                     </TouchableOpacity>
                     <TouchableOpacity
                       style={styles.authBtnSecondary}
                       onPress={() => router.push('/register' as any)}
                     >
-                      <Text style={styles.authBtnSecondaryText}>Sign Up</Text>
+                      <Text style={styles.authBtnSecondaryText}>{t('common.register')}</Text>
                     </TouchableOpacity>
                   </View>
                 )}
@@ -1090,20 +1130,20 @@ export default function BitcoinMiningApp() {
         <View style={[styles.walletBar, isMobile && styles.walletBarMobile]}>
           <View style={[styles.walletStats, isMobile && styles.walletStatsMobile]}>
             <View style={[styles.statBox, isMobile && styles.statBoxMobile]}>
-              <Text style={styles.statLabel}>USDT/USDC BALANCE</Text>
+              <Text style={styles.statLabel}>{t('wallet.usdBalance').toUpperCase()}</Text>
               <Text style={styles.statUsd}>{user?.wallet?.usdBalance?.toLocaleString(undefined, { minimumFractionDigits: 2 }) || '0.00'}</Text>
             </View>
             <View style={[styles.statBox, isMobile && styles.statBoxMobile]}>
-              <Text style={styles.statLabel}>BITCOIN</Text>
+              <Text style={styles.statLabel}>{t('wallet.btcBalance').toUpperCase()}</Text>
               <Text style={styles.statBtc}>₿ {user?.wallet?.btcBalance?.toFixed(8) || '0.00000000'} BTC</Text>
               <Text style={styles.statBtcUsd}>≈ {((user?.wallet?.btcBalance || 0) * btcPrice).toFixed(2)} USDT</Text>
             </View>
             <View style={[styles.statBox, isMobile && styles.statBoxMobile]}>
-              <Text style={styles.statLabel}>10% DIRECT BONUS</Text>
+              <Text style={styles.statLabel}>{t('wallet.totalDirectEarned').toUpperCase()}</Text>
               <Text style={styles.statDirect}>+{user?.wallet?.totalDirectEarned?.toFixed(2) || '0.00'}</Text>
             </View>
             <View style={[styles.statBox, isMobile && styles.statBoxMobile]}>
-              <Text style={styles.statLabel}>10% BINARY PAIRING</Text>
+              <Text style={styles.statLabel}>{t('wallet.totalBinaryEarned').toUpperCase()}</Text>
               <Text style={styles.statBinary}>+{user?.wallet?.totalBinaryEarned?.toFixed(2) || '0.00'}</Text>
               <Text style={styles.statSub}>{summary?.pairsCount || 0} Pairs (100 USDT/ea)</Text>
             </View>
@@ -1111,7 +1151,7 @@ export default function BitcoinMiningApp() {
 
           <View style={[styles.walletActions, isMobile && styles.walletActionsMobile]}>
             <TouchableOpacity style={[styles.actionBtnTransfer, isMobile && styles.actionBtnFlex]} onPress={() => router.push('/transfer' as any)}>
-              <Text style={styles.actionBtnTransferText}>⇄ Transfer & Withdraw</Text>
+              <Text style={styles.actionBtnTransferText}>⇄ {t('wallet.transfer')}</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.actionBtnDeposit, isMobile && styles.actionBtnFlex]}
@@ -1120,10 +1160,10 @@ export default function BitcoinMiningApp() {
                 setDepositModalVisible(true);
               }}
             >
-              <Text style={styles.actionBtnText}>+ Deposit (USDT/BTC/USDC)</Text>
+              <Text style={styles.actionBtnText}>+ {t('wallet.deposit')}</Text>
             </TouchableOpacity>
             <TouchableOpacity style={[styles.actionBtnRegister, isMobile && styles.actionBtnFlex]} onPress={() => handleJoinMember()}>
-              <Text style={styles.actionBtnText}>+ Sign Up Member</Text>
+              <Text style={styles.actionBtnText}>+ {t('common.register')}</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -1177,7 +1217,7 @@ export default function BitcoinMiningApp() {
             onPress={() => router.push('/' as any)}
           >
             <Text style={[styles.navTabText, { color: '#38BDF8', fontWeight: '800' }]}>
-              ← 🏛️ Main Home Page
+              ← 🏛️ {t('common.appName')}
             </Text>
           </TouchableOpacity>
 
@@ -1186,7 +1226,7 @@ export default function BitcoinMiningApp() {
             onPress={() => setActiveTab('packages')}
           >
             <Text style={[styles.navTabText, activeTab === 'packages' && styles.navTabTextActive]}>
-              ⚡ Mining Packages
+              ⚡ {t('dashboard.miningRigs')}
             </Text>
           </TouchableOpacity>
 
@@ -1195,7 +1235,7 @@ export default function BitcoinMiningApp() {
             onPress={() => setActiveTab('binary')}
           >
             <Text style={[styles.navTabText, activeTab === 'binary' && styles.navTabTextActive]}>
-              🌲 Binary Placement Tree
+              🌲 {t('dashboard.binaryNetwork')}
             </Text>
           </TouchableOpacity>
 
@@ -1204,7 +1244,7 @@ export default function BitcoinMiningApp() {
             onPress={() => setActiveTab('referrals')}
           >
             <Text style={[styles.navTabText, activeTab === 'referrals' && styles.navTabTextActive]}>
-              👥 Direct Referrals
+              👥 {t('binary.directSponsored')}
             </Text>
           </TouchableOpacity>
 
@@ -1213,7 +1253,7 @@ export default function BitcoinMiningApp() {
             onPress={() => setActiveTab('contracts')}
           >
             <Text style={[styles.navTabText, activeTab === 'contracts' && styles.navTabTextActive]}>
-              ⛏️ My Contracts
+              ⛏️ {t('dashboard.myContracts')}
             </Text>
           </TouchableOpacity>
 
@@ -1222,7 +1262,7 @@ export default function BitcoinMiningApp() {
             onPress={() => router.push('/trade' as any)}
           >
             <Text style={[styles.navTabText, { color: '#F7931A', fontWeight: '800' }]}>
-              🪙 Buy / Sell BTC
+              🪙 {t('dashboard.instantSwap')}
             </Text>
           </TouchableOpacity>
         </ScrollView>
@@ -1242,14 +1282,14 @@ export default function BitcoinMiningApp() {
               <View style={styles.tabContent}>
                 <View style={styles.sectionHeader}>
                   <View style={{ flex: 1 }}>
-                    <Text style={styles.sectionTitle}>Bitcoin Cloud Mining Contracts</Text>
+                    <Text style={styles.sectionTitle}>{t('mining.sectionTitle')}</Text>
                     <Text style={styles.sectionSubtitle}>
-                      Official tiers: min 100, 300, 1,000, 5,000, 10,000, 30,000 USDT • Daily Bitcoin ROI for up to 1,500 Days
+                      {t('mining.sectionSubtitle')}
                     </Text>
                   </View>
                   <View style={[styles.referralHighlightPill, isMobile && styles.fullWidthPill]}>
                     <Text style={styles.referralHighlightText}>
-                      ⭐ 10% Direct Bonus & 10% Pairing (Mining Service Purchase Required to Qualify)
+                      {t('mining.referralHighlight')}
                     </Text>
                   </View>
                 </View>
@@ -1261,14 +1301,14 @@ export default function BitcoinMiningApp() {
                     <View style={[styles.storeHeroTop, isMobile && styles.storeHeroTopMobile]}>
                       <View style={styles.storeHeroPill}>
                         <View style={styles.storeHeroDotGreen} />
-                        <Text style={styles.storeHeroPillText}>300+ MW MINEBEST DATA CENTER FLEET</Text>
+                        <Text style={styles.storeHeroPillText}>{t('mining.storeHeroPill')}</Text>
                       </View>
-                      <Text style={styles.storeHeroSpecs}>Tier-III • 1,500-Day Hardware Lifecycle</Text>
+                      <Text style={styles.storeHeroSpecs}>{t('mining.storeHeroSpecs')}</Text>
                     </View>
                     <View style={styles.storeHeroBottom}>
-                      <Text style={styles.storeHeroTitle}>High-Density Physical ASIC Hashrate</Text>
+                      <Text style={styles.storeHeroTitle}>{t('mining.storeHeroTitle')}</Text>
                       <Text style={styles.storeHeroSubtitle}>
-                        Direct allocation from MicroBT WhatsMiner & Bitmain Antminer clusters in Poland & Kazakhstan. 100% automated daily yield credited every 24 hours.
+                        {t('mining.storeHeroSubtitle')}
                       </Text>
                     </View>
                   </View>
@@ -1293,13 +1333,13 @@ export default function BitcoinMiningApp() {
                         <View key={pkg._id || pkg.tier} style={[styles.packageCard, isMobile && styles.packageCardMobile]}>
                           <View style={styles.cardHeader}>
                             <View style={styles.badgePill}>
-                              <Text style={styles.badgeText}>{pkg.badge || 'ASIC RIG'}</Text>
+                              <Text style={styles.badgeText}>{t(`mining.badges.${pkg.badge}`, { defaultValue: pkg.badge || 'ASIC RIG' })}</Text>
                             </View>
-                            <Text style={styles.tierDuration}>MAX {pkg.maxDays || 1000} DAYS</Text>
+                            <Text style={styles.tierDuration}>{t('mining.maxDays', { days: pkg.maxDays || 1500 })}</Text>
                           </View>
 
                           <Text style={styles.pkgTitle}>{pkg.name}</Text>
-                          <Text style={styles.pkgTagline}>{pkg.tagline}</Text>
+                          <Text style={styles.pkgTagline}>{t(`mining.taglines.${pkg.tier}`, { defaultValue: pkg.tagline })}</Text>
 
                           <View style={styles.priceRow}>
                             <Text style={styles.priceAmount}>{pkg.tier.toLocaleString()}</Text>
@@ -1308,11 +1348,11 @@ export default function BitcoinMiningApp() {
 
                           <View style={styles.pkgSpecs}>
                             <View style={styles.specRow}>
-                              <Text style={styles.specLabel}>Hashrate Capacity:</Text>
+                              <Text style={styles.specLabel}>{t('mining.hashrateCapacity')}</Text>
                               <Text style={styles.specValueGold}>{pkg.hashrate}</Text>
                             </View>
                             <View style={styles.specRow}>
-                              <Text style={styles.specLabel}>Daily Bitcoin Yield:</Text>
+                              <Text style={styles.specLabel}>{t('mining.dailyBitcoinYield')}</Text>
                               <View style={{ alignItems: 'flex-end' }}>
                                 <Text style={styles.specValueGreen}>
                                   {isRandomYieldPackage(pkg)
@@ -1320,20 +1360,12 @@ export default function BitcoinMiningApp() {
                                     : `₿ ${pkg.dailyBtcYield.toFixed(6)} BTC/day`}
                                 </Text>
                                 {isRandomYieldPackage(pkg) && (
-                                  <Text style={{ fontSize: 9, color: '#00F0FF', fontWeight: '700' }}>⚡ Daily Output</Text>
+                                  <Text style={{ fontSize: 9, color: '#00F0FF', fontWeight: '700' }}>⚡ {t('mining.dailyOutput')}</Text>
                                 )}
                               </View>
                             </View>
-                            {/* <View style={styles.specRow}>
-                              <Text style={styles.specLabel}>Est. Daily Value:</Text>
-                              <Text style={styles.specValue}>
-                                {isRandomYieldPackage(pkg)
-                                  ? `≈ ${(getPackageYieldRange(pkg).min * 98420).toFixed(2)} ~ ${(getPackageYieldRange(pkg).max * 98420).toFixed(2)} USDT/day`
-                                  : `≈ ${pkg.estimatedDailyUsd?.toFixed(2)} USDT/day`}
-                              </Text>
-                            </View> */}
                             <View style={styles.specRow}>
-                              <Text style={styles.specLabel}>Total 1500-Day Yield:</Text>
+                              <Text style={styles.specLabel}>{t('mining.total1500Yield')}</Text>
                               <Text style={styles.specValueBtc}>
                                 {isRandomYieldPackage(pkg)
                                   ? `₿ ${(getPackageYieldRange(pkg).min * 1500).toFixed(4)} ~ ${(getPackageYieldRange(pkg).max * 1500).toFixed(4)} BTC`
@@ -1341,7 +1373,7 @@ export default function BitcoinMiningApp() {
                               </Text>
                             </View>
                             <View style={styles.specRow}>
-                              <Text style={styles.specLabel}>Sponsor 10% Bonus:</Text>
+                              <Text style={styles.specLabel}>{t('mining.sponsorBonus')}</Text>
                               <Text style={styles.specValueReward}>+{(pkg.tier * 0.1).toFixed(2)} USDT</Text>
                             </View>
                           </View>
@@ -1351,7 +1383,7 @@ export default function BitcoinMiningApp() {
                             onPress={() => handleOpenPurchase(pkg)}
                           >
                             <Text style={styles.buyBtnText}>
-                              {isAffordable ? `Purchase ${pkg.tier.toLocaleString()} USDT Service` : `Need ${(pkg.tier - (user?.wallet?.usdBalance || 0)).toFixed(0)} USDT more`}
+                              {isAffordable ? t('mining.purchaseService', { amount: pkg.tier.toLocaleString() }) : t('mining.needMore', { amount: (pkg.tier - (user?.wallet?.usdBalance || 0)).toFixed(0) })}
                             </Text>
                           </TouchableOpacity>
                         </View>
@@ -1368,25 +1400,25 @@ export default function BitcoinMiningApp() {
                 {/* Pairing Rules Card */}
                 <View style={styles.pairingBannerCard}>
                   <View style={styles.pairingBannerHeader}>
-                    <Text style={styles.pairingBannerTitle}>⚡ Binary Pairing Engine (Leg A & Leg B)</Text>
+                    <Text style={styles.pairingBannerTitle}>{t('binary.pairingTitle')}</Text>
                     <View style={styles.rateBadge}>
-                      <Text style={styles.rateBadgeText}>10% REWARD ON 1,000</Text>
+                      <Text style={styles.rateBadgeText}>{t('binary.pairingRateBadge')}</Text>
                     </View>
                   </View>
                   <Text style={styles.pairingBannerDesc}>
-                    When Binary <Text style={styles.boldWhite}>Leg A</Text> hits <Text style={styles.boldGold}>1,000</Text> AND Binary <Text style={styles.boldWhite}>Leg B</Text> hits <Text style={styles.boldGold}>1,000</Text>, parent gets an instant <Text style={styles.boldGreen}>10% reward (100 USDT)</Text> one-time. After pairing 1,000, volume restarts from 0, ready for the next 1,000 pairing! Only users who have already purchased a mining service qualify to receive the 10% Binary Pairing reward.
+                    {t('binary.pairingDesc')}
                   </Text>
 
                   <View style={styles.qualNoticeRow}>
                     <View style={[styles.qualNoticeBadge, (user?.wallet?.totalInvested || 0) > 0 ? styles.qualNoticeBadgeActive : styles.qualNoticeBadgeInactive]}>
                       <Text style={[styles.qualNoticeBadgeText, (user?.wallet?.totalInvested || 0) > 0 ? styles.qualNoticeBadgeTextActive : styles.qualNoticeBadgeTextInactive]}>
-                        {(user?.wallet?.totalInvested || 0) > 0 ? '✓ QUALIFIED FOR 10% PAIRING' : '⚠️ UNQUALIFIED (PURCHASE SERVICE TO QUALIFY)'}
+                        {(user?.wallet?.totalInvested || 0) > 0 ? `✓ ${t('dashboard.qualifiedForPairing')}` : `⚠️ ${t('dashboard.notQualifiedForPairing')}`}
                       </Text>
                     </View>
                     <Text style={styles.qualNoticeSub}>
                       {(user?.wallet?.totalInvested || 0) > 0
-                        ? `Active Mining Contract (${user?.wallet?.totalInvested?.toLocaleString()} USDT invested). You qualify to receive 10% Binary Pairing.`
-                        : 'Rule: You must already purchase a mining service to qualify to receive 10% Binary Pairing.'}
+                        ? t('binary.activeMiningNotice', { amount: user?.wallet?.totalInvested?.toLocaleString() })
+                        : t('binary.inactiveMiningNotice')}
                     </Text>
                   </View>
 
@@ -1394,8 +1426,8 @@ export default function BitcoinMiningApp() {
                   <View style={[styles.gaugeContainer, isMobile && styles.gaugeContainerMobile]}>
                     <View style={[styles.gaugeBox, isMobile && styles.gaugeBoxMobile]}>
                       <View style={styles.gaugeHeader}>
-                        <Text style={styles.gaugeTitle}>LEG A (LEFT PLACEMENT)</Text>
-                        <Text style={styles.gaugeTotal}>All-time: {summary?.leftLeg?.totalVolume?.toLocaleString() || 0} USDT</Text>
+                        <Text style={styles.gaugeTitle}>{t('binary.legA').toUpperCase()}</Text>
+                        <Text style={styles.gaugeTotal}>{t('binary.allTime')}: {summary?.leftLeg?.totalVolume?.toLocaleString() || 0} USDT</Text>
                       </View>
                       <View style={styles.progressBarWrapper}>
                         <View
@@ -1407,24 +1439,24 @@ export default function BitcoinMiningApp() {
                       </View>
                       <View style={styles.gaugeFooter}>
                         <Text style={styles.gaugeCurrent}>
-                          Current: <Text style={styles.boldGold}>{summary?.leftLeg?.currentVolume || 0}</Text> / 1,000
+                          {t('binary.current')} <Text style={styles.boldGold}>{summary?.leftLeg?.currentVolume || 0}</Text> / 1,000
                         </Text>
                         <Text style={styles.gaugeNeeded}>
-                          {(summary?.nextPairNeeded?.legA || 0) === 0 ? '✓ Ready' : `+${summary?.nextPairNeeded?.legA} to Pair`}
+                          {(summary?.nextPairNeeded?.legA || 0) === 0 ? t('binary.ready') : `+${summary?.nextPairNeeded?.legA} ${t('binary.toPair')}`}
                         </Text>
                       </View>
                     </View>
 
                     <View style={styles.pairIconBox}>
                       <Text style={styles.pairIconText}>⚖️</Text>
-                      <Text style={styles.pairMatchesText}>{summary?.pairsCount || 0} PAIRS</Text>
+                      <Text style={styles.pairMatchesText}>{summary?.pairsCount || 0} {t('binary.pairs')}</Text>
                       <Text style={styles.pairTotalEarned}>{summary?.totalBinaryBonus?.toFixed(2) || '0.00'}</Text>
                     </View>
 
                     <View style={[styles.gaugeBox, isMobile && styles.gaugeBoxMobile]}>
                       <View style={styles.gaugeHeader}>
-                        <Text style={styles.gaugeTitle}>LEG B (RIGHT PLACEMENT)</Text>
-                        <Text style={styles.gaugeTotal}>All-time: {summary?.rightLeg?.totalVolume?.toLocaleString() || 0} USDT</Text>
+                        <Text style={styles.gaugeTitle}>{t('binary.legB').toUpperCase()}</Text>
+                        <Text style={styles.gaugeTotal}>{t('binary.allTime')}: {summary?.rightLeg?.totalVolume?.toLocaleString() || 0} USDT</Text>
                       </View>
                       <View style={styles.progressBarWrapper}>
                         <View
@@ -1436,10 +1468,10 @@ export default function BitcoinMiningApp() {
                       </View>
                       <View style={styles.gaugeFooter}>
                         <Text style={styles.gaugeCurrent}>
-                          Current: <Text style={styles.boldGold}>{summary?.rightLeg?.currentVolume || 0}</Text> / 1,000
+                          {t('binary.current')} <Text style={styles.boldGold}>{summary?.rightLeg?.currentVolume || 0}</Text> / 1,000
                         </Text>
                         <Text style={styles.gaugeNeeded}>
-                          {(summary?.nextPairNeeded?.legB || 0) === 0 ? '✓ Ready' : `+${summary?.nextPairNeeded?.legB} to Pair`}
+                          {(summary?.nextPairNeeded?.legB || 0) === 0 ? t('binary.ready') : `+${summary?.nextPairNeeded?.legB} ${t('binary.toPair')}`}
                         </Text>
                       </View>
                     </View>
@@ -1451,7 +1483,7 @@ export default function BitcoinMiningApp() {
                   <View style={[styles.starRankHeader, isMobile && styles.starRankHeaderMobile]}>
                     <View style={isMobile ? { width: '100%' } : { flex: 1 }}>
                       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                        <Text style={styles.starRankTitle}>STAR RANKING & 23:59 SETTLEMENT</Text>
+                        <Text style={styles.starRankTitle}>{t('starRanking.title')}</Text>
                         <StarRankIndicator
                           rank={summary?.starRanking?.rank || 0}
                           isQualified={summary?.starRanking?.isOneStarQualified}
@@ -1460,7 +1492,7 @@ export default function BitcoinMiningApp() {
                         />
                       </View>
                       <Text style={styles.starRankSub}>
-                        {summary?.starRanking?.name || 'Star Ranking System'}: 1★ (1,000 Sales) = 1 Pair • 2★ (Min 300 Service + 2,000 Sales) = 2 Pairs • 3★ (Min 1,000 Service + 10,000 Sales) = 4 Pairs • 4★ (Min 5,000 Service + 50,000 Sales) = 6 Pairs • 5★ (Min 5,000 Service + 100,000 Sales) = 7 Pairs • 6★ (Min 10,000 Service + 1,000,000 Sales) = 9 Pairs • 7★ (Min 30,000 Service + 5,000,000 Sales) = 11 Pairs • 👑 Crown (Min 30,000 Service + 10,000,000 Sales) = 13 Pairs • 👑👑 2 Crown (Min 60,000 Service + 50,000,000 Sales) = 15 Pairs • 👑👑👑 3 Crown (Min 100,000 Service + 100,000,000 Sales) = 18 Pairs/Day at 23:59.
+                        {t('starRanking.subTitle')}
                       </Text>
                     </View>
                     <View
@@ -1474,21 +1506,21 @@ export default function BitcoinMiningApp() {
                         <View style={styles.indicatorPulseGreen} />
                         <Text style={styles.autoSettlementHeaderText}>
                           {settlingBinary
-                            ? '⚡ EXECUTING 23:59:59 AUTO-SETTLEMENT...'
-                            : '🟢 100% AUTOMATED DAILY SETTLEMENT'}
+                            ? t('binary.executingSettlement')
+                            : `🟢 ${t('starRanking.automatedBadge')}`}
                         </Text>
                       </View>
                       <Text style={styles.autoSettlementCountdownTimer}>
                         {settlingBinary
-                          ? 'AUTO-CREDITING USDT...'
-                          : `23:59:59 IN ${formatCountdown(binarySettlementMsLeft)}`}
+                          ? t('binary.autoCrediting')
+                          : `23:59:59 ${t('binary.inCountdown')} ${formatCountdown(binarySettlementMsLeft)}`}
                       </Text>
                       <Text style={styles.autoSettlementSubText}>
                         {settlingBinary
-                          ? 'Depositing 10% Pairing Bonus to USDT Balance...'
+                          ? t('binary.depositingPairingBonus')
                           : (summary?.starRanking?.pendingPaidPairs && summary.starRanking.pendingPaidPairs > 0)
-                            ? `⚡ ${summary.starRanking.pendingPaidPairs} Pair(s) Queued (+${summary.starRanking.pendingPaidPairs * 100} USDT) • Auto-settled on 23:59:59 daily`
-                            : '✓ 100% Automated System • Auto-Credited on 23:59:59 Daily (No manual click required)'}
+                            ? t('binary.queuedPairsSettlement', { pairs: summary.starRanking.pendingPaidPairs, usdt: summary.starRanking.pendingPaidPairs * 100 })
+                            : t('starRanking.automatedSub')}
                       </Text>
                     </View>
                   </View>
@@ -1498,30 +1530,30 @@ export default function BitcoinMiningApp() {
                     {/* 1. Direct Placement Tree Volume */}
                     <View style={styles.starProgressHeaderRow}>
                       <Text style={styles.starProgressLabel}>
-                        Direct Placement Tree Volume: <Text style={{ color: '#00F0FF', fontWeight: '800' }}>{(summary?.starRanking?.directPlacementVolume || 0).toLocaleString()} USDT</Text> / {(summary?.starRanking?.targetVolume || 1000).toLocaleString()} USDT
+                        {t('starRanking.directPlacementVolume')}: <Text style={{ color: '#00F0FF', fontWeight: '800' }}>{(summary?.starRanking?.directPlacementVolume || 0).toLocaleString()} USDT</Text> / {(summary?.starRanking?.targetVolume || 1000).toLocaleString()} USDT
                       </Text>
                       <Text style={[styles.starProgressStatus, summary?.starRanking?.isThreeCrownQualified ? { color: '#FFF275' } : summary?.starRanking?.isTwoCrownQualified ? { color: '#FFE000' } : summary?.starRanking?.isCrownQualified ? { color: '#FFD700' } : summary?.starRanking?.isSevenStarQualified ? { color: '#FFE600' } : summary?.starRanking?.isSixStarQualified ? { color: '#FF007F' } : summary?.starRanking?.isFiveStarQualified ? styles.textCyan : summary?.starRanking?.isFourStarQualified ? styles.textPurple : summary?.starRanking?.isThreeStarQualified ? styles.textGreen : summary?.starRanking?.isTwoStarQualified ? styles.textCyan : summary?.starRanking?.isOneStarQualified ? styles.textCyan : styles.textOrange]}>
                         {summary?.starRanking?.isThreeCrownQualified
-                          ? '✓ 3 CROWN QUALIFIED (100,000,000+ USDT)'
+                          ? t('binary.qualifiedRank', { rank: '3 CROWN', amount: '100,000,000+' })
                           : summary?.starRanking?.isTwoCrownQualified
-                            ? `✓ 2 CROWN (Need +${(summary?.starRanking?.volumeNeededForNextRank || 0).toLocaleString()} to 3 Crown)`
+                            ? t('binary.rankNeedMore', { currentRank: '2 CROWN', amount: (summary?.starRanking?.volumeNeededForNextRank || 0).toLocaleString(), nextRank: '3 Crown' })
                             : summary?.starRanking?.isCrownQualified
-                              ? `✓ CROWN (Need +${(summary?.starRanking?.volumeNeededForNextRank || 0).toLocaleString()} to 2 Crown)`
+                              ? t('binary.rankNeedMore', { currentRank: 'CROWN', amount: (summary?.starRanking?.volumeNeededForNextRank || 0).toLocaleString(), nextRank: '2 Crown' })
                               : summary?.starRanking?.isSevenStarQualified
-                                ? `✓ 7 STAR (Need +${(summary?.starRanking?.volumeNeededForNextRank || 0).toLocaleString()} to Crown)`
+                                ? t('binary.rankNeedMore', { currentRank: '7 STAR', amount: (summary?.starRanking?.volumeNeededForNextRank || 0).toLocaleString(), nextRank: 'Crown' })
                                 : summary?.starRanking?.isSixStarQualified
-                                  ? `✓ 6 STAR (Need +${(summary?.starRanking?.volumeNeededForNextRank || 0).toLocaleString()} to 7★)`
+                                  ? t('binary.rankNeedMore', { currentRank: '6 STAR', amount: (summary?.starRanking?.volumeNeededForNextRank || 0).toLocaleString(), nextRank: '7★' })
                                   : summary?.starRanking?.isFiveStarQualified
-                                    ? `✓ 5 STAR (Need +${(summary?.starRanking?.volumeNeededForNextRank || 0).toLocaleString()} to 6★)`
+                                    ? t('binary.rankNeedMore', { currentRank: '5 STAR', amount: (summary?.starRanking?.volumeNeededForNextRank || 0).toLocaleString(), nextRank: '6★' })
                                     : summary?.starRanking?.isFourStarQualified
-                                      ? `✓ 4 STAR (Need +${(summary?.starRanking?.volumeNeededForNextRank || 0).toLocaleString()} to 5★)`
+                                      ? t('binary.rankNeedMore', { currentRank: '4 STAR', amount: (summary?.starRanking?.volumeNeededForNextRank || 0).toLocaleString(), nextRank: '5★' })
                                       : summary?.starRanking?.isThreeStarQualified
-                                        ? `✓ 3 STAR (Need +${(summary?.starRanking?.volumeNeededForNextRank || 0).toLocaleString()} to 4★)`
+                                        ? t('binary.rankNeedMore', { currentRank: '3 STAR', amount: (summary?.starRanking?.volumeNeededForNextRank || 0).toLocaleString(), nextRank: '4★' })
                                         : summary?.starRanking?.isTwoStarQualified
-                                          ? `✓ 2 STAR (Need +${(summary?.starRanking?.volumeNeededForNextRank || 0).toLocaleString()} to 3★)`
+                                          ? t('binary.rankNeedMore', { currentRank: '2 STAR', amount: (summary?.starRanking?.volumeNeededForNextRank || 0).toLocaleString(), nextRank: '3★' })
                                           : summary?.starRanking?.isOneStarQualified
-                                            ? `✓ 1 STAR (Need +${(summary?.starRanking?.volumeNeededForNextRank || 0).toLocaleString()} to 2★)`
-                                            : `+${(summary?.starRanking?.volumeNeededForNextRank || 1000).toLocaleString()} USDT to 1★`}
+                                            ? t('binary.rankNeedMore', { currentRank: '1 STAR', amount: (summary?.starRanking?.volumeNeededForNextRank || 0).toLocaleString(), nextRank: '2★' })
+                                            : t('binary.needMoreToRank', { amount: (summary?.starRanking?.volumeNeededForNextRank || 1000).toLocaleString(), rank: '1★' })}
                       </Text>
                     </View>
                     <View style={styles.starProgressBarTrack}>
@@ -1543,7 +1575,7 @@ export default function BitcoinMiningApp() {
                     {/* 2. Personal Mining Service Purchase (Min 100,000 for 3 Crown, 60,000 for 2 Crown, 30,000 for Crown & 7-Star, 10,000 for 6-Star, 5,000 for 5-Star & 4-Star, 1,000 for 3-Star, 300 for 2-Star) */}
                     <View style={[styles.starProgressHeaderRow, { marginTop: 10 }]}>
                       <Text style={styles.starProgressLabel}>
-                        Personal Mining Service: <Text style={{ color: '#F7931A', fontWeight: '800' }}>{(summary?.starRanking?.personalInvested || user?.wallet?.totalInvested || 0).toLocaleString()} USDT</Text> / {(summary?.starRanking?.minPersonalRequired || 300).toLocaleString()} USDT ({(summary?.starRanking?.rank || 0) >= 9 ? '👑👑👑 3 Crown' : (summary?.starRanking?.rank || 0) === 8 ? '👑👑 2 Crown' : (summary?.starRanking?.rank || 0) === 7 ? '👑 Crown' : (summary?.starRanking?.rank || 0) === 6 ? '7★' : (summary?.starRanking?.rank || 0) === 5 ? '6★' : (summary?.starRanking?.rank || 0) === 4 ? '5★' : (summary?.starRanking?.rank || 0) === 3 ? '4★' : (summary?.starRanking?.rank || 0) === 2 ? '3★' : '2★'} Requirement)
+                        {t('starRanking.personalMiningService')}: <Text style={{ color: '#F7931A', fontWeight: '800' }}>{(summary?.starRanking?.personalInvested || user?.wallet?.totalInvested || 0).toLocaleString()} USDT</Text> / {(summary?.starRanking?.minPersonalRequired || 300).toLocaleString()} USDT ({(summary?.starRanking?.rank || 0) >= 9 ? '👑👑👑 3 Crown' : (summary?.starRanking?.rank || 0) === 8 ? '👑👑 2 Crown' : (summary?.starRanking?.rank || 0) === 7 ? '👑 Crown' : (summary?.starRanking?.rank || 0) === 6 ? '7★' : (summary?.starRanking?.rank || 0) === 5 ? '6★' : (summary?.starRanking?.rank || 0) === 4 ? '5★' : (summary?.starRanking?.rank || 0) === 3 ? '4★' : (summary?.starRanking?.rank || 0) === 2 ? '3★' : '2★'} {t('binary.requirement')})
                       </Text>
                       <Text
                         style={[
@@ -1554,8 +1586,8 @@ export default function BitcoinMiningApp() {
                         ]}
                       >
                         {(summary?.starRanking?.personalInvested || user?.wallet?.totalInvested || 0) >= (summary?.starRanking?.minPersonalRequired || 300)
-                          ? `✓ ${(summary?.starRanking?.minPersonalRequired || 300).toLocaleString()} USDT MIN SERVICE MET`
-                          : `Need +${Math.max(0, (summary?.starRanking?.minPersonalRequired || 300) - (summary?.starRanking?.personalInvested || user?.wallet?.totalInvested || 0)).toLocaleString()} USDT for ${(summary?.starRanking?.rank || 0) >= 9 ? '👑👑👑 3 Crown' : (summary?.starRanking?.rank || 0) === 8 ? '👑👑 2 Crown' : (summary?.starRanking?.rank || 0) === 7 ? '👑 Crown' : (summary?.starRanking?.rank || 0) === 6 ? '7★' : (summary?.starRanking?.rank || 0) === 5 ? '6★' : (summary?.starRanking?.rank || 0) === 4 ? '5★' : (summary?.starRanking?.rank || 0) === 3 ? '4★' : (summary?.starRanking?.rank || 0) === 2 ? '3★' : '2★'}`}
+                          ? `✓ ${(summary?.starRanking?.minPersonalRequired || 300).toLocaleString()} USDT ${t('starRanking.minServiceMet')}`
+                          : `${t('starRanking.needMore', 'Need +')}${Math.max(0, (summary?.starRanking?.minPersonalRequired || 300) - (summary?.starRanking?.personalInvested || user?.wallet?.totalInvested || 0)).toLocaleString()} USDT ${t('starRanking.forRank', 'for')} ${(summary?.starRanking?.rank || 0) >= 9 ? '👑👑👑 3 Crown' : (summary?.starRanking?.rank || 0) === 8 ? '👑👑 2 Crown' : (summary?.starRanking?.rank || 0) === 7 ? '👑 Crown' : (summary?.starRanking?.rank || 0) === 6 ? '7★' : (summary?.starRanking?.rank || 0) === 5 ? '6★' : (summary?.starRanking?.rank || 0) === 4 ? '5★' : (summary?.starRanking?.rank || 0) === 3 ? '4★' : (summary?.starRanking?.rank || 0) === 2 ? '3★' : '2★'}`}
                       </Text>
                     </View>
                     <View style={styles.starProgressBarTrack}>
@@ -1578,39 +1610,39 @@ export default function BitcoinMiningApp() {
                   {/* Today's Pairing Breakdown & Confiscation Info */}
                   <View style={[styles.starMetricsGrid, isMobile && styles.starMetricsGridMobile]}>
                     <View style={styles.starMetricItem}>
-                      <Text style={styles.starMetricLabel}>DAILY PAIRING LIMIT</Text>
+                      <Text style={styles.starMetricLabel}>{t('starRanking.dailyPairingLimit')}</Text>
                       <Text style={[styles.starMetricValue, (summary?.starRanking?.rank || 0) >= 10 ? { color: '#FFF275' } : (summary?.starRanking?.rank || 0) === 9 ? { color: '#FFE000' } : (summary?.starRanking?.rank || 0) === 8 ? { color: '#FFD700' } : (summary?.starRanking?.rank || 0) === 7 ? { color: '#FFE600' } : (summary?.starRanking?.rank || 0) === 6 ? { color: '#FF007F' } : (summary?.starRanking?.rank || 0) === 5 ? { color: '#00F0FF' } : (summary?.starRanking?.rank || 0) === 4 ? { color: '#C084FC' } : (summary?.starRanking?.rank || 0) === 3 ? { color: '#FF5722' } : (summary?.starRanking?.rank || 0) === 2 ? { color: '#FFA726' } : {}]}>
-                        {summary?.starRanking?.maxDailyPairs || 0} TIME{(summary?.starRanking?.maxDailyPairs || 0) === 1 ? '' : 'S'} / DAY
+                        {summary?.starRanking?.maxDailyPairs || 0} {(summary?.starRanking?.maxDailyPairs || 0) === 1 ? t('binary.timePerDay') : t('binary.timesPerDay')}
                       </Text>
                       <Text style={styles.starMetricSub}>
-                        Max {((summary?.starRanking?.maxDailyPairs || 0) * 100).toLocaleString()} USDT at 23:59
+                        {t('binary.maxUsdtAt2359', { amount: ((summary?.starRanking?.maxDailyPairs || 0) * 100).toLocaleString() })}
                       </Text>
                     </View>
 
                     <View style={styles.starMetricItem}>
-                      <Text style={styles.starMetricLabel}>PENDING AT 23:59</Text>
+                      <Text style={styles.starMetricLabel}>{t('starRanking.pendingAt2359')}</Text>
                       <Text style={styles.starMetricValue}>
-                        {summary?.starRanking?.totalPairsReady || 0} PAIRS READY
+                        {summary?.starRanking?.totalPairsReady || 0} {t('starRanking.pairsReady')}
                       </Text>
                       <Text style={styles.starMetricSub}>
-                        {summary?.starRanking?.pendingPaidPairs || 0} will pay • {summary?.starRanking?.pendingConfiscatedPairs || 0} will confiscate
+                        {summary?.starRanking?.pendingPaidPairs || 0} {t('starRanking.willPay')} • {summary?.starRanking?.pendingConfiscatedPairs || 0} {t('starRanking.willConfiscate')}
                       </Text>
                     </View>
 
                     <View style={styles.starMetricItem}>
-                      <Text style={styles.starMetricLabel}>CONFISCATED BY SYSTEM</Text>
+                      <Text style={styles.starMetricLabel}>{t('starRanking.confiscatedBySystem')}</Text>
                       <Text style={[styles.starMetricValue, (summary?.starRanking?.pendingConfiscatedVolume || 0) > 0 ? { color: '#EF4444' } : { color: '#94A3B8' }]}>
                         {summary?.starRanking?.pendingConfiscatedVolume ? `${summary.starRanking.pendingConfiscatedVolume} USDT` : '0 USDT'}
                       </Text>
-                      <Text style={styles.starMetricSub}>Excess pairs beyond daily limit</Text>
+                      <Text style={styles.starMetricSub}>{t('starRanking.excessPairs')}</Text>
                     </View>
 
                     <View style={styles.starMetricItem}>
-                      <Text style={styles.starMetricLabel}>NEXT SETTLEMENT</Text>
+                      <Text style={styles.starMetricLabel}>{t('starRanking.nextSettlement')}</Text>
                       <Text style={[styles.starMetricValue, { color: '#00FF66' }]}>
                         {formatCountdown(binarySettlementMsLeft)}
                       </Text>
-                      <Text style={styles.starMetricSub}>Auto-executes at 23:59:00</Text>
+                      <Text style={styles.starMetricSub}>{t('starRanking.autoExecutes')}</Text>
                     </View>
                   </View>
 
@@ -1619,37 +1651,37 @@ export default function BitcoinMiningApp() {
                     <Text style={styles.starRuleIcon}>📜</Text>
                     <View style={{ flex: 1, gap: 4 }}>
                       <Text style={styles.starRuleText}>
-                        <Text style={styles.boldGold}>★ 1 Star User Rule:</Text> Direct placement tree volume ≥ 1,000 USDT gives BINARY PAIRING 1 time only per day (100 USDT). Second 1,000 pairing is confiscated by system.
+                        <Text style={styles.boldGold}>{t('binary.rules.star1')}</Text> {t('binary.rules.star1Desc')}
                       </Text>
                       <Text style={styles.starRuleText}>
-                        <Text style={{ color: '#FFA726', fontWeight: '800' }}>★★ 2 Star User Rule:</Text> Min purchased 300 USDT mining service + direct placement tree volume ≥ 2,000 USDT gives BINARY PAIRING 2 times only per day (200 USDT). Excess pairings beyond 2 are confiscated by system.
+                        <Text style={{ color: '#FFA726', fontWeight: '800' }}>{t('binary.rules.star2')}</Text> {t('binary.rules.star2Desc')}
                       </Text>
                       <Text style={styles.starRuleText}>
-                        <Text style={{ color: '#FF5722', fontWeight: '800' }}>★★★ 3 Star User Rule:</Text> Min purchased 1,000 USDT mining service + direct placement tree volume ≥ 10,000 USDT gives BINARY PAIRING 4 times only per day (400 USDT). Excess pairings beyond 4 are confiscated by system.
+                        <Text style={{ color: '#FF5722', fontWeight: '800' }}>{t('binary.rules.star3')}</Text> {t('binary.rules.star3Desc')}
                       </Text>
                       <Text style={styles.starRuleText}>
-                        <Text style={{ color: '#C084FC', fontWeight: '800' }}>★★★★ 4 Star User Rule:</Text> Min purchased 5,000 USDT mining service + direct placement tree volume ≥ 50,000 USDT gives BINARY PAIRING 6 times only per day (600 USDT). Excess pairings beyond 6 are confiscated by system.
+                        <Text style={{ color: '#C084FC', fontWeight: '800' }}>{t('binary.rules.star4')}</Text> {t('binary.rules.star4Desc')}
                       </Text>
                       <Text style={styles.starRuleText}>
-                        <Text style={{ color: '#00F0FF', fontWeight: '800' }}>★★★★★ 5 Star User Rule:</Text> Min purchased 5,000 USDT mining service + direct placement tree volume ≥ 100,000 USDT gives BINARY PAIRING 7 times only per day (700 USDT). Excess pairings beyond 7 are confiscated by system.
+                        <Text style={{ color: '#00F0FF', fontWeight: '800' }}>{t('binary.rules.star5')}</Text> {t('binary.rules.star5Desc')}
                       </Text>
                       <Text style={styles.starRuleText}>
-                        <Text style={{ color: '#FF007F', fontWeight: '800' }}>★★★★★★ 6 Star User Rule:</Text> Min purchased 10,000 USDT mining service + below placement tree volume ≥ 1,000,000 USDT gives BINARY PAIRING 9 times only per day (900 USDT). Excess pairings beyond 9 are confiscated by system.
+                        <Text style={{ color: '#FF007F', fontWeight: '800' }}>{t('binary.rules.star6')}</Text> {t('binary.rules.star6Desc')}
                       </Text>
                       <Text style={styles.starRuleText}>
-                        <Text style={{ color: '#FFE600', fontWeight: '800' }}>★★★★★★★ 7 Star User Rule:</Text> Min purchased 30,000 USDT mining service + below placement tree volume ≥ 5,000,000 USDT gives BINARY PAIRING 11 times only per day (1,100 USDT). Excess pairings beyond 11 are confiscated by system.
+                        <Text style={{ color: '#FFE600', fontWeight: '800' }}>{t('binary.rules.star7')}</Text> {t('binary.rules.star7Desc')}
                       </Text>
                       <Text style={styles.starRuleText}>
-                        <Text style={{ color: '#FFD700', fontWeight: '800' }}>👑 Crown User Rule:</Text> Min purchased 30,000 USDT mining service + below placement tree volume ≥ 10,000,000 USDT gives BINARY PAIRING 13 times only per day (1,300 USDT). Excess pairings beyond 13 are confiscated by system.
+                        <Text style={{ color: '#FFD700', fontWeight: '800' }}>{t('binary.rules.crown1')}</Text> {t('binary.rules.crown1Desc')}
                       </Text>
                       <Text style={styles.starRuleText}>
-                        <Text style={{ color: '#FFE000', fontWeight: '800' }}>👑👑 2 Crown User Rule:</Text> Min purchased 60,000 USDT mining service + below placement tree volume ≥ 50,000,000 USDT gives BINARY PAIRING 15 times only per day (1,500 USDT). Excess pairings beyond 15 are confiscated by system.
+                        <Text style={{ color: '#FFE000', fontWeight: '800' }}>{t('binary.rules.crown2')}</Text> {t('binary.rules.crown2Desc')}
                       </Text>
                       <Text style={styles.starRuleText}>
-                        <Text style={{ color: '#FFF275', fontWeight: '800' }}>👑👑👑 3 Crown User Rule:</Text> Min purchased 100,000 USDT mining service + below placement tree volume ≥ 100,000,000 USDT gives BINARY PAIRING 18 times only per day (1,800 USDT). Excess pairings beyond 18 are confiscated by system.
+                        <Text style={{ color: '#FFF275', fontWeight: '800' }}>{t('binary.rules.crown3')}</Text> {t('binary.rules.crown3Desc')}
                       </Text>
                       <Text style={[styles.starRuleText, { color: '#94A3B8', fontSize: 11 }]}>
-                        ⚡ All binary pairing bonuses and confiscations implement automatically on 23:59 every day.
+                        {t('binary.dailyAutoExecutionNote')}
                       </Text>
                     </View>
                   </View>
@@ -1659,9 +1691,9 @@ export default function BitcoinMiningApp() {
                 <View style={styles.treeSection}>
                   <View style={styles.treeSectionHeader}>
                     <View>
-                      <Text style={styles.sectionTitle}>Interactive Binary Network Tree</Text>
+                      <Text style={styles.sectionTitle}>{t('binary.interactiveTitle')}</Text>
                       <Text style={styles.sectionSubtitle}>
-                        {isMobile ? '↔ Swipe horizontally to inspect downlines' : 'Visual hierarchy showing downlines, leg placement (A / B), and active volume'}
+                        {isMobile ? t('binary.swipeSub') : t('binary.interactiveSub')}
                       </Text>
                     </View>
                   </View>
@@ -1675,16 +1707,16 @@ export default function BitcoinMiningApp() {
                         </View>
                         <View style={{ flex: 1 }}>
                           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-                            <Text style={styles.treeDrillDownTitle}>FOCUS VIEW:</Text>
+                            <Text style={styles.treeDrillDownTitle}>{t('binary.focusView')}:</Text>
                             <Text style={styles.treeDrillDownUsername}>@{treeRootUser.username}</Text>
                             <View style={styles.activeRootBadge}>
                               <Text style={styles.activeRootBadgeText}>
-                                {treeData?.binaryPosition ? `LEAF ${treeData.binaryPosition} USER` : 'LEAF USER'}
+                                {treeData?.binaryPosition ? `${t('binary.leafUser')} ${treeData.binaryPosition} ${t('binary.user')}` : `${t('binary.leafUser')} ${t('binary.user')}`}
                               </Text>
                             </View>
                           </View>
                           <Text style={styles.treeDrillDownSub}>
-                            Viewing downlines and slots from Leaf {treeData?.binaryPosition || 'A'} user @{treeRootUser.username} (not become a root user).
+                            {t('binary.viewingDownlines', { position: treeData?.binaryPosition || 'A', username: treeRootUser.username })}
                           </Text>
                         </View>
                       </View>
@@ -1692,18 +1724,18 @@ export default function BitcoinMiningApp() {
                       <View style={[styles.treeDrillDownButtonsRow, isMobile && styles.treeDrillDownButtonsRowMobile]}>
                         {treeHistory.length > 0 && (
                           <TouchableOpacity style={[styles.treeBackBtn, isMobile && { flex: 1, alignItems: 'center' }]} onPress={handleStepUpTree}>
-                            <Text style={styles.treeBackBtnText}>⬅ Back 1 Level</Text>
+                            <Text style={styles.treeBackBtnText}>{t('binary.backOneLevel')}</Text>
                           </TouchableOpacity>
                         )}
                         <TouchableOpacity style={[styles.treeResetBtn, isMobile && { flex: 1, alignItems: 'center' }]} onPress={handleResetToMyTree}>
-                          <Text style={styles.treeResetBtnText}>🔄 Reset to My Tree</Text>
+                          <Text style={styles.treeResetBtnText}>{t('binary.resetMyTree')}</Text>
                         </TouchableOpacity>
                       </View>
                     </View>
                   ) : (
                     <View style={styles.treeTipBar}>
                       <Text style={styles.treeTipText}>
-                        💡 Tip: Click on any member card (including leaf A / leaf B downlines) to display their placement A/B slots.
+                        {t('binary.treeTip')}
                       </Text>
                     </View>
                   )}
@@ -1712,7 +1744,7 @@ export default function BitcoinMiningApp() {
                     {loadingTree && (
                       <View style={styles.treeLoadingOverlay}>
                         <ActivityIndicator color="#00F0FF" size="small" />
-                        <Text style={styles.treeLoadingText}>Loading Placement Tree...</Text>
+                        <Text style={styles.treeLoadingText}>{t('binary.loadingTree')}</Text>
                       </View>
                     )}
                     <BinaryTreeVisualizer
@@ -1732,51 +1764,51 @@ export default function BitcoinMiningApp() {
                 <View style={styles.refLinkCard}>
                   <View style={[styles.refCardHeaderRow, isMobile && styles.refCardHeaderRowMobile]}>
                     <View style={isMobile ? { width: '100%' } : { flex: 1 }}>
-                      <Text style={styles.refTitle}>Sponsor Referral Link & Binary Placement</Text>
+                      <Text style={styles.refTitle}>{t('referralsTab.refTitle')}</Text>
                       <Text style={styles.refDesc}>
-                        When newcomers register with your code and buy any mining service tier, you receive an instant <Text style={styles.boldGreen}>10% one-time reward</Text> credited to your USDT balance! Only users who have already purchased a mining service qualify to receive the 10% Direct Bonus.
+                        {t('referralsTab.refDesc')}
                       </Text>
                     </View>
                     <View style={[styles.autoFilledPillContainer, isMobile && { alignSelf: 'flex-start' }]}>
-                      <Text style={styles.autoFilledPillText}>⚡ ACTIVE SPONSOR NODE</Text>
+                      <Text style={styles.autoFilledPillText}>{t('referralsTab.activeSponsorNode')}</Text>
                     </View>
                   </View>
 
                   <View style={styles.qualNoticeRow}>
                     <View style={[styles.qualNoticeBadge, (user?.wallet?.totalInvested || 0) > 0 ? styles.qualNoticeBadgeActive : styles.qualNoticeBadgeInactive]}>
                       <Text style={[styles.qualNoticeBadgeText, (user?.wallet?.totalInvested || 0) > 0 ? styles.qualNoticeBadgeTextActive : styles.qualNoticeBadgeTextInactive]}>
-                        {(user?.wallet?.totalInvested || 0) > 0 ? '✓ QUALIFIED FOR 10% DIRECT BONUS' : '⚠️ UNQUALIFIED (PURCHASE SERVICE TO QUALIFY)'}
+                        {(user?.wallet?.totalInvested || 0) > 0 ? t('referralsTab.qualifiedForDirectBonus') : t('referralsTab.unqualifiedBuyToQualify')}
                       </Text>
                     </View>
                     <Text style={styles.qualNoticeSub}>
                       {(user?.wallet?.totalInvested || 0) > 0
-                        ? `Active Mining Contract (${user?.wallet?.totalInvested?.toLocaleString()} USDT invested). You qualify to receive 10% Direct Bonus on referral purchases.`
-                        : 'Rule: You must already purchase a mining service to qualify to receive the 10% Direct Bonus.'}
+                        ? t('referralsTab.activeNoticeDirect', { amount: user?.wallet?.totalInvested?.toLocaleString() })
+                        : t('referralsTab.inactiveNoticeDirect')}
                     </Text>
                   </View>
 
                   {/* Display Current Sponsor & Placement Parent Info */}
                   <View style={styles.sponsorDataGrid}>
                     <View style={styles.sponsorDataItem}>
-                      <Text style={styles.sponsorDataLabel}>SPONSOR REFERRAL CODE (OPTIONAL)</Text>
+                      <Text style={styles.sponsorDataLabel}>{t('referralsTab.sponsorReferralCode')}</Text>
                       <View style={styles.sponsorDataValueRow}>
                         <Text style={styles.sponsorDataValueGold}>{user?.referralCode || 'BTCMASTER1'}</Text>
                         <TouchableOpacity style={styles.copyCodeMiniBtn} onPress={copyReferralCode}>
-                          <Text style={styles.copyCodeMiniBtnText}>📋 Copy Code</Text>
+                          <Text style={styles.copyCodeMiniBtnText}>📋 {t('dashboard.copyCode')}</Text>
                         </TouchableOpacity>
                       </View>
-                      <Text style={styles.sponsorDataSub}>10% direct reward on downline contracts</Text>
+                      <Text style={styles.sponsorDataSub}>{t('referralsTab.direct10RewardDownline')}</Text>
                     </View>
 
                     <View style={styles.sponsorDataItem}>
-                      <Text style={styles.sponsorDataLabel}>SPECIFIC PLACEMENT PARENT (OPTIONAL)</Text>
+                      <Text style={styles.sponsorDataLabel}>{t('referralsTab.specificPlacementParent')}</Text>
                       <View style={styles.sponsorDataValueRow}>
                         <Text style={styles.sponsorDataValueCyan}>@{user?.username || 'user'}</Text>
                         <View style={styles.autoFilledBadgeSmall}>
-                          <Text style={styles.autoFilledBadgeTextSmall}>✓ AUTO-FILLED</Text>
+                          <Text style={styles.autoFilledBadgeTextSmall}>✓ {t('referralsTab.autoFilled')}</Text>
                         </View>
                       </View>
-                      <Text style={styles.sponsorDataSub}>Root parent for binary leg pairing</Text>
+                      <Text style={styles.sponsorDataSub}>{t('referralsTab.rootParentDesc')}</Text>
                     </View>
                   </View>
 
@@ -1787,7 +1819,7 @@ export default function BitcoinMiningApp() {
                       </Text>
                     </View>
                     <TouchableOpacity style={styles.copyBtn} onPress={copyReferralLink}>
-                      <Text style={styles.copyBtnText}>🔗 Copy Link</Text>
+                      <Text style={styles.copyBtnText}>🔗 {t('dashboard.copyReferralLink')}</Text>
                     </TouchableOpacity>
                   </View>
 
@@ -1795,18 +1827,18 @@ export default function BitcoinMiningApp() {
 
                 {/* Direct Referrals List */}
                 <View style={styles.tableCard}>
-                  <Text style={styles.tableTitle}>Direct Sponsored Downlines ({referrals.length})</Text>
+                  <Text style={styles.tableTitle}>{t('referralsTab.directDownlines')} ({referrals.length})</Text>
                   {referrals.length === 0 ? (
-                    <Text style={styles.emptyTableText}>No direct referrals registered yet. Share your code to earn 10%!</Text>
+                    <Text style={styles.emptyTableText}>{t('referralsTab.emptyTable')}</Text>
                   ) : (
                     <ScrollView horizontal showsHorizontalScrollIndicator={true}>
                       <View style={styles.tableWrapper}>
                         <View style={styles.tableHeaderRow}>
-                          <Text style={[styles.th, { width: 120 }]}>MEMBER</Text>
-                          <Text style={[styles.th, { width: 160 }]}>EMAIL</Text>
-                          <Text style={[styles.th, { width: 110 }]}>INVESTED</Text>
-                          <Text style={[styles.th, { width: 120 }]}>10% BONUS</Text>
-                          <Text style={[styles.th, { width: 230 }]}>BINARY LEG / PLACEMENT</Text>
+                          <Text style={[styles.th, { width: 120 }]}>{t('referralsTab.thMember')}</Text>
+                          <Text style={[styles.th, { width: 160 }]}>{t('referralsTab.thEmail')}</Text>
+                          <Text style={[styles.th, { width: 110 }]}>{t('referralsTab.thInvested')}</Text>
+                          <Text style={[styles.th, { width: 120 }]}>{t('referralsTab.thBonus')}</Text>
+                          <Text style={[styles.th, { width: 230 }]}>{t('referralsTab.thPlacement')}</Text>
                         </View>
                         {referrals.map((ref) => {
                           const directBonus = ref.directBonusEarned != null ? Number(ref.directBonusEarned) : 0;
@@ -1914,11 +1946,11 @@ export default function BitcoinMiningApp() {
                                   <View style={{ alignItems: 'flex-start' }}>
                                     <View style={[styles.legChip, { backgroundColor: 'rgba(239, 68, 68, 0.12)', borderColor: 'rgba(239, 68, 68, 0.4)', borderWidth: 1 }]}>
                                       <Text style={[styles.legChipText, { color: '#EF4444', fontWeight: '700' }]}>
-                                        Awaiting Package
+                                        {t('referralsTab.awaitingPackage')}
                                       </Text>
                                     </View>
                                     <Text style={{ fontSize: 9, color: '#94A3B8', marginTop: 2 }}>
-                                      Must buy package to qualify
+                                      {t('referralsTab.mustBuyToQualify')}
                                     </Text>
                                   </View>
                                 )}
@@ -1938,9 +1970,9 @@ export default function BitcoinMiningApp() {
               <View style={styles.tabContent}>
                 <View style={[styles.sectionHeader, isMobile && styles.sectionHeaderMobile]}>
                   <View style={isMobile ? { width: '100%' } : { flex: 1 }}>
-                    <Text style={styles.sectionTitle}>Active Mining Rigs & 1500-Day Yield</Text>
+                    <Text style={styles.sectionTitle}>{t('mining.activeRigsTitle')}</Text>
                     <Text style={styles.sectionSubtitle}>
-                      Live contracts earning automated daily Bitcoin mining for up to 1,500 Days
+                      {t('mining.activeRigsSub')}
                     </Text>
                   </View>
                   {runningContracts.length > 0 ? (
@@ -1948,50 +1980,50 @@ export default function BitcoinMiningApp() {
                       <View style={styles.countdownHeaderRow}>
                         <View style={styles.indicatorPulseGreen} />
                         <Text style={styles.autoSystemBadgeHeaderTextActive}>
-                          {earliestNextPayoutMs === 0 ? '⚡ PAYOUT PROCESSING' : '🟢 REAL-TIME MINING ACTIVE'}
+                          {earliestNextPayoutMs === 0 ? t('contractsTab.payoutProcessing') : t('contractsTab.realtimeMiningActive')}
                         </Text>
                       </View>
                       <Text style={styles.autoSystemBadgeCountdownTimerGreen}>
-                        {earliestNextPayoutMs === 0 ? 'CREDITING BTC...' : `NEXT PAYOUT IN ${formatCountdown(earliestNextPayoutMs)}`}
+                        {earliestNextPayoutMs === 0 ? t('contractsTab.creditingBtc') : t('contractsTab.nextPayoutIn', { time: formatCountdown(earliestNextPayoutMs) })}
                       </Text>
                       <Text style={styles.autoSystemBadgeHeaderSubActive}>
                         {runningContracts.length === 1
-                          ? '1 Rig actively streaming daily BTC'
-                          : `${runningContracts.length} Rigs actively streaming daily BTC`}
-                        {warmupContracts.length > 0 ? ` • ${warmupContracts.length} warming up` : ''}
+                          ? t('contractsTab.oneRigStreaming')
+                          : t('contractsTab.multiRigsStreaming', { count: runningContracts.length })}
+                        {warmupContracts.length > 0 ? t('contractsTab.warmingUpCount', { count: warmupContracts.length }) : ''}
                       </Text>
                     </View>
                   ) : warmupContracts.length > 0 ? (
                     <View style={[styles.autoSystemBadgeHeaderCountdown, isMobile && styles.autoSystemBadgeHeaderActiveMobile]}>
                       <View style={styles.countdownHeaderRow}>
                         <View style={styles.indicatorPulseAmber} />
-                        <Text style={styles.autoSystemBadgeHeaderTextCountdown}>⏳ MINING ACTIVATES IN</Text>
+                        <Text style={styles.autoSystemBadgeHeaderTextCountdown}>{t('contractsTab.miningActivatesIn')}</Text>
                       </View>
                       <Text style={styles.autoSystemBadgeCountdownTimer}>
                         {formatCountdown(headerCountdownMs)}
                       </Text>
                       <Text style={styles.autoSystemBadgeHeaderSubCountdown}>
                         {warmupContracts.length === 1
-                          ? 'Starts 48h after purchase'
-                          : `${warmupContracts.length} Rigs warming up (48h)`}
+                          ? t('contractsTab.starts48hAfterPurchase')
+                          : t('contractsTab.rigsWarmingUp48h', { count: warmupContracts.length })}
                       </Text>
                     </View>
                   ) : (
                     <View style={[styles.autoSystemBadgeHeader, isMobile && styles.autoSystemBadgeHeaderActiveMobile]}>
-                      <Text style={styles.autoSystemBadgeHeaderText}>⚡ SYSTEM MINING ACTIVATION</Text>
-                      <Text style={styles.autoSystemBadgeHeaderSub}>Starts 48h after purchase</Text>
+                      <Text style={styles.autoSystemBadgeHeaderText}>{t('contractsTab.systemMiningActivation')}</Text>
+                      <Text style={styles.autoSystemBadgeHeaderSub}>{t('contractsTab.starts48hAfterPurchase')}</Text>
                     </View>
                   )}
                 </View>
 
                 {contracts.length === 0 ? (
                   <View style={styles.emptyContractBox}>
-                    <Text style={styles.emptyTitle}>No Mining Contracts Active</Text>
+                    <Text style={styles.emptyTitle}>{t('mining.noContracts')}</Text>
                     <Text style={styles.emptySubtitle}>
-                      Purchase an entry package (100, 300, 1000, 5000, 10000, 30000 USDT) to start mining Bitcoin!
+                      {t('mining.purchaseToStart')}
                     </Text>
                     <TouchableOpacity style={styles.browseStoreBtn} onPress={() => setActiveTab('packages')}>
-                      <Text style={styles.browseStoreBtnText}>View 1,500-Day Packages</Text>
+                      <Text style={styles.browseStoreBtnText}>{t('mining.viewPackages')}</Text>
                     </TouchableOpacity>
                   </View>
                 ) : (
@@ -2031,16 +2063,18 @@ export default function BitcoinMiningApp() {
                             <View style={styles.contractTopMobileWrap}>
                               {/* Row 1: Badges */}
                               <View style={styles.contractBadgeRowMobile}>
-                                <Text style={styles.contractBadge}>{c.tier} USDT TIER</Text>
-                                <Text style={styles.contractStatus}>{c.status}</Text>
+                                <Text style={styles.contractBadge}>{c.tier} USDT {t('contractsTab.tier')}</Text>
+                                <Text style={styles.contractStatus}>
+                                  {t(`contractsTab.status.${(c.status || 'active').toLowerCase()}`, { defaultValue: c.status })}
+                                </Text>
                                 {isWarmupPhase ? (
                                   <View style={styles.warmupBadge}>
-                                    <Text style={styles.warmupBadgeText}>⏳ Starts in {formatCountdown(contractMsLeft)}</Text>
+                                    <Text style={styles.warmupBadgeText}>⏳ {t('contractsTab.startsIn', { time: formatCountdown(contractMsLeft) })}</Text>
                                   </View>
                                 ) : (
                                   <View style={styles.liveMiningBadge}>
                                     <View style={styles.indicatorPulseGreenSmall} />
-                                    <Text style={styles.liveMiningBadgeText}>⚡ Real-Time Mining Active</Text>
+                                    <Text style={styles.liveMiningBadgeText}>{t('contractsTab.realtimeActiveBadge')}</Text>
                                   </View>
                                 )}
                               </View>
@@ -2053,7 +2087,7 @@ export default function BitcoinMiningApp() {
 
                               {/* Row 3: Daily Yield Estimate */}
                               <View style={styles.contractYieldRowMobile}>
-                                <Text style={styles.contractYieldLabelMobile}>EST. DAILY YIELD RATE</Text>
+                                <Text style={styles.contractYieldLabelMobile}>{t('contractsTab.estDailyYieldRate')}</Text>
                                 <Text style={styles.contractDailyYieldMobile}>
                                   {isRandomYieldPackage(c)
                                     ? `₿ ${getPackageYieldRange(c).min.toFixed(8)} ~ ${getPackageYieldRange(c).max.toFixed(8)} BTC/day`
@@ -2066,16 +2100,18 @@ export default function BitcoinMiningApp() {
                             <View style={styles.contractTop}>
                               <View style={{ flex: 1 }}>
                                 <View style={styles.contractBadgeRow}>
-                                  <Text style={styles.contractBadge}>{c.tier} USDT TIER</Text>
-                                  <Text style={styles.contractStatus}>{c.status}</Text>
+                                  <Text style={styles.contractBadge}>{c.tier} USDT {t('contractsTab.tier')}</Text>
+                                  <Text style={styles.contractStatus}>
+                                    {t(`contractsTab.status.${(c.status || 'active').toLowerCase()}`, { defaultValue: c.status })}
+                                  </Text>
                                   {isWarmupPhase ? (
                                     <View style={styles.warmupBadge}>
-                                      <Text style={styles.warmupBadgeText}>⏳ Starts in {formatCountdown(contractMsLeft)}</Text>
+                                      <Text style={styles.warmupBadgeText}>⏳ {t('contractsTab.startsIn', { time: formatCountdown(contractMsLeft) })}</Text>
                                     </View>
                                   ) : (
                                     <View style={styles.liveMiningBadge}>
                                       <View style={styles.indicatorPulseGreenSmall} />
-                                      <Text style={styles.liveMiningBadgeText}>⚡ Real-Time Mining Active</Text>
+                                      <Text style={styles.liveMiningBadgeText}>{t('contractsTab.realtimeActiveBadge')}</Text>
                                     </View>
                                   )}
                                 </View>
@@ -2095,7 +2131,7 @@ export default function BitcoinMiningApp() {
                           {isWarmupPhase ? (
                             <View style={styles.warmupNoticeBox}>
                               <Text style={styles.warmupNoticeText}>
-                                ⏳ Node Setup: Automated {`{ Mine Daily Yield }`} begins in {formatCountdown(contractMsLeft)} (48 hours from purchase).
+                                {t('contractsTab.warmupNotice', { time: formatCountdown(contractMsLeft) })}
                               </Text>
                             </View>
                           ) : (
@@ -2104,12 +2140,12 @@ export default function BitcoinMiningApp() {
                               <View style={[styles.realtimeMiningTopRow, isMobile && styles.realtimeMiningTopRowMobile]}>
                                 <View style={styles.realtimeStatusBadge}>
                                   <View style={styles.indicatorPulseGreen} />
-                                  <Text style={styles.realtimeStatusText}>REAL-TIME MINING RUNNING</Text>
+                                  <Text style={styles.realtimeStatusText}>{t('contractsTab.realtimeMiningRunning')}</Text>
                                 </View>
                                 <View style={[styles.realtimePayoutTimerBox, isMobile && styles.realtimePayoutTimerBoxMobile]}>
-                                  <Text style={styles.realtimePayoutTimerLabel}>⏱️ NEXT BTC PAYOUT IN</Text>
+                                  <Text style={styles.realtimePayoutTimerLabel}>{t('contractsTab.nextBtcPayoutIn')}</Text>
                                   <Text style={styles.realtimePayoutTimerVal}>
-                                    {isPayoutDue ? 'CREDITING NOW...' : formatCountdown(payoutMsLeft)}
+                                    {isPayoutDue ? t('contractsTab.creditingNow') : formatCountdown(payoutMsLeft)}
                                   </Text>
                                 </View>
                               </View>
@@ -2117,7 +2153,7 @@ export default function BitcoinMiningApp() {
                               {/* 24-Hour Payout Cycle Progress Bar */}
                               <View style={styles.cycleProgressBox}>
                                 <View style={styles.cycleProgressLabelRow}>
-                                  <Text style={styles.cycleProgressLabel}>24h Payout Cycle</Text>
+                                  <Text style={styles.cycleProgressLabel}>{t('contractsTab.payoutCycle24h')}</Text>
                                   <Text style={styles.cycleProgressPercent}>
                                     {cycleProgressPct.toFixed(1)}% ({((24 * cycleProgressPct) / 100).toFixed(1)}h / 24h)
                                   </Text>
@@ -2130,18 +2166,18 @@ export default function BitcoinMiningApp() {
                               {/* Real-time Streaming Metrics Grid */}
                               <View style={[styles.realtimeMetricsGrid, isMobile && styles.realtimeMetricsGridMobile]}>
                                 <View style={styles.realtimeMetricCol}>
-                                  <Text style={styles.realtimeMetricLabel}>⛏️ Real-Time Accrued (Today)</Text>
+                                  <Text style={styles.realtimeMetricLabel}>{t('contractsTab.realtimeAccruedToday')}</Text>
                                   <Text style={styles.realtimeMetricValGreen}>₿ {liveAccruingBtc.toFixed(8)} BTC</Text>
-                                  <Text style={styles.realtimeMetricSub}>Streams live every second</Text>
+                                  <Text style={styles.realtimeMetricSub}>{t('contractsTab.streamsLiveEverySecond')}</Text>
                                 </View>
                                 <View style={styles.realtimeMetricCol}>
-                                  <Text style={styles.realtimeMetricLabel}>💰 Est. 24h Daily Payout</Text>
+                                  <Text style={styles.realtimeMetricLabel}>{t('contractsTab.estDailyPayout')}</Text>
                                   <Text style={styles.realtimeMetricValGold}>
                                     {isRandomYieldPackage(c)
                                       ? `₿ ${getPackageYieldRange(c).min.toFixed(8)} ~ ${getPackageYieldRange(c).max.toFixed(8)}`
                                       : `₿ ${dailyBtcRate.toFixed(6)} BTC`}
                                   </Text>
-                                  <Text style={styles.realtimeMetricSub}>Auto-credited to BTC wallet</Text>
+                                  <Text style={styles.realtimeMetricSub}>{t('contractsTab.autoCreditedBtcWallet')}</Text>
                                 </View>
                               </View>
 
@@ -2149,8 +2185,8 @@ export default function BitcoinMiningApp() {
                               <View style={[styles.realtimeNoticeRow, isPayoutDue && styles.realtimeNoticeRowDue]}>
                                 <Text style={[styles.realtimeNoticeText, { flex: 1 }]}>
                                   {isPayoutDue
-                                    ? `⚡ 24h Cycle Complete! System is auto-depositing ₿ ${dailyBtcRate.toFixed(6)} BTC to your BTC wallet.`
-                                    : `🟢 Real-Time Mining: System continuously computes hash power and deposits ₿ ${dailyBtcRate.toFixed(6)} BTC directly to your internal BTC wallet upon cycle completion.`}
+                                    ? t('contractsTab.cycleCompleteNotice', { amount: dailyBtcRate.toFixed(6) })
+                                    : t('contractsTab.realtimeMiningNotice', { amount: dailyBtcRate.toFixed(6) })}
                                 </Text>
                                 {isPayoutDue && (
                                   <TouchableOpacity
@@ -2161,18 +2197,18 @@ export default function BitcoinMiningApp() {
                                         await refreshAllData();
                                         if (res?.result?.paid) {
                                           showNotification(
-                                            `🎉 Payout Credited: +₿ ${Number(res.result.totalBtcDistributed).toFixed(8)} BTC to your wallet!`,
+                                            t('contractsTab.payoutCreditedSuccess', { amount: Number(res.result.totalBtcDistributed).toFixed(8) }),
                                             'success'
                                           );
                                         } else {
-                                          showNotification('BTC payout processed & synced.', 'info');
+                                          showNotification(t('contractsTab.payoutSynced'), 'info');
                                         }
                                       } catch (err: any) {
                                         refreshAllData();
                                       }
                                     }}
                                   >
-                                    <Text style={styles.instantPayoutBtnText}>⚡ Credit Payout Now</Text>
+                                    <Text style={styles.instantPayoutBtnText}>{t('contractsTab.creditPayoutNow')}</Text>
                                   </TouchableOpacity>
                                 )}
                               </View>
@@ -2182,9 +2218,9 @@ export default function BitcoinMiningApp() {
                           <View style={styles.progressSection}>
                             <View style={styles.progressLabels}>
                               <Text style={styles.progressDayText}>
-                                Day <Text style={styles.boldWhite}>{c.daysCompleted}</Text> of {c.maxDays || 1500} Days
+                                {t('mining.day')} <Text style={styles.boldWhite}>{c.daysCompleted}</Text> {t('mining.of')} {c.maxDays || 1500} {t('dashboard.days')}
                               </Text>
-                              <Text style={styles.progressDaysLeft}>{daysLeft} Days Left</Text>
+                              <Text style={styles.progressDaysLeft}>{daysLeft} {t('mining.daysLeft')}</Text>
                             </View>
                             <View style={styles.contractProgressBar}>
                               <View style={[styles.contractProgressFill, { width: `${progressPct}%` }]} />
@@ -2193,10 +2229,10 @@ export default function BitcoinMiningApp() {
 
                           <View style={[styles.contractFooter, isMobile && styles.contractFooterMobile]}>
                             <Text style={styles.harvestedText}>
-                              Total Harvested:{' '}
+                              {t('mining.totalHarvested')}{' '}
                               <Text style={styles.boldGreen}>₿ {c.totalBtcHarvested?.toFixed(6)} BTC</Text>
                             </Text>
-                            <Text style={styles.contractExpiry}>Max: {c.maxDays ? c.maxDays.toLocaleString() : '1,500'} Days</Text>
+                            <Text style={styles.contractExpiry}>{t('contractsTab.maxLimit', { days: c.maxDays ? c.maxDays.toLocaleString() : '1,500' })}</Text>
                           </View>
                         </View>
                       );
@@ -2213,29 +2249,29 @@ export default function BitcoinMiningApp() {
       <Modal visible={purchaseModalVisible} transparent animationType="fade">
         <View style={styles.modalOverlay}>
           <View style={[styles.modalBox, isMobile && styles.modalBoxMobile]}>
-            <Text style={styles.modalTitle}>Confirm Mining Service Purchase</Text>
+            <Text style={styles.modalTitle}>{t('mining.confirmPurchaseTitle')}</Text>
             {selectedPackage && (
               <View style={styles.modalBody}>
                 <Text style={styles.modalPkgName}>{selectedPackage.name}</Text>
                 <Text style={styles.modalPrice}>{selectedPackage.tier.toLocaleString()} USDT</Text>
 
                 <View style={styles.modalInfoGrid}>
-                  <Text style={styles.modalInfoLabel}>Hashrate Speed:</Text>
+                  <Text style={styles.modalInfoLabel}>{t('mining.hashrateSpeed')}</Text>
                   <Text style={styles.modalInfoVal}>{selectedPackage.hashrate}</Text>
-                  <Text style={styles.modalInfoLabel}>Daily BTC Yield:</Text>
+                  <Text style={styles.modalInfoLabel}>{t('mining.dailyBitcoinYield')}</Text>
                   <Text style={styles.modalInfoValGreen}>
                     {isRandomYieldPackage(selectedPackage)
                       ? `₿ ${getPackageYieldRange(selectedPackage).min.toFixed(8)} ~ ${getPackageYieldRange(selectedPackage).max.toFixed(8)} BTC/day (Random)`
                       : `₿ ${selectedPackage.dailyBtcYield.toFixed(6)} BTC/day`}
                   </Text>
-                  <Text style={styles.modalInfoLabel}>Contract Duration:</Text>
-                  <Text style={styles.modalInfoVal}>Max 1,500 Days</Text>
-                  <Text style={styles.modalInfoLabel}>Direct Sponsor (10%):</Text>
+                  <Text style={styles.modalInfoLabel}>{t('mining.contractDuration')}</Text>
+                  <Text style={styles.modalInfoVal}>{t('mining.maxDuration')}</Text>
+                  <Text style={styles.modalInfoLabel}>{t('mining.directSponsor10')}</Text>
                   <Text style={styles.modalInfoValGold}>+{(selectedPackage.tier * 0.1).toFixed(2)} USDT</Text>
-                  <Text style={styles.modalInfoLabel}>Binary Placement Vol:</Text>
-                  <Text style={styles.modalInfoVal}>+{selectedPackage.tier} USDT to Leg A or B</Text>
-                  <Text style={styles.modalInfoLabel}>Pairing Reward (10%):</Text>
-                  <Text style={styles.modalInfoVal}>Pairs at each 1,000 match (100 USDT)</Text>
+                  <Text style={styles.modalInfoLabel}>{t('mining.binaryPlacementVol')}</Text>
+                  <Text style={styles.modalInfoVal}>{t('mining.binaryVolDesc', { tier: selectedPackage.tier })}</Text>
+                  <Text style={styles.modalInfoLabel}>{t('mining.pairingReward10')}</Text>
+                  <Text style={styles.modalInfoVal}>{t('mining.pairingRuleNotice')}</Text>
                 </View>
 
                 <View style={styles.modalButtonRow}>
@@ -2244,7 +2280,7 @@ export default function BitcoinMiningApp() {
                     onPress={() => setPurchaseModalVisible(false)}
                     disabled={isPurchasing}
                   >
-                    <Text style={styles.modalCancelBtnText}>Cancel</Text>
+                    <Text style={styles.modalCancelBtnText}>{t('common.cancel')}</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
                     style={styles.modalConfirmBtn}
@@ -2254,7 +2290,7 @@ export default function BitcoinMiningApp() {
                     {isPurchasing ? (
                       <ActivityIndicator color="#000" />
                     ) : (
-                      <Text style={styles.modalConfirmBtnText}>Activate Contract</Text>
+                      <Text style={styles.modalConfirmBtnText}>{t('mining.activateContractBtn')}</Text>
                     )}
                   </TouchableOpacity>
                 </View>
@@ -2269,7 +2305,7 @@ export default function BitcoinMiningApp() {
         <View style={styles.modalOverlay}>
           <View style={[styles.modalBox, { maxWidth: 540, maxHeight: '90%' }, isMobile && styles.modalBoxMobile]}>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-              <Text style={styles.modalTitle}>Deposit Crypto Mining Funds</Text>
+              <Text style={styles.modalTitle}>{t('depositModal.title')}</Text>
               <TouchableOpacity onPress={() => setDepositModalVisible(false)}>
                 <Text style={{ color: '#8A99AD', fontSize: 16, fontWeight: '700' }}>✕</Text>
               </TouchableOpacity>
@@ -2298,9 +2334,9 @@ export default function BitcoinMiningApp() {
               {/* Official Deposit Address Card */}
               <View style={styles.depositAddressCard}>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-                  <Text style={styles.depositAddressCardTitle}>⚡ OFFICIAL {depositCurrency} WALLET</Text>
+                  <Text style={styles.depositAddressCardTitle}>{t('depositModal.officialWallet', { currency: depositCurrency })}</Text>
                   <View style={styles.networkBadge}>
-                    <Text style={styles.networkBadgeText}>{activeCurrencyConfig.network}</Text>
+                    <Text style={styles.networkBadgeText}>{getDepositNetwork()}</Text>
                   </View>
                 </View>
 
@@ -2313,27 +2349,27 @@ export default function BitcoinMiningApp() {
                     onPress={handleCopyDepositAddress}
                   >
                     <Text style={[styles.copyDepositBtnText, depositAddressCopied && { color: '#00FF66' }]}>
-                      {depositAddressCopied ? '✓ Copied' : '📋 Copy'}
+                      {depositAddressCopied ? t('depositModal.copied') : t('depositModal.copy')}
                     </Text>
                   </TouchableOpacity>
                 </View>
 
                 <Text style={styles.depositInstructionsText}>
-                  {activeCurrencyConfig.instructions}
+                  {getDepositInstructions()}
                 </Text>
               </View>
 
               {/* Amount input */}
               <View style={{ marginTop: 12 }}>
                 <Text style={styles.inputLabel}>
-                  DEPOSIT AMOUNT ({depositCurrency}) * (MIN {activeCurrencyConfig.minDeposit} {depositCurrency})
+                  {t('depositModal.depositAmount', { currency: depositCurrency, min: activeCurrencyConfig.minDeposit })}
                 </Text>
                 <TextInput
                   style={[styles.modalInput, { marginTop: 6 }]}
                   keyboardType="numeric"
                   value={depositAmount}
                   onChangeText={setDepositAmount}
-                  placeholder={depositCurrency === 'BTC' ? 'e.g. 0.01' : 'e.g. 1000'}
+                  placeholder={depositCurrency === 'BTC' ? t('depositModal.placeholderBtcAmount') : t('depositModal.placeholderUsdtAmount')}
                   placeholderTextColor="#64748B"
                 />
               </View>
@@ -2357,27 +2393,27 @@ export default function BitcoinMiningApp() {
 
               {/* TxHash input */}
               <View style={{ marginTop: 12 }}>
-                <Text style={styles.inputLabel}>BLOCKCHAIN TRANSACTION HASH (TXID / HASH)</Text>
+                <Text style={styles.inputLabel}>{t('depositModal.txHash')}</Text>
                 <TextInput
                   style={[styles.modalInput, { marginTop: 6 }]}
                   value={depositTxHash}
                   onChangeText={setDepositTxHash}
                   placeholder={
                     depositCurrency === 'BTC'
-                      ? 'e.g. 7f8a9b2c3d4e5f6a1b2c3d4e5f... (Bitcoin TxID)'
-                      : 'e.g. 0x... or TRON TxID'
+                      ? t('depositModal.placeholderBtcTx')
+                      : t('depositModal.placeholderOtherTx')
                   }
                   placeholderTextColor="#64748B"
                   autoCapitalize="none"
                 />
                 <Text style={{ color: '#64748B', fontSize: 10, marginTop: 4 }}>
-                  Providing your on-chain transaction hash allows administrators to verify and approve your {depositCurrency} funds rapidly.
+                  {t('depositModal.txHashDesc', { currency: depositCurrency })}
                 </Text>
               </View>
 
               <View style={[styles.modalButtonRow, { marginTop: 16 }]}>
                 <TouchableOpacity style={styles.modalCancelBtn} onPress={() => setDepositModalVisible(false)}>
-                  <Text style={styles.modalCancelBtnText}>Close</Text>
+                  <Text style={styles.modalCancelBtnText}>{t('depositModal.close')}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={[styles.modalConfirmBtn, isSubmittingDeposit && { opacity: 0.6 }]}
@@ -2387,7 +2423,7 @@ export default function BitcoinMiningApp() {
                   {isSubmittingDeposit ? (
                     <ActivityIndicator size="small" color="#000" />
                   ) : (
-                    <Text style={styles.modalConfirmBtnText}>Submit {depositCurrency} Request</Text>
+                    <Text style={styles.modalConfirmBtnText}>{t('depositModal.submitRequest', { currency: depositCurrency })}</Text>
                   )}
                 </TouchableOpacity>
               </View>
@@ -2395,7 +2431,7 @@ export default function BitcoinMiningApp() {
               {/* User Recent Deposits Tracker */}
               {userDepositsList.length > 0 ? (
                 <View style={styles.recentDepositsSection}>
-                  <Text style={styles.recentDepositsTitle}>📜 RECENT DEPOSIT REQUESTS</Text>
+                  <Text style={styles.recentDepositsTitle}>{t('depositModal.recentDeposits')}</Text>
                   {userDepositsList.slice(0, 5).map((dep) => (
                     <View key={dep.id} style={styles.recentDepositItem}>
                       <View style={{ flex: 1 }}>
@@ -2424,10 +2460,10 @@ export default function BitcoinMiningApp() {
                               ]}
                             >
                               {dep.status === 'APPROVED'
-                                ? '🟢 Credited'
+                                ? t('depositModal.credited')
                                 : dep.status === 'REJECTED'
-                                  ? '⛔ Rejected'
-                                  : '⏳ Pending Review'}
+                                  ? t('depositModal.rejected')
+                                  : t('depositModal.pendingReview')}
                             </Text>
                           </View>
                         </View>
@@ -2437,7 +2473,7 @@ export default function BitcoinMiningApp() {
                         {Boolean(dep.rejectionReason) ? (
                           <View style={styles.rejectionReasonBox}>
                             <Text style={styles.rejectionReasonText}>
-                              Rejection Reason: <Text style={{ color: '#E2E8F0' }}>{dep.rejectionReason}</Text>
+                              {t('depositModal.rejectionReason')} <Text style={{ color: '#E2E8F0' }}>{dep.rejectionReason}</Text>
                             </Text>
                           </View>
                         ) : null}
@@ -2456,7 +2492,7 @@ export default function BitcoinMiningApp() {
         <View style={styles.modalOverlay}>
           <View style={[styles.modalBox, { maxWidth: 500 }, isMobile && styles.modalBoxMobile]}>
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-              <Text style={styles.modalTitle}>🌿 Binary Tree Placement</Text>
+              <Text style={styles.modalTitle}>{t('placementModal.title')}</Text>
               <TouchableOpacity onPress={() => setShowPlacementModal(false)}>
                 <Text style={{ fontSize: 18, color: '#94A3B8' }}>✕</Text>
               </TouchableOpacity>
@@ -2466,7 +2502,7 @@ export default function BitcoinMiningApp() {
               {/* Downline Member Selection */}
               <View>
                 <Text style={{ fontSize: 11, fontWeight: '700', color: '#94A3B8', marginBottom: 6 }}>
-                  DIRECT DOWNLINE MEMBER (QUALIFIED)
+                  {t('placementModal.downlineMember')}
                 </Text>
                 <View style={{ backgroundColor: '#0B111E', padding: 10, borderRadius: 8, borderWidth: 1, borderColor: '#242F42' }}>
                   <Text style={{ color: '#00E5FF', fontWeight: '800', fontSize: 14 }}>
@@ -2474,7 +2510,7 @@ export default function BitcoinMiningApp() {
                   </Text>
                   {Boolean(referrals.find((r) => r.username === placementTargetMember)?.wallet?.totalInvested) && (
                     <Text style={{ color: '#00E676', fontSize: 11, marginTop: 2 }}>
-                      ✅ Active package: ${referrals.find((r) => r.username === placementTargetMember)?.wallet?.totalInvested} USDT (Qualified)
+                      {t('placementModal.activePkg', { amount: referrals.find((r) => r.username === placementTargetMember)?.wallet?.totalInvested })}
                     </Text>
                   )}
                 </View>
@@ -2483,7 +2519,7 @@ export default function BitcoinMiningApp() {
               {/* Target Parent Node */}
               <View>
                 <Text style={{ fontSize: 11, fontWeight: '700', color: '#94A3B8', marginBottom: 6 }}>
-                  PLACEMENT PARENT NODE (IN YOUR DOWNLINE TREE)
+                  {t('placementModal.parentNode')}
                 </Text>
                 <TextInput
                   style={[styles.modalInput, { backgroundColor: '#0B111E', color: '#FFF' }]}
@@ -2494,14 +2530,14 @@ export default function BitcoinMiningApp() {
                   autoCapitalize="none"
                 />
                 <Text style={{ fontSize: 10, color: '#64748B', marginTop: 4 }}>
-                  Defaults to your root account @{user?.username}, or specify any downline member username to place under.
+                  {t('placementModal.parentDesc', { username: user?.username })}
                 </Text>
               </View>
 
               {/* Leg Selection */}
               <View>
                 <Text style={{ fontSize: 11, fontWeight: '700', color: '#94A3B8', marginBottom: 6 }}>
-                  SELECT BINARY LEG
+                  {t('placementModal.selectLeg')}
                 </Text>
                 <View style={{ flexDirection: 'row', gap: 10 }}>
                   <TouchableOpacity
@@ -2512,9 +2548,9 @@ export default function BitcoinMiningApp() {
                     onPress={() => setPlacementTargetLeg('A')}
                   >
                     <Text style={[styles.placementLegTitle, placementTargetLeg === 'A' && { color: '#38BDF8' }]}>
-                      Leg A (Left)
+                      {t('binary.legA')}
                     </Text>
-                    <Text style={styles.placementLegSub}>Left Binary Branch</Text>
+                    <Text style={styles.placementLegSub}>{t('placementModal.leftBranch')}</Text>
                   </TouchableOpacity>
 
                   <TouchableOpacity
@@ -2525,9 +2561,9 @@ export default function BitcoinMiningApp() {
                     onPress={() => setPlacementTargetLeg('B')}
                   >
                     <Text style={[styles.placementLegTitle, placementTargetLeg === 'B' && { color: '#F59E0B' }]}>
-                      Leg B (Right)
+                      {t('binary.legB')}
                     </Text>
-                    <Text style={styles.placementLegSub}>Right Binary Branch</Text>
+                    <Text style={styles.placementLegSub}>{t('placementModal.rightBranch')}</Text>
                   </TouchableOpacity>
                 </View>
               </View>
@@ -2535,7 +2571,7 @@ export default function BitcoinMiningApp() {
               {/* Rule Note */}
               <View style={{ backgroundColor: 'rgba(0, 229, 255, 0.06)', padding: 10, borderRadius: 8, borderColor: 'rgba(0, 229, 255, 0.2)', borderWidth: 1 }}>
                 <Text style={{ fontSize: 11, color: '#94A3B8', lineHeight: 16 }}>
-                  💡 <Text style={{ color: '#00E5FF', fontWeight: '700' }}>Binary Rule:</Text> Volume from placed downlines propagates up the tree to build Leg A / Leg B volumes for your 10% Binary Pairing bonus settled daily at 23:59.
+                  💡 <Text style={{ color: '#00E5FF', fontWeight: '700' }}>{t('placementModal.binaryRule')}</Text> {t('placementModal.binaryRuleDesc')}
                 </Text>
               </View>
 
@@ -2545,7 +2581,7 @@ export default function BitcoinMiningApp() {
                   style={styles.modalCancelBtn}
                   onPress={() => setShowPlacementModal(false)}
                 >
-                  <Text style={styles.modalCancelBtnText}>Cancel</Text>
+                  <Text style={styles.modalCancelBtnText}>{t('common.cancel')}</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity
@@ -2557,7 +2593,7 @@ export default function BitcoinMiningApp() {
                     <ActivityIndicator color="#000" />
                   ) : (
                     <Text style={[styles.modalConfirmBtnText, { color: '#000', fontWeight: '800' }]}>
-                      Confirm Placement
+                      {t('placementModal.confirmPlacement')}
                     </Text>
                   )}
                 </TouchableOpacity>
@@ -4957,6 +4993,23 @@ const styles = StyleSheet.create({
     fontSize: 8.5,
     fontWeight: '600',
     marginTop: 1,
+  },
+  settleNowBtn: {
+    marginTop: 6,
+    backgroundColor: 'rgba(0, 230, 118, 0.22)',
+    borderColor: '#00E676',
+    borderWidth: 1,
+    borderRadius: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  settleNowBtnText: {
+    color: '#00FF66',
+    fontSize: 10,
+    fontWeight: '900',
+    letterSpacing: 0.5,
   },
   starProgressContainer: {
     backgroundColor: 'rgba(30, 41, 59, 0.6)',

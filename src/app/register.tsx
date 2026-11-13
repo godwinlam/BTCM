@@ -11,13 +11,16 @@ import {
   Platform,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { api } from '@/services/api';
 import { useIsMobile } from '@/hooks/useIsMobile';
+import { LanguageSelector } from '@/components/LanguageSelector';
 
 export default function SignUpScreen() {
   const router = useRouter();
   const searchParams = useLocalSearchParams<{ ref?: string; parent?: string; positionParent?: string }>();
   const isMobile = useIsMobile();
+  const { t, i18n } = useTranslation();
 
   const [fullName, setFullName] = useState('');
   const [username, setUsername] = useState('');
@@ -76,27 +79,27 @@ export default function SignUpScreen() {
   const handleRegister = async () => {
     // Basic validations
     if (!username.trim() || !email.trim() || !password) {
-      setErrorMessage('Username, email, and password are required.');
+      setErrorMessage(t('register.errors.requiredFields'));
       return;
     }
 
     if (username.trim().length < 3) {
-      setErrorMessage('Username must be at least 3 characters.');
+      setErrorMessage(t('register.errors.usernameMinLength'));
       return;
     }
 
     if (!email.includes('@') || !email.includes('.')) {
-      setErrorMessage('Please enter a valid email address.');
+      setErrorMessage(t('register.errors.invalidEmail'));
       return;
     }
 
     if (password.length < 6) {
-      setErrorMessage('Password must be at least 6 characters.');
+      setErrorMessage(t('register.errors.passwordMinLength'));
       return;
     }
 
     if (password !== confirmPassword) {
-      setErrorMessage('Passwords do not match. Please re-enter.');
+      setErrorMessage(t('register.errors.passwordsDoNotMatch'));
       return;
     }
 
@@ -114,6 +117,7 @@ export default function SignUpScreen() {
           username: username.trim(),
           email: email.trim(),
           password,
+          preferredLanguage: i18n.language || 'en',
           referralCode: referralCode.trim() || undefined,
           placementUsername: targetPlacement || undefined,
           positionParent: positionParent ? positionParent.trim() : undefined,
@@ -129,11 +133,11 @@ export default function SignUpScreen() {
       if (res.token || res.user) {
         if (isAlreadyLoggedIn) {
           setSuccessMessage(
-            `New user @${username.trim()} created successfully under sponsor! They can be placed into the binary tree once their mining package requirement is completed. Returning to dashboard...`
+            t('register.success.downlineCreated', { username: username.trim() })
           );
         } else {
           setSuccessMessage(
-            `Account created successfully! Purchase a mining service package to qualify for binary tree placement. Redirecting to dashboard...`
+            t('register.success.accountCreated')
           );
         }
         setTimeout(() => {
@@ -143,7 +147,7 @@ export default function SignUpScreen() {
         throw new Error(res.message || 'Registration failed');
       }
     } catch (err: any) {
-      setErrorMessage(err.message || 'Registration failed. Username or email may already be taken.');
+      setErrorMessage(err.message || t('register.errors.registrationFailed'));
     } finally {
       setLoading(false);
     }
@@ -157,24 +161,22 @@ export default function SignUpScreen() {
       <ScrollView contentContainerStyle={styles.scrollContent}>
         {/* Brand Header */}
         <View style={styles.brandContainer}>
+          <View style={{ width: '100%', flexDirection: 'row', justifyContent: 'flex-end', marginBottom: 10 }}>
+            <LanguageSelector compact />
+          </View>
           <TouchableOpacity onPress={() => router.replace('/')} style={styles.logoBadge}>
             <Text style={styles.logoChar}>₿</Text>
           </TouchableOpacity>
-          <Text style={styles.brandTitle}>BTCM // CLOUD MINING</Text>
-          <Text style={styles.brandSubtitle}>Binary Hashrate Infrastructure & Mining BTC Portal</Text>
+          <Text style={styles.brandTitle}>{t('common.appName')}</Text>
+          <Text style={styles.brandSubtitle}>{t('auth.welcomeSub')}</Text>
         </View>
 
         {/* Sign Up Card */}
         <View style={[styles.card, isMobile && styles.cardMobile]}>
           <View style={styles.cardHeader}>
             <Text style={styles.cardTitle}>
-              {activeLoggedInUser ? 'Register Downline Member' : 'Create Miner Account'}
+              {activeLoggedInUser ? t('register.title') : t('register.createAccount')}
             </Text>
-            {/* <Text style={styles.cardSubtitle}>
-              {activeLoggedInUser
-                ? `Logged in as @${activeLoggedInUser.username}. New user will be placed into your downline while you remain logged in.`
-                : 'Join the Bitcoin Cloud Mining network. Unlock 10% direct sponsor rewards and 10% binary pairing bonuses.'}
-            </Text> */}
           </View>
 
           {/* Feedback banners */}
@@ -191,14 +193,14 @@ export default function SignUpScreen() {
           )}
 
           {/* Section 1: Basic Info */}
-          <Text style={styles.sectionDivider}>1. PERSONAL CREDENTIALS</Text>
+          <Text style={styles.sectionDivider}>{t('register.personalCredentials')}</Text>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>FULL NAME (OPTIONAL)</Text>
+            <Text style={styles.label}>{t('register.fullNameLabel')}</Text>
             <View style={styles.inputWrapper}>
               <TextInput
                 style={styles.input}
-                placeholder="e.g. Satoshi Nakamoto"
+                placeholder={t('register.fullNamePlaceholder')}
                 placeholderTextColor="#64748B"
                 value={fullName}
                 onChangeText={setFullName}
@@ -208,11 +210,11 @@ export default function SignUpScreen() {
 
           <View style={styles.inputRow}>
             <View style={[styles.inputGroup, styles.inputFlex]}>
-              <Text style={styles.label}>USERNAME *</Text>
+              <Text style={styles.label}>{t('register.usernameLabel')}</Text>
               <View style={styles.inputWrapper}>
                 <TextInput
                   style={styles.input}
-                  placeholder="e.g. crypto_miner99"
+                  placeholder={t('register.usernamePlaceholder')}
                   placeholderTextColor="#64748B"
                   value={username}
                   onChangeText={(val) => {
@@ -226,11 +228,11 @@ export default function SignUpScreen() {
             </View>
 
             <View style={[styles.inputGroup, styles.inputFlex]}>
-              <Text style={styles.label}>EMAIL ADDRESS *</Text>
+              <Text style={styles.label}>{t('register.emailLabel')}</Text>
               <View style={styles.inputWrapper}>
                 <TextInput
                   style={styles.input}
-                  placeholder="name@domain.com"
+                  placeholder={t('register.emailPlaceholder')}
                   placeholderTextColor="#64748B"
                   value={email}
                   onChangeText={(val) => {
@@ -248,17 +250,17 @@ export default function SignUpScreen() {
           <View style={styles.inputRow}>
             <View style={[styles.inputGroup, styles.inputFlex]}>
               <View style={styles.labelRow}>
-                <Text style={styles.label}>PASSWORD *</Text>
+                <Text style={styles.label}>{t('register.passwordLabel')}</Text>
                 <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
                   <Text style={styles.showPassToggle}>
-                    {showPassword ? 'Hide' : 'Show'}
+                    {showPassword ? t('register.hide') : t('register.show')}
                   </Text>
                 </TouchableOpacity>
               </View>
               <View style={styles.inputWrapper}>
                 <TextInput
                   style={styles.input}
-                  placeholder="Min 6 characters"
+                  placeholder={t('register.passwordPlaceholder')}
                   placeholderTextColor="#64748B"
                   value={password}
                   onChangeText={(val) => {
@@ -272,11 +274,11 @@ export default function SignUpScreen() {
             </View>
 
             <View style={[styles.inputGroup, styles.inputFlex]}>
-              <Text style={styles.label}>CONFIRM PASSWORD *</Text>
+              <Text style={styles.label}>{t('register.confirmPasswordLabel')}</Text>
               <View style={styles.inputWrapper}>
                 <TextInput
                   style={styles.input}
-                  placeholder="Re-enter password"
+                  placeholder={t('register.confirmPasswordPlaceholder')}
                   placeholderTextColor="#64748B"
                   value={confirmPassword}
                   onChangeText={(val) => {
@@ -291,21 +293,21 @@ export default function SignUpScreen() {
           </View>
 
           {/* Section 2: Sponsor & Referral Details */}
-          <Text style={styles.sectionDivider}>2. SPONSOR & REFERRAL DETAILS</Text>
+          <Text style={styles.sectionDivider}>{t('register.sponsorDetails')}</Text>
 
           {(!!referralCode || !!placementUsername) && (
             <View style={styles.autoFilledNoticeBanner}>
               <Text style={styles.autoFilledNoticeIcon}>🤝</Text>
               <View style={{ flex: 1 }}>
-                <Text style={styles.autoFilledNoticeTitle}>SPONSOR INVITATION DETECTED</Text>
+                <Text style={styles.autoFilledNoticeTitle}>{t('register.sponsorInvitationDetected')}</Text>
                 <Text style={styles.autoFilledNoticeText}>
                   {placementUsername ? (
-                    <>Sponsor By: <Text style={styles.autoFilledBold}>@{placementUsername}</Text></>
+                    <>{t('register.sponsorBy')} <Text style={styles.autoFilledBold}>@{placementUsername}</Text></>
                   ) : null}
                   {referralCode ? (
-                    <>{placementUsername ? ' • ' : ''}Referral Code: <Text style={styles.autoFilledBold}>{referralCode}</Text></>
+                    <>{placementUsername ? ' • ' : ''}{t('register.referralCode')} <Text style={styles.autoFilledBold}>{referralCode}</Text></>
                   ) : null}
-                  . You are joining under this direct team.
+                  {t('register.joiningDirectTeam')}
                 </Text>
               </View>
             </View>
@@ -313,17 +315,17 @@ export default function SignUpScreen() {
 
           <View style={styles.inputGroup}>
             <View style={styles.labelRowWithBadge}>
-              <Text style={styles.label}>SPONSOR REFERRAL CODE (OPTIONAL)</Text>
+              <Text style={styles.label}>{t('register.sponsorReferralCodeLabel')}</Text>
               {!!referralCode && (
                 <View style={styles.autoFilledBadge}>
-                  <Text style={styles.autoFilledBadgeText}>✓ CURRENT LOGIN USER</Text>
+                  <Text style={styles.autoFilledBadgeText}>{t('register.currentLoginUser')}</Text>
                 </View>
               )}
             </View>
             <View style={[styles.inputWrapper, !!referralCode && styles.inputWrapperFilled]}>
               <TextInput
                 style={styles.input}
-                placeholder="e.g. BTCROOT1 (Leave empty for root node)"
+                placeholder={t('register.referralCodePlaceholder')}
                 placeholderTextColor="#64748B"
                 value={referralCode}
                 onChangeText={(val) => setReferralCode(val.toUpperCase())}
@@ -331,23 +333,23 @@ export default function SignUpScreen() {
               />
             </View>
             <Text style={styles.fieldHint}>
-              ⭐ Current login user referral code for 10% direct reward.
+              {t('register.directRewardHint')}
             </Text>
           </View>
 
           <View style={styles.inputGroup}>
             <View style={styles.labelRowWithBadge}>
-              <Text style={styles.label}>SPECIFIC PLACEMENT PARENT (OPTIONAL)</Text>
+              <Text style={styles.label}>{t('register.specificPlacementParentLabel')}</Text>
               {!!placementUsername && (
                 <View style={styles.autoFilledBadge}>
-                  <Text style={styles.autoFilledBadgeText}>✓ CURRENT LOGIN USER</Text>
+                  <Text style={styles.autoFilledBadgeText}>{t('register.currentLoginUser')}</Text>
                 </View>
               )}
             </View>
             <View style={[styles.inputWrapper, !!placementUsername && styles.inputWrapperFilled]}>
               <TextInput
                 style={styles.input}
-                placeholder="e.g. godwin_miner (Defaults to sponsor)"
+                placeholder={t('register.placementPlaceholder')}
                 placeholderTextColor="#64748B"
                 value={placementUsername}
                 onChangeText={setPlacementUsername}
@@ -355,17 +357,17 @@ export default function SignUpScreen() {
               />
             </View>
             <Text style={styles.fieldHint}>
-              🌲 Direct sponsor or placement parent node (@{placementUsername || 'root'}).
+              {t('register.placementParentHint', { parent: placementUsername || 'root' })}
             </Text>
           </View>
 
           {/* Placement Notice Banner */}
           <View style={styles.placementRuleBox}>
             <Text style={styles.placementRuleTitle}>
-              ℹ️ BINARY TREE PLACEMENT REQUIREMENT:
+              {t('register.placementRequirementTitle')}
             </Text>
             <Text style={styles.placementRuleText}>
-              New members are registered directly under their sponsor. Binary tree placement (Leg A or B) is only implemented once the mining package requirement is completed.
+              {t('register.placementRequirementText')}
             </Text>
           </View>
 
@@ -380,27 +382,27 @@ export default function SignUpScreen() {
             ) : (
               <Text style={styles.submitBtnText}>
                 {activeLoggedInUser
-                  ? `Create Downline Member 🚀`
-                  : 'Create Account & Join Network 🚀'}
+                  ? t('register.createDownlineBtn')
+                  : t('register.createAccountBtn')}
               </Text>
             )}
           </TouchableOpacity>
 
           {/* Links */}
           <View style={styles.cardFooter}>
-            <Text style={styles.footerPrompt}>Already have a mining account?</Text>
+            <Text style={styles.footerPrompt}>{t('register.alreadyHaveAccount')}</Text>
             <TouchableOpacity
               style={styles.loginLinkBtn}
               onPress={() => router.push('/login' as any)}
             >
-              <Text style={styles.loginLinkText}>Sign In to Existing Node →</Text>
+              <Text style={styles.loginLinkText}>{t('register.signInExisting')}</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
               style={styles.backLinkBtn}
               onPress={() => router.replace('/')}
             >
-              <Text style={styles.backLinkText}>← Return to MineBest Home Page</Text>
+              <Text style={styles.backLinkText}>{t('register.returnHome')}</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -408,7 +410,7 @@ export default function SignUpScreen() {
         {/* Trust Badges */}
         <View style={styles.trustFooter}>
           <Text style={styles.trustText}>
-            🔒 End-to-End Encrypted Node Access • MineBest Infrastructure • 1,500 Days Max ROI Lifecycle
+            {t('register.trustFooter')}
           </Text>
         </View>
       </ScrollView>
