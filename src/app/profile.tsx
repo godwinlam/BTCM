@@ -1168,9 +1168,9 @@ export default function UserProfileScreen() {
                     </Text>
                   </View>
                   <View style={styles.starRankDetailItem}>
-                    <Text style={styles.starRankDetailLabel}>SETTLEMENT TIME</Text>
-                    <Text style={styles.starRankDetailValCyan}>23:59:00 Daily</Text>
-                    <Text style={styles.starRankDetailSub}>Automated Nightly Run</Text>
+                    <Text style={styles.starRankDetailLabel}>SETTLEMENT CYCLE</Text>
+                    <Text style={styles.starRankDetailValCyan}>Next Day Daily</Text>
+                    <Text style={styles.starRankDetailSub}>Automated Daily Run</Text>
                   </View>
                   <View style={styles.starRankDetailItem}>
                     <Text style={styles.starRankDetailLabel}>CONFISCATION RULE</Text>

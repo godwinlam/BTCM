@@ -80,23 +80,23 @@
     "days": "天"
   },
   "starRanking": {
-    "title": "星级领导位阶与 23:59 每日结算",
+    "title": "星级领导位阶与次日自动结算",
     "subTitle": "10 级星级与皇冠领导体系，每日对碰上限最高扩展至 18 局/日",
     "dailyPairingLimit": "每日对碰上限",
-    "pendingAt2359": "等待 23:59 结算",
+    "pendingAt2359": "等待次日结算",
     "pairsReady": "局可对碰",
     "willPay": "局将发放",
     "willConfiscate": "局将充公",
     "confiscatedBySystem": "系统充公金额",
     "excessPairs": "超出星级每日上限之多余局数",
     "nextSettlement": "下次结算时间",
-    "autoExecutes": "于每日 23:59:00 全自动执行",
+    "autoExecutes": "于每日次日周期全自动执行",
     "directPlacementVolume": "直属安置树总业绩",
     "personalMiningService": "个人已购算力服务",
     "minServiceMet": "已达最低消费标准",
     "needMore": "尚需",
     "automatedBadge": "100% 全自动每日结算引擎",
-    "automatedSub": "✓ 系统每日 23:59:59 全自动结算并派发到账（无需手动点击）",
+    "automatedSub": "✓ 系统次日每日周期全自动结算并派发到账（无需手动点击）",
     "ranks": {
       "unranked": "一般会员",
       "star1": "一星会员",
@@ -109,7 +109,8 @@
       "crown": "皇冠会员",
       "crown2": "双皇冠会员",
       "crown3": "三皇冠顶级会员"
-    }
+    },
+    "maxUsdtAt2359": "每日周期最高封顶 {{amount}} USDT"
   },
   "binary": {
     "treeTitle": "双轨安置组织图",
@@ -150,7 +151,7 @@
     "loadingTree": "正在加载双轨安置树...",
     "timePerDay": "次 / 天",
     "timesPerDay": "次 / 天",
-    "maxUsdtAt2359": "每日 23:59 最高封顶 {{amount}} USDT",
+    "maxUsdtAt2359": "每日周期最高封顶 {{amount}} USDT",
     "personalService": "个人已购算力服务：",
     "minServiceMet": "✓ {{amount}} USDT 达标个人算力最低门槛",
     "needMoreFor": "还需 +{{amount}} USDT 达到 {{rank}}",
@@ -183,18 +184,20 @@
     "focusedLeaf": "🔍 聚焦子节点",
     "slots": "位置",
     "user": "用户",
-    "at2359": "于 23:59",
+    "at2359": "于次日",
     "inCountdown": "倒计时",
-    "executingSettlement": "⚡ 正在执行 23:59:59 自动结算...",
+    "executingSettlement": "⚡ 正在执行次日自动结算...",
     "autoCrediting": "自动计入 USDT...",
     "depositingPairingBonus": "正在将 10% 对碰奖励发放至 USDT 钱包...",
-    "queuedPairsSettlement": "⚡ 已排队 {{pairs}} 组对碰 (+{{usdt}} USDT) • 每日 23:59:59 自动结算",
+    "queuedPairsSettlement": "⚡ 已排队 {{pairs}} 组对碰 (+{{usdt}} USDT) • 于次日每日周期自动结算",
     "viewingDownlines": "正在查看子节点 {{position}} 用户 @{{username}} 的下线及位置（非根节点）。",
     "requirement": "要求",
     "qualifiedRank": "✓ {{rank}} 已达标 ({{amount}} USDT)",
     "rankNeedMore": "✓ {{currentRank}} (距离 {{nextRank}} 尚需 +{{amount}})",
     "needMoreToRank": "升级至 {{rank}} 尚需 +{{amount}} USDT",
-    "dailyAutoExecutionNote": "⚡ 所有双轨对碰奖励与超出没收均在每日 23:59:59 自动执行。"
+    "dailyAutoExecutionNote": "⚡ 所有双轨对碰奖励与超出没收均在次日全自动执行。",
+    "nextDayCycle": "次日周期",
+    "dailyCycle": "每日"
   },
   "mining": {
     "title": "比特币 ASIC 云端挖矿服务",
@@ -315,8 +318,8 @@
     "feat2Desc": "加密产业中最长周期的合约之一。在全套专业硬件维护支持下，您的 ASIC 算力持续四季不间断运转。",
     "feat3Title": "10% 直推推荐奖励",
     "feat3Desc": "分享您的个人专属链接，按下线会员购买矿机方案金额，即时享有 10% 现金奖励，直接计入您的 USDT 余额。",
-    "feat4Title": "23:59 双轨对碰结算",
-    "feat4Desc": "配对左右区 (A/B 区) 业绩量。每对碰 1,000 USDT 即可获得 100 USDT 奖金，每日服务器时间 23:59:59 全自动结算派发。",
+    "feat4Title": "次日双轨对碰结算",
+    "feat4Desc": "配对左右区 (A/B 区) 业绩量。每对碰 1,000 USDT 即可获得 100 USDT 奖金，次日每日周期全自动结算派发。",
     "infraOverline": "基础设施与矿机设备",
     "infraTitle": "实体挖矿设备 • 经审计世界级机房",
     "infraSubtitle": "我们的云端合约由 Tier-III 数据中心内实体高性能 ASIC 矿机与机构级电力管理系统全额支撑。",
@@ -377,7 +380,7 @@
     "faqQ2": "挖矿合约的有效期限是多久？",
     "faqA2": "每份云端挖矿合约运作长达 1,500 个连续天数。在 48 小时硬件检测与老化校准期过后，每日自动比特币派发随即启动，无须手动领取。",
     "faqQ3": "10% 直推推荐奖与双轨对碰奖励如何运作？",
-    "faqA3": "当他人使用您的邀请链接加入并购买矿机方案时，您将立即获得 10% 现金推荐奖励（以 USDT 入账）。此外，双轨对碰引擎于每晚 23:59:59 结算左右区业绩，每对碰 1,000 USDT 奖励 100 USDT。",
+    "faqA3": "当他人使用您的邀请链接加入并购买矿机方案时，您将立即获得 10% 现金推荐奖励（以 USDT 入账）。此外，双轨对碰引擎于次日每日周期结算左右区业绩，每对碰 1,000 USDT 奖励 100 USDT。",
     "faqQ4": "支持哪些加密货币充值与提现？",
     "faqA4": "我们支持 USDT (TRC-20 & ERC-20)、USDC 以及原生比特币 (BTC)。区块链确认后充值自动入账，随时可于控制台申请提现。",
     "faqQ5": "MineBest 是谁？数据中心位于哪里？",
@@ -618,7 +621,7 @@
     "leftBranch": "左轨（A 区）",
     "rightBranch": "右轨（B 区）",
     "binaryRule": "双轨规则：",
-    "binaryRuleDesc": "被安置下线的业绩将沿双轨树向上累积至您的 A 边或 B 边，用于每日 23:59 全自动结算 10% 对碰分红。",
+    "binaryRuleDesc": "被安置下线的业绩将沿双轨树向上累积至您的 A 边或 B 边，用于次日每日周期全自动结算 10% 对碰分红。",
     "confirmPlacement": "确认安置排线"
   },
   "transfer": {
@@ -775,5 +778,13 @@
       "downlineCreated": "新用户 @{{username}} 已成功在推荐人名下创建！完成矿机算力套餐购买后即可排线至双轨树。正在返回控制台...",
       "accountCreated": "账户创建成功！购买算力套餐即可达标双轨排线资格。正在进入控制台..."
     }
+  },
+  "landing": {
+    "feat4Title": "次日双轨对碰结算",
+    "feat4Desc": "配对左右区 (A/B 区) 业绩量。每对碰 1,000 USDT 即可获得 100 USDT 奖金，次日每日周期全自动结算派发。",
+    "faqA3": "当他人使用您的邀请链接加入并购买矿机方案时，您将立即获得 10% 现金推荐奖励（以 USDT 入账）。此外，双轨对碰引擎于次日每日周期结算左右区业绩，每对碰 1,000 USDT 奖励 100 USDT。"
+  },
+  "network": {
+    "binaryRuleDesc": "被安置下线的业绩将沿双轨树向上累积至您的 A 边或 B 边，用于次日每日周期全自动结算 10% 对碰分红。"
   }
 }

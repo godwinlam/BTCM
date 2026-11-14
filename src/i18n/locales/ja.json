@@ -80,23 +80,23 @@
     "days": "日"
   },
   "starRanking": {
-    "title": "スターランク & 23:59 毎日自動決済",
+    "title": "スターランク & 翌日自動決済",
     "subTitle": "最大1日18ペアまで拡大可能な10段階スター＆クラウンリーダーシップ階層",
     "dailyPairingLimit": "1日のペアリング上限",
-    "pendingAt2359": "23:59決済待ち",
+    "pendingAt2359": "翌日決済待ち",
     "pairsReady": "ペア準備完了",
     "willPay": "ペア支払い対象",
     "willConfiscate": "ペアシステム没収",
     "confiscatedBySystem": "システム没収額",
     "excessPairs": "1日の上限を超過したペア数",
     "nextSettlement": "次回決済時刻",
-    "autoExecutes": "毎日 23:59:00 に自動実行",
+    "autoExecutes": "翌日サイクルにて毎日自動実行",
     "directPlacementVolume": "直属組織販売実績",
     "personalMiningService": "個人マイニング購入額",
     "minServiceMet": "最低基準クリア",
     "needMore": "不足額",
     "automatedBadge": "100% 完全自動デイリー決済エンジン",
-    "automatedSub": "✓ 毎日 23:59:59 に全自動でペアリング決済・付与（クリック不要）",
+    "automatedSub": "✓ 翌日サイクルにて全自動でペアリング決済・付与（クリック不要）",
     "ranks": {
       "unranked": "一般",
       "star1": "1 スター",
@@ -109,7 +109,8 @@
       "crown": "クラウン",
       "crown2": "2 クラウン",
       "crown3": "3 クラウン (最上位)"
-    }
+    },
+    "maxUsdtAt2359": "1日あたり上限 {{amount}} USDT"
   },
   "binary": {
     "treeTitle": "バイナリーツリー配置図",
@@ -150,7 +151,7 @@
     "loadingTree": "ツリーを読み込み中...",
     "timePerDay": "回 / 日",
     "timesPerDay": "回 / 日",
-    "maxUsdtAt2359": "毎晩23:59 上限 {{amount}} USDT",
+    "maxUsdtAt2359": "1日あたり上限 {{amount}} USDT",
     "personalService": "個人マイニング購入額：",
     "minServiceMet": "✓ {{amount}} USDT 個人最低要件達成",
     "needMoreFor": "{{rank}} 達成まであと +{{amount}} USDT",
@@ -183,18 +184,20 @@
     "focusedLeaf": "🔍 フォーカス子ノード",
     "slots": "スロット",
     "user": "ユーザー",
-    "at2359": "23:59時点",
+    "at2359": "翌日",
     "inCountdown": "残り",
-    "executingSettlement": "⚡ 23:59:59 自動決済を実行中...",
+    "executingSettlement": "⚡ 翌日自動決済を実行中...",
     "autoCrediting": "USDTを自動入金中...",
     "depositingPairingBonus": "10%ペアボーナスをUSDT残高に入金中...",
-    "queuedPairsSettlement": "⚡ {{pairs}}ペア待機中 (+{{usdt}} USDT) • 毎日23:59:59に自動決済",
+    "queuedPairsSettlement": "⚡ {{pairs}}ペア待機中 (+{{usdt}} USDT) • 翌日サイクルにて自動決済",
     "viewingDownlines": "子ノード {{position}} ユーザー @{{username}} のダウンラインとスロットを表示中（ルートではありません）。",
     "requirement": "要件",
     "qualifiedRank": "✓ {{rank}} 達成 ({{amount}} USDT)",
     "rankNeedMore": "✓ {{currentRank}} ({{nextRank}}まであと+{{amount}})",
     "needMoreToRank": "{{rank}}まであと+{{amount}} USDT",
-    "dailyAutoExecutionNote": "⚡ すべてのバイナリペアボーナスおよび超過没収は、毎日23:59:59に自動的に執行されます。"
+    "dailyAutoExecutionNote": "⚡ すべてのバイナリペアボーナスおよび超過没収は、翌日に自動的に執行されます。",
+    "nextDayCycle": "翌日サイクル",
+    "dailyCycle": "毎日"
   },
   "mining": {
     "title": "ビットコイン ASIC クラウドマイニング",
@@ -315,8 +318,8 @@
     "feat2Desc": "暗号資産業界で最も長期の契約モデル。完全な機器メンテナンスに支えられ、長期にわたり安定したマイニングを継続できます。",
     "feat3Title": "10% 直接紹介ボーナス",
     "feat3Desc": "紹介リンクを共有すると、紹介ユーザーがマイニングプランを購入するたびに10%のUSDT報酬が即時ウォレットに反映されます。",
-    "feat4Title": "23:59 バイナリペアリング決済",
-    "feat4Desc": "左右レッグの売上高をマッチング。1,000 USDTマッチごとに100 USDTが付与され、毎晩23:59:59に完全自動精算されます。",
+    "feat4Title": "翌日バイナリペアリング決済",
+    "feat4Desc": "左右レッグの売上高をマッチング。1,000 USDTマッチごとに100 USDTが付与され、翌日サイクルにて完全自動精算されます。",
     "infraOverline": "インフラとマイニング機器",
     "infraTitle": "実在するマイニング機器 • 監査済み設備",
     "infraSubtitle": "当社のクラウド契約は、Tier-IIIデータセンターで稼働する高性能物理ASIC機器と電力管理に支えられています。",
@@ -377,7 +380,7 @@
     "faqQ2": "マイニング契約の期間はどのくらいですか？",
     "faqA2": "すべてのクラウドマイニング契約は1,500日連続で有効です。48時間の機器較正の後、手動操作不要で毎日の報酬付与が始まります。",
     "faqQ3": "10%直接紹介ボーナスとバイナリペアリングの仕組みは？",
-    "faqA3": "紹介リンク経由で加入したユーザーがプランを購入すると、10%のUSDT報酬が即時付与されます。さらに左右レッグのマッチングにより1,000USDT毎に100USDTが毎晩23:59:59に自動付与されます。",
+    "faqA3": "紹介リンク経由で加入したユーザーがプランを購入すると、10%のUSDT報酬が即時付与されます。さらに左右レッグのマッチングにより1,000USDT毎に100USDTが翌日サイクルで自動付与されます。",
     "faqQ4": "どの暗号資産で入出金できますか？",
     "faqA4": "USDT (TRC-20 / ERC-20)、USDC、Bitcoin (BTC)に対応しています。ブロックチェーン確認後すぐに反映され、いつでも出金申請が可能です。",
     "faqQ5": "MineBestとはどのような会社ですか？データセンターの場所は？",
@@ -618,7 +621,7 @@
     "leftBranch": "左ライン (A)",
     "rightBranch": "右ライン (B)",
     "binaryRule": "バイナリルール：",
-    "binaryRuleDesc": "配置されたメンバーの売上はツリー上位に累積され、毎日23:59の10%ペアリングボーナス計算に使用されます。",
+    "binaryRuleDesc": "配置されたメンバーの売上はツリー上位に累積され、翌日サイクルの10%ペアリングボーナス計算に使用されます。",
     "confirmPlacement": "配置を確定する"
   },
   "transfer": {
@@ -775,5 +778,13 @@
       "downlineCreated": "新規ユーザー @{{username}} をスポンサー直下に登録しました！マイニングパッケージ購入後にバイナリーツリーへ配置可能になります。ダッシュボードに戻ります...",
       "accountCreated": "アカウントを作成しました！マイニングパッケージを購入してバイナリー配置資格を獲得してください。ダッシュボードに移動中..."
     }
+  },
+  "landing": {
+    "feat4Title": "翌日バイナリペアリング決済",
+    "feat4Desc": "左右レッグの売上高をマッチング。1,000 USDTマッチごとに100 USDTが付与され、翌日サイクルにて完全自動精算されます。",
+    "faqA3": "紹介リンク経由で加入したユーザーがプランを購入すると、10%のUSDT報酬が即時付与されます。さらに左右レッグのマッチングにより1,000USDT毎に100USDTが翌日サイクルで自動付与されます。"
+  },
+  "network": {
+    "binaryRuleDesc": "配置されたメンバーの売上はツリー上位に累積され、翌日サイクルの10%ペアリングボーナス計算に使用されます。"
   }
 }

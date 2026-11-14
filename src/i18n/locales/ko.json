@@ -80,23 +80,23 @@
     "days": "일"
   },
   "starRanking": {
-    "title": "스타 랭킹 & 23:59 매일 자동 정산",
+    "title": "스타 랭킹 & 익일 자동 정산",
     "subTitle": "하루 최대 18쌍까지 페어링 한도가 확장되는 10단계 리더십 체계",
     "dailyPairingLimit": "일일 페어링 한도",
-    "pendingAt2359": "23:59 정산 대기",
+    "pendingAt2359": "익일 정산 대기",
     "pairsReady": "쌍 정산 가능",
     "willPay": "쌍 지급 예정",
     "willConfiscate": "쌍 시스템 몰수",
     "confiscatedBySystem": "시스템 몰수 금액",
     "excessPairs": "일일 한도를 초과한 잉여 쌍",
     "nextSettlement": "다음 정산 시간",
-    "autoExecutes": "매일 23:59:00에 완전 자동 실행",
+    "autoExecutes": "익일 주기에 매일 완전 자동 실행",
     "directPlacementVolume": "직속 배치 트리 총매출",
     "personalMiningService": "개인 채굴 서비스 구매액",
     "minServiceMet": "최소 기준 달성",
     "needMore": "부족액",
     "automatedBadge": "100% 완전 자동 데일리 정산 엔진",
-    "automatedSub": "✓ 매일 23:59:59에 클릭 없이 100% 자동으로 정산 및 지갑 입금",
+    "automatedSub": "✓ 익일 주기에 클릭 없이 100% 자동으로 정산 및 지갑 입금",
     "ranks": {
       "unranked": "일반 회원",
       "star1": "1스타 회원",
@@ -109,7 +109,8 @@
       "crown": "크라운 회원",
       "crown2": "2 크라운 회원",
       "crown3": "3 크라운 최고회원"
-    }
+    },
+    "maxUsdtAt2359": "1일 주기 최대 {{amount}} USDT 한도"
   },
   "binary": {
     "treeTitle": "듀얼 바이너리 배치도",
@@ -150,7 +151,7 @@
     "loadingTree": "조직도를 불러오는 중...",
     "timePerDay": "회 / 일",
     "timesPerDay": "회 / 일",
-    "maxUsdtAt2359": "매일 23:59 최대 {{amount}} USDT 한도",
+    "maxUsdtAt2359": "1일 주기 최대 {{amount}} USDT 한도",
     "personalService": "개인 마이닝 구매 금액:",
     "minServiceMet": "✓ {{amount}} USDT 개인 최소 기준 충족",
     "needMoreFor": "{{rank}} 달성까지 +{{amount}} USDT 필요",
@@ -183,18 +184,20 @@
     "focusedLeaf": "🔍 포커스 리프",
     "slots": "슬롯",
     "user": "사용자",
-    "at2359": "23:59 기준",
+    "at2359": "익일",
     "inCountdown": "남음",
-    "executingSettlement": "⚡ 23:59:59 자동 정산 실행 중...",
+    "executingSettlement": "⚡ 익일 자동 정산 실행 중...",
     "autoCrediting": "USDT 자동 입금 중...",
     "depositingPairingBonus": "10% 페어링 보너스를 USDT 잔액으로 입금 중...",
-    "queuedPairsSettlement": "⚡ {{pairs}}개 페어 대기 중 (+{{usdt}} USDT) • 매일 23:59:59 자동 정산",
+    "queuedPairsSettlement": "⚡ {{pairs}}개 페어 대기 중 (+{{usdt}} USDT) • 익일 주기에 자동 정산",
     "viewingDownlines": "리프 {{position}} 유저 @{{username}} 의 하위 라인 및 슬롯 조회 중 (루트 유저 아님).",
     "requirement": "요건",
     "qualifiedRank": "✓ {{rank}} 달성 ({{amount}} USDT)",
     "rankNeedMore": "✓ {{currentRank}} ({{nextRank}}까지 +{{amount}} 필요)",
     "needMoreToRank": "{{rank}}까지 +{{amount}} USDT 필요",
-    "dailyAutoExecutionNote": "⚡ 모든 바이너리 페어링 보너스 및 한도 초과 몰수는 매일 23:59:59에 자동으로 실행됩니다."
+    "dailyAutoExecutionNote": "⚡ 모든 바이너리 페어링 보너스 및 한도 초과 몰수는 익일에 자동으로 실행됩니다.",
+    "nextDayCycle": "익일 주기",
+    "dailyCycle": "매일"
   },
   "mining": {
     "title": "비트코인 ASIC 클라우드 채굴",
@@ -315,8 +318,8 @@
     "feat2Desc": "암호화폐 업계에서 가장 긴 계약 수명 중 하나입니다. 전문 하드웨어 유지보수를 바탕으로 사계절 내내 ASIC 연산이 중단 없이 지속됩니다.",
     "feat3Title": "10% 추천 보너스",
     "feat3Desc": "추천 링크를 공유하고 파트너가 마이닝 패키지를 구매할 때마다 구매 금액의 10%가 USDT 잔액으로 즉시 지급됩니다.",
-    "feat4Title": "23:59 바이너리 페어링 정산",
-    "feat4Desc": "좌우 라인 실적을 매칭합니다. 1,000 USDT 매칭마다 100 USDT 보상이 지급되며 매일 밤 23:59:59에 전자동 정산됩니다.",
+    "feat4Title": "익일 바이너리 페어링 정산",
+    "feat4Desc": "좌우 라인 실적을 매칭합니다. 1,000 USDT 매칭마다 100 USDT 보상이 지급되며 익일 주기에 전자동 정산됩니다.",
     "infraOverline": "인프라 및 장비",
     "infraTitle": "실제 마이닝 장비 • 검증된 데이터 센터",
     "infraSubtitle": "클라우드 계약은 Tier-III 데이터 센터에서 기관급 전력 관리를 받는 고성능 물리적 ASIC 장비에 의해 뒷받침됩니다.",
@@ -377,7 +380,7 @@
     "faqQ2": "마이닝 계약 기간은 얼마인가요?",
     "faqA2": "모든 클라우드 마이닝 계약은 1,500일 연속으로 진행됩니다. 48시간의 하드웨어 진단 및 셋업 후 매일 수동 작업 없이 비트코인이 지급됩니다.",
     "faqQ3": "10% 추천 보너스와 바이너리 페어링은 어떻게 작동하나요?",
-    "faqA3": "초대 링크로 가입한 회원이 패키지를 구매하면 10%의 현금성 USDT 보너스가 즉시 지급됩니다. 또한 매일 밤 23:59:59에 1,000 USDT 매칭당 100 USDT의 바이너리 보너스가 정산됩니다.",
+    "faqA3": "초대 링크로 가입한 회원이 패키지를 구매하면 10%의 현금성 USDT 보너스가 즉시 지급됩니다. 또한 익일 주기에 1,000 USDT 매칭당 100 USDT의 바이너리 보너스가 정산됩니다.",
     "faqQ4": "어떤 암호화폐로 입출금할 수 있나요?",
     "faqA4": "USDT(TRC-20 및 ERC-20), USDC, 비트코인(BTC)을 지원합니다. 블록체인 승인 후 즉시 입금되며 언제든지 대시보드에서 출금할 수 있습니다.",
     "faqQ5": "MineBest는 어떤 회사이며 데이터 센터는 어디에 있나요?",
@@ -618,7 +621,7 @@
     "leftBranch": "좌측 라인 (A)",
     "rightBranch": "우측 라인 (B)",
     "binaryRule": "바이너리 규칙:",
-    "binaryRuleDesc": "배치된 하위 회원의 매출은 상위로 누적되어 매일 23:59에 10% 바이너리 페어링 보너스로 정산됩니다.",
+    "binaryRuleDesc": "배치된 하위 회원의 매출은 상위로 누적되어 익일 주기에 10% 바이너리 페어링 보너스로 정산됩니다.",
     "confirmPlacement": "배치 확인"
   },
   "transfer": {
@@ -775,5 +778,13 @@
       "downlineCreated": "추천인 산하에 신규 회원 @{{username}} 등록 완료! 패키지 구매 후 바이너리 트리에 배치 가능합니다. 대시보드로 돌아가는 중...",
       "accountCreated": "계정이 성공적으로 생성되었습니다! 채굴 패키지를 구매하여 바이너리 트리 배치 자격을 획득하세요. 대시보드로 이동 중..."
     }
+  },
+  "landing": {
+    "feat4Title": "익일 바이너리 페어링 정산",
+    "feat4Desc": "좌우 라인 실적을 매칭합니다. 1,000 USDT 매칭마다 100 USDT 보상이 지급되며 익일 주기에 전자동 정산됩니다.",
+    "faqA3": "초대 링크로 가입한 회원이 패키지를 구매하면 10%의 현금성 USDT 보너스가 즉시 지급됩니다. 또한 익일 주기에 1,000 USDT 매칭당 100 USDT의 바이너리 보너스가 정산됩니다."
+  },
+  "network": {
+    "binaryRuleDesc": "배치된 하위 회원의 매출은 상위로 누적되어 익일 주기에 10% 바이너리 페어링 보너스로 정산됩니다."
   }
 }

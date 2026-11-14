@@ -80,23 +80,23 @@
     "days": "days"
   },
   "starRanking": {
-    "title": "STAR RANKING & 23:59 SETTLEMENT",
+    "title": "STAR RANKING & NEXT DAY SETTLEMENT",
     "subTitle": "10-Tier Star and Crown leadership ladder scaling binary caps up to 18 pairs/day",
     "dailyPairingLimit": "DAILY PAIRING LIMIT",
-    "pendingAt2359": "PENDING AT 23:59",
+    "pendingAt2359": "PENDING NEXT DAY SETTLEMENT",
     "pairsReady": "PAIRS READY",
     "willPay": "will pay",
     "willConfiscate": "will confiscate",
     "confiscatedBySystem": "CONFISCATED BY SYSTEM",
     "excessPairs": "Excess pairs beyond daily limit",
     "nextSettlement": "NEXT SETTLEMENT",
-    "autoExecutes": "Auto-executes at 23:59:00",
+    "autoExecutes": "Auto-executes daily on next day cycle",
     "directPlacementVolume": "Direct Placement Tree Volume",
     "personalMiningService": "Personal Mining Service",
     "minServiceMet": "MIN SERVICE MET",
     "needMore": "Need",
     "automatedBadge": "100% AUTOMATED DAILY SETTLEMENT",
-    "automatedSub": "✓ 100% Automated System • Auto-Credited on 23:59:59 Daily (No manual click required)",
+    "automatedSub": "✓ 100% Automated System • Auto-Credited on Next Day Daily Cycle (No manual click required)",
     "ranks": {
       "unranked": "Unranked",
       "star1": "1 Star User",
@@ -109,7 +109,8 @@
       "crown": "Crown User",
       "crown2": "2 Crown User",
       "crown3": "3 Crown User"
-    }
+    },
+    "maxUsdtAt2359": "Max {{amount}} USDT per daily cycle"
   },
   "binary": {
     "treeTitle": "Dual Binary Tree Placement",
@@ -150,7 +151,7 @@
     "loadingTree": "Loading Placement Tree...",
     "timePerDay": "TIME / DAY",
     "timesPerDay": "TIMES / DAY",
-    "maxUsdtAt2359": "Max {{amount}} USDT at 23:59",
+    "maxUsdtAt2359": "Max {{amount}} USDT per daily cycle",
     "personalService": "Personal Mining Service:",
     "minServiceMet": "✓ {{amount}} USDT MIN SERVICE MET",
     "needMoreFor": "Need +{{amount}} USDT for {{rank}}",
@@ -183,18 +184,20 @@
     "focusedLeaf": "🔍 Focused Leaf",
     "slots": "Slots",
     "user": "USER",
-    "at2359": "at 23:59",
+    "at2359": "on next day",
     "inCountdown": "IN",
-    "executingSettlement": "⚡ EXECUTING 23:59:59 AUTO-SETTLEMENT...",
+    "executingSettlement": "⚡ EXECUTING NEXT DAY AUTO-SETTLEMENT...",
     "autoCrediting": "AUTO-CREDITING USDT...",
     "depositingPairingBonus": "Depositing 10% Pairing Bonus to USDT Balance...",
-    "queuedPairsSettlement": "⚡ {{pairs}} Pair(s) Queued (+{{usdt}} USDT) • Auto-settled on 23:59:59 daily",
+    "queuedPairsSettlement": "⚡ {{pairs}} Pair(s) Queued (+{{usdt}} USDT) • Auto-settled on next day daily cycle",
     "viewingDownlines": "Viewing downlines and slots from Leaf {{position}} user @{{username}} (not become a root user).",
     "requirement": "Requirement",
     "qualifiedRank": "✓ {{rank}} QUALIFIED ({{amount}} USDT)",
     "rankNeedMore": "✓ {{currentRank}} (Need +{{amount}} to {{nextRank}})",
     "needMoreToRank": "+{{amount}} USDT to {{rank}}",
-    "dailyAutoExecutionNote": "⚡ All binary pairing bonuses and confiscations implement automatically on 23:59 every day."
+    "dailyAutoExecutionNote": "⚡ All binary pairing bonuses and confiscations implement automatically on the next day.",
+    "nextDayCycle": "Next Day Cycle",
+    "dailyCycle": "Daily"
   },
   "mining": {
     "title": "Bitcoin ASIC Cloud Mining",
@@ -315,8 +318,8 @@
     "feat2Desc": "One of the longest contract lifecycles in the entire crypto industry. Your ASIC computing capacity continues mining through all seasons, backed by full hardware maintenance.",
     "feat3Title": "10% Direct Referral Bonus",
     "feat3Desc": "Share your personal link and earn an instant 10% cash reward credited directly to your USDT balance whenever your downline purchases a mining package.",
-    "feat4Title": "23:59 Dual Binary Pairing",
-    "feat4Desc": "Pair volume from your Left (A) and Right (B) legs. Every 1,000 USDT matched volume earns you 100 USDT, automatically settled every single night at 23:59 server time.",
+    "feat4Title": "Next Day Dual Binary Pairing",
+    "feat4Desc": "Pair volume from your Left (A) and Right (B) legs. Every 1,000 USDT matched volume earns you 100 USDT, automatically settled on next day cycle.",
     "infraOverline": "INFRASTRUCTURE & DEVICES",
     "infraTitle": "Real Mining Equipment. Audited Facilities.",
     "infraSubtitle": "Our cloud contracts are underpinned by physical, high-performance ASIC rigs operating in Tier-III data centers with institutional-grade power management.",
@@ -377,7 +380,7 @@
     "faqQ2": "How long do mining contracts last?",
     "faqA2": "Every cloud mining contract runs for 1,500 consecutive days. After a 48-hour hardware diagnostics and burn-in period, automated daily Bitcoin mining distributions begin without requiring manual harvest.",
     "faqQ3": "How does the 10% Direct Bonus and Binary Pairing work?",
-    "faqA3": "When someone joins using your referral link and activates a mining package, you instantly earn a 10% cash reward credited in USDT. In addition, our binary pairing engine pairs Leg A and Leg B volume every night at 23:59, awarding 100 USDT per 1,000 pair volume.",
+    "faqA3": "When someone joins using your referral link and activates a mining package, you instantly earn a 10% cash reward credited in USDT. In addition, our binary pairing engine pairs Leg A and Leg B volume on next day cycle, awarding 100 USDT per 1,000 pair volume.",
     "faqQ4": "Which cryptocurrencies can I deposit and withdraw?",
     "faqA4": "We support USDT (TRC-20 & ERC-20), USDC, and native Bitcoin (BTC). Deposits credit automatically upon blockchain confirmation, and withdrawals can be requested anytime from your dashboard.",
     "faqQ5": "Who is MineBest and where are the data centers located?",
@@ -618,7 +621,7 @@
     "leftBranch": "Left Binary Branch",
     "rightBranch": "Right Binary Branch",
     "binaryRule": "Binary Rule:",
-    "binaryRuleDesc": "Volume from placed downlines propagates up the tree to build Leg A / Leg B volumes for your 10% Binary Pairing bonus settled daily at 23:59.",
+    "binaryRuleDesc": "Volume from placed downlines propagates up the tree to build Leg A / Leg B volumes for your 10% Binary Pairing bonus settled automatically on next day cycle.",
     "confirmPlacement": "Confirm Placement"
   },
   "transfer": {
@@ -775,5 +778,13 @@
       "downlineCreated": "New user @{{username}} created successfully under sponsor! They can be placed into the binary tree once their mining package requirement is completed. Returning to dashboard...",
       "accountCreated": "Account created successfully! Purchase a mining service package to qualify for binary tree placement. Redirecting to dashboard..."
     }
+  },
+  "landing": {
+    "feat4Title": "Next Day Dual Binary Pairing",
+    "feat4Desc": "Pair volume from your Left (A) and Right (B) legs. Every 1,000 USDT matched volume earns you 100 USDT, automatically settled on next day cycle.",
+    "faqA3": "When someone joins using your referral link and activates a mining package, you instantly earn a 10% cash reward credited in USDT. In addition, our binary pairing engine pairs Leg A and Leg B volume on the next day cycle, awarding 100 USDT per 1,000 pair volume."
+  },
+  "network": {
+    "binaryRuleDesc": "Volume from placed downlines propagates up the tree to build Leg A / Leg B volumes for your 10% Binary Pairing bonus settled automatically on next day cycle."
   }
 }

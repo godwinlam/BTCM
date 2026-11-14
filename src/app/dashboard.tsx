@@ -99,6 +99,8 @@ interface NetworkSummary {
   totalDirectBonus: number;
   totalBinaryConfiscated?: number;
   nextPairNeeded: { legA: number; legB: number };
+  lastSettledDate?: string | null;
+  pairsAchievedDate?: string | null;
   starRanking?: {
     rank: number;
     name: string;
@@ -127,6 +129,9 @@ interface NetworkSummary {
     pendingConfiscatedVolume: number;
     pendingBonusEarned: number;
     settlementTime: string;
+    lastSettledDate?: string | null;
+    pairsAchievedDate?: string | null;
+    canAutoSettle?: boolean;
     nextSettlementAt: string;
     countdown: string;
     ruleText: string;
@@ -404,35 +409,39 @@ export default function BitcoinMiningApp() {
     }
   }, [activeTab]);
 
-  // Calculation for Daily 23:59:59 Binary Settlement countdown
-  const next2359TargetMs = (() => {
+  // Calculation for Next Day Daily Binary Settlement countdown (targets tomorrow 00:00:00)
+  const nextDayTargetMs = (() => {
     const d = new Date(nowMs);
-    d.setHours(23, 59, 59, 0);
-    if (nowMs >= d.getTime()) {
-      d.setDate(d.getDate() + 1);
-    }
+    d.setDate(d.getDate() + 1);
+    d.setHours(0, 0, 0, 0);
     return d.getTime();
   })();
-  const binarySettlementMsLeft = Math.max(0, next2359TargetMs - nowMs);
-  const isBinarySettlementDue = binarySettlementMsLeft <= 1500;
+  const nextDaySettlementMsLeft = Math.max(0, nextDayTargetMs - nowMs);
 
   // 100% Automated 10% Binary Pairing Engine:
-  // Pairs remain in { PENDING AT 23:59 } throughout the day.
-  // When 23:59:59 is reached (isBinarySettlementDue), daily pairing auto-executes without manual clicks!
+  // Rule: When { ✓ QUALIFIED FOR 10% PAIRING } is achieved, auto implement binary settlement on next day.
+  // Zero manual clicks required!
   const lastBinaryAutoSettleRef = useRef<number>(0);
   useEffect(() => {
     if (!api.getToken() || settlingBinary) return;
-
-    // Strict condition: ONLY execute when clock reaches 23:59:59!
-    if (!isBinarySettlementDue) return;
 
     const isQualified = (user?.wallet?.totalInvested || 0) > 0;
     const hasPairsReady =
       (summary?.leftLeg?.currentVolume || 0) >= 1000 &&
       (summary?.rightLeg?.currentVolume || 0) >= 1000;
+    const starRank = summary?.starRanking?.rank || 0;
+
+    const todayKey = new Date().toISOString().slice(0, 10);
+    const lastSettledDate = summary?.lastSettledDate || summary?.starRanking?.lastSettledDate;
+    const pairsAchievedDate = summary?.pairsAchievedDate || summary?.starRanking?.pairsAchievedDate;
+
+    // Due on next day: user is qualified with starRank >= 1 and ready pairs,
+    // not settled today, and pairs were achieved before today (or backend signals canAutoSettle).
+    const isNextDayDue = isQualified && starRank >= 1 && hasPairsReady &&
+      (summary?.starRanking?.canAutoSettle || (lastSettledDate !== todayKey && (!pairsAchievedDate || pairsAchievedDate !== todayKey)));
 
     const now = Date.now();
-    if (isQualified && hasPairsReady && (now - lastBinaryAutoSettleRef.current) > 30000) {
+    if (isNextDayDue && (now - lastBinaryAutoSettleRef.current) > 30000) {
       lastBinaryAutoSettleRef.current = now;
       setSettlingBinary(true);
       api.settleDailyBinary()
@@ -441,7 +450,7 @@ export default function BitcoinMiningApp() {
             refreshAllData();
             const { pairsPaid, rewardUsd, pairsConfiscated, starName } = res.result;
             showNotification(
-              `⭐ Daily 23:59 Settlement Complete: +${rewardUsd} USDT credited automatically to your wallet! ${pairsConfiscated > 0 ? `• [${pairsConfiscated} pair(s) confiscated under ${starName || 'Star'} Rule]` : ''}`,
+              `⭐ Next Day Daily Settlement Complete: +${rewardUsd} USDT credited automatically to your wallet! ${pairsConfiscated > 0 ? `• [${pairsConfiscated} pair(s) confiscated under ${starName || 'Star'} Rule]` : ''}`,
               'success'
             );
           } else {
@@ -449,13 +458,13 @@ export default function BitcoinMiningApp() {
           }
         })
         .catch((e) => {
-          console.error('Automated binary pairing settlement error at 23:59:', e);
+          console.error('Automated next day binary pairing settlement error:', e);
         })
         .finally(() => {
           setSettlingBinary(false);
         });
     }
-  }, [isBinarySettlementDue, summary?.leftLeg?.currentVolume, summary?.rightLeg?.currentVolume, user?.wallet?.totalInvested]);
+  }, [summary?.leftLeg?.currentVolume, summary?.rightLeg?.currentVolume, user?.wallet?.totalInvested, summary?.lastSettledDate, summary?.starRanking?.canAutoSettle, summary?.starRanking?.rank]);
 
   // Initial load
   useEffect(() => {
@@ -611,7 +620,7 @@ export default function BitcoinMiningApp() {
       if (res.result?.settled) {
         const { pairsPaid, rewardUsd, pairsConfiscated, confiscatedVolume, starName } = res.result;
         showNotification(
-          `⭐ Daily 23:59 Settlement Complete: ${pairsPaid} pair paid (+${rewardUsd} USDT). ${pairsConfiscated > 0 ? `⚠️ ${pairsConfiscated} pair (${confiscatedVolume} USDT volume) confiscated under ${starName || 'Star'} Rule (limit: ${summary?.starRanking?.maxDailyPairs || 1} pair/day).` : 'No excess pairings confiscated.'}`
+          `⭐ Next Day Daily Settlement Complete: ${pairsPaid} pair paid (+${rewardUsd} USDT). ${pairsConfiscated > 0 ? `⚠️ ${pairsConfiscated} pair (${confiscatedVolume} USDT volume) confiscated under ${starName || 'Star'} Rule (limit: ${summary?.starRanking?.maxDailyPairs || 1} pair/day).` : 'No excess pairings confiscated.'}`
         );
       } else {
         showNotification(`⭐ Settlement Notice: ${res.message || 'No ready pairing to settle.'}`);
@@ -1478,7 +1487,7 @@ export default function BitcoinMiningApp() {
                   </View>
                 </View>
 
-                {/* STAR RANKING & 23:59 DAILY BINARY SETTLEMENT CARD */}
+                {/* STAR RANKING & NEXT DAY DAILY BINARY SETTLEMENT CARD */}
                 <View style={[styles.starRankCard, isMobile && styles.starRankCardMobile]}>
                   <View style={[styles.starRankHeader, isMobile && styles.starRankHeaderMobile]}>
                     <View style={isMobile ? { width: '100%' } : { flex: 1 }}>
@@ -1513,7 +1522,7 @@ export default function BitcoinMiningApp() {
                       <Text style={styles.autoSettlementCountdownTimer}>
                         {settlingBinary
                           ? t('binary.autoCrediting')
-                          : `23:59:59 ${t('binary.inCountdown')} ${formatCountdown(binarySettlementMsLeft)}`}
+                          : `${t('binary.nextDayCycle', 'Next Day Cycle')} ${formatCountdown(nextDaySettlementMsLeft)}`}
                       </Text>
                       <Text style={styles.autoSettlementSubText}>
                         {settlingBinary
@@ -1640,7 +1649,7 @@ export default function BitcoinMiningApp() {
                     <View style={styles.starMetricItem}>
                       <Text style={styles.starMetricLabel}>{t('starRanking.nextSettlement')}</Text>
                       <Text style={[styles.starMetricValue, { color: '#00FF66' }]}>
-                        {formatCountdown(binarySettlementMsLeft)}
+                        {formatCountdown(nextDaySettlementMsLeft)}
                       </Text>
                       <Text style={styles.starMetricSub}>{t('starRanking.autoExecutes')}</Text>
                     </View>

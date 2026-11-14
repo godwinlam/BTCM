@@ -80,23 +80,23 @@
     "days": "días"
   },
   "starRanking": {
-    "title": "RANGO ESTRELLA Y LIQUIDACIÓN 23:59",
+    "title": "RANGO ESTRELLA Y LIQUIDACIÓN AL DÍA SIGUIENTE",
     "subTitle": "Escala de liderazgo de 10 niveles que amplía los límites binarios hasta 18 pares por día",
     "dailyPairingLimit": "LÍMITE DIARIO DE PARES",
-    "pendingAt2359": "PENDIENTE A LAS 23:59",
+    "pendingAt2359": "PENDIENTE LIQUIDACIÓN DÍA SIGUIENTE",
     "pairsReady": "PARES LISTOS",
     "willPay": "pares pagarán",
     "willConfiscate": "pares se confiscarán",
     "confiscatedBySystem": "CONFISCADO POR EL SISTEMA",
     "excessPairs": "Pares excedentes del límite diario",
     "nextSettlement": "PRÓXIMA LIQUIDACIÓN",
-    "autoExecutes": "Se ejecuta automáticamente a las 23:59:00",
+    "autoExecutes": "Se ejecuta automáticamente en el ciclo del día siguiente",
     "directPlacementVolume": "Volumen de Ventas Directas",
     "personalMiningService": "Inversión Personal de Minería",
     "minServiceMet": "MÍNIMO CUMPLIDO",
     "needMore": "Falta",
     "automatedBadge": "MOTOR 100% AUTOMATIZADO DE LIQUIDACIÓN DIARIA",
-    "automatedSub": "✓ Liquidación y acreditación 100% automática a las 23:59:59 (sin clics)",
+    "automatedSub": "✓ Liquidación y acreditación 100% automática en el ciclo del día siguiente (sin clics)",
     "ranks": {
       "unranked": "Sin Rango",
       "star1": "Usuario 1 Estrella",
@@ -109,7 +109,8 @@
       "crown": "Usuario Corona",
       "crown2": "Usuario 2 Coronas",
       "crown3": "Usuario 3 Coronas"
-    }
+    },
+    "maxUsdtAt2359": "Máx {{amount}} USDT por ciclo diario"
   },
   "binary": {
     "treeTitle": "Árbol de Colocación Binaria",
@@ -150,7 +151,7 @@
     "loadingTree": "Cargando Árbol...",
     "timePerDay": "VEZ / DÍA",
     "timesPerDay": "VECES / DÍA",
-    "maxUsdtAt2359": "Máx {{amount}} USDT a las 23:59",
+    "maxUsdtAt2359": "Máx {{amount}} USDT por ciclo diario",
     "personalService": "Servicio de Minería Personal:",
     "minServiceMet": "✓ {{amount}} USDT SERVICIO MÍNIMO CUMPLIDO",
     "needMoreFor": "Faltan +{{amount}} USDT para {{rank}}",
@@ -183,18 +184,20 @@
     "focusedLeaf": "🔍 Hoja enfocada",
     "slots": "Ranuras",
     "user": "USUARIO",
-    "at2359": "a las 23:59",
+    "at2359": "al día siguiente",
     "inCountdown": "EN",
-    "executingSettlement": "⚡ EJECUTANDO LIQUIDACIÓN AUTOMÁTICA 23:59:59...",
+    "executingSettlement": "⚡ EJECUTANDO LIQUIDACIÓN AUTOMÁTICA DÍA SIGUIENTE...",
     "autoCrediting": "ACREDITANDO USDT AUTOMÁTICAMENTE...",
     "depositingPairingBonus": "Depositando Bono de Emparejamiento del 10% en Saldo USDT...",
-    "queuedPairsSettlement": "⚡ {{pairs}} Par(es) en cola (+{{usdt}} USDT) • Liquidado a las 23:59:59 diario",
+    "queuedPairsSettlement": "⚡ {{pairs}} Par(es) en cola (+{{usdt}} USDT) • Liquidado automáticamente al día siguiente",
     "viewingDownlines": "Viendo líneas descendentes y ranuras del usuario Hoja {{position}} @{{username}} (no es usuario raíz).",
     "requirement": "Requisito",
     "qualifiedRank": "✓ {{rank}} CALIFICADO ({{amount}} USDT)",
     "rankNeedMore": "✓ {{currentRank}} (Necesita +{{amount}} para {{nextRank}})",
     "needMoreToRank": "+{{amount}} USDT para {{rank}}",
-    "dailyAutoExecutionNote": "⚡ Todos los bonos de emparejamiento binario y confiscaciones se ejecutan automáticamente a las 23:59 todos los días."
+    "dailyAutoExecutionNote": "⚡ Todos los bonos de emparejamiento binario y confiscaciones se ejecutan automáticamente al día siguiente.",
+    "nextDayCycle": "Ciclo del día siguiente",
+    "dailyCycle": "Diario"
   },
   "mining": {
     "title": "Minería ASIC Bitcoin en la Nube",
@@ -315,8 +318,8 @@
     "feat2Desc": "Uno de los ciclos de contrato más largos del sector. Tu capacidad de cómputo ASIC continúa minando respaldada por mantenimiento completo.",
     "feat3Title": "Bono Directo de Referido del 10%",
     "feat3Desc": "Comparte tu enlace personal y gana un 10% en efectivo acreditado en tu saldo USDT cada vez que un invitado compre un paquete.",
-    "feat4Title": "Emparejamiento Binario a las 23:59",
-    "feat4Desc": "Empareja volumen entre tus líneas Izquierda (A) y Derecha (B). Cada 1,000 USDT emparejados te otorgan 100 USDT, liquidados cada noche a las 23:59.",
+    "feat4Title": "Emparejamiento Binario al Día Siguiente",
+    "feat4Desc": "Empareja volumen entre tus líneas Izquierda (A) y Derecha (B). Cada 1,000 USDT emparejados te otorgan 100 USDT, liquidados en el ciclo del día siguiente.",
     "infraOverline": "INFRAESTRUCTURA Y DISPOSITIVOS",
     "infraTitle": "Equipos Reales. Instalaciones Auditadas.",
     "infraSubtitle": "Nuestros contratos en la nube están respaldados por plataformas físicas ASIC que operan en centros de datos Tier-III.",
@@ -377,7 +380,7 @@
     "faqQ2": "¿Cuánto duran los contratos de minería?",
     "faqA2": "Cada contrato funciona durante 1,500 días consecutivos. Tras 48 horas de calibración inicial, comienzan las distribuciones diarias automatizadas.",
     "faqQ3": "¿Cómo funciona el Bono Directo del 10% y el Binario?",
-    "faqA3": "Ganas un bono instantáneo del 10% en USDT por cada compra de tu red. Además, el motor binario empareja a las 23:59 otorgando 100 USDT por cada 1,000 de volumen emparejado.",
+    "faqA3": "Ganas un bono instantáneo del 10% en USDT por cada compra de tu red. Además, el motor binario empareja en el ciclo del día siguiente otorgando 100 USDT por cada 1,000 de volumen emparejado.",
     "faqQ4": "¿Qué criptomonedas puedo depositar y retirar?",
     "faqA4": "Aceptamos USDT (TRC-20 y ERC-20), USDC y Bitcoin (BTC). Los depósitos se acreditan automáticamente tras la confirmación de la blockchain.",
     "faqQ5": "¿Quién es MineBest y dónde están los centros de datos?",
@@ -618,7 +621,7 @@
     "leftBranch": "Rama izquierda (A)",
     "rightBranch": "Rama derecha (B)",
     "binaryRule": "Regla binaria:",
-    "binaryRuleDesc": "El volumen se propaga hacia arriba en el árbol para emparejar al 10% a las 23:59 diariamente.",
+    "binaryRuleDesc": "El volumen se propaga hacia arriba en el árbol para emparejar al 10% en el ciclo del día siguiente automáticamente.",
     "confirmPlacement": "Confirmar colocación"
   },
   "transfer": {
@@ -775,5 +778,13 @@
       "downlineCreated": "¡Nuevo usuario @{{username}} creado exitosamente bajo el patrocinador! Se puede colocar en el árbol binario una vez que adquiera un paquete. Volviendo al panel...",
       "accountCreated": "¡Cuenta creada exitosamente! Adquiera un paquete de minería para calificar en el árbol binario. Redirigiendo al panel..."
     }
+  },
+  "landing": {
+    "feat4Title": "Emparejamiento Binario al Día Siguiente",
+    "feat4Desc": "Empareja volumen entre tus líneas Izquierda (A) y Derecha (B). Cada 1,000 USDT emparejados te otorgan 100 USDT, liquidados en el ciclo del día siguiente.",
+    "faqA3": "Ganas un bono instantáneo del 10% en USDT por cada compra de tu red. Además, el motor binario empareja en el ciclo del día siguiente otorgando 100 USDT por cada 1,000 de volumen emparejado."
+  },
+  "network": {
+    "binaryRuleDesc": "El volumen se propaga hacia arriba en el árbol para emparejar al 10% en el ciclo del día siguiente automáticamente."
   }
 }
