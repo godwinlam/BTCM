@@ -16,6 +16,8 @@ import { useTranslation } from 'react-i18next';
 import { api } from '../services/api';
 import { StarRankIndicator } from '../components/StarRankIndicator';
 import { LanguageSelector } from '../components/LanguageSelector';
+import { ThemeToggle } from '../components/ThemeToggle';
+import { useThemeMode } from '@/context/ThemeContext';
 import { useIsMobile } from '../hooks/useIsMobile';
 
 type TradeAction = 'BUY' | 'SELL';
@@ -42,6 +44,7 @@ export default function TradeScreen() {
   const router = useRouter();
   const isMobile = useIsMobile();
   const { t } = useTranslation();
+  const { isDark, colors } = useThemeMode();
 
   // Active Trade Mode
   const [action, setAction] = useState<TradeAction>('BUY');
@@ -311,7 +314,10 @@ export default function TradeScreen() {
                   <Text style={styles.brandSubtitleMobile}>{t('trade.title')}</Text>
                 </View>
               </View>
-              <LanguageSelector compact />
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                <ThemeToggle compact />
+                <LanguageSelector compact />
+              </View>
             </View>
 
             {/* Row 2: Live BTC Price & Profile */}
@@ -362,6 +368,7 @@ export default function TradeScreen() {
             </View>
 
             <View style={styles.navRight}>
+              <ThemeToggle compact />
               <LanguageSelector compact />
               <View style={styles.livePricePill}>
                 <View style={styles.liveDot} />

@@ -29,7 +29,10 @@
     "language": "Idioma",
     "selectLanguage": "Seleccionar Idioma",
     "industrialInfra": "Infraestructura Industrial",
-    "openDashboard": "Abrir Panel"
+    "openDashboard": "Abrir Panel",
+    "theme": "Tema",
+    "darkMode": "Modo Oscuro",
+    "lightMode": "Modo Claro"
   },
   "auth": {
     "welcomeTitle": "Minería Bitcoin Descentralizada en la Nube",

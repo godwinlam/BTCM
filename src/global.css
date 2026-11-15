@@ -6,6 +6,22 @@
     ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, Courier New, monospace;
   --font-rounded: 'SF Pro Rounded', 'Hiragino Maru Gothic ProN', Meiryo, 'MS PGothic', sans-serif;
   --font-serif: Georgia, 'Times New Roman', serif;
+
+  --app-bg: #0B0E14;
+  --app-surface: #0F172A;
+  --app-card: #131824;
+  --app-text: #FFFFFF;
+  --app-text-sub: #94A3B8;
+  --app-border: rgba(255, 255, 255, 0.08);
+}
+
+[data-theme="light"] {
+  --app-bg: #F8FAFC;
+  --app-surface: #FFFFFF;
+  --app-card: #FFFFFF;
+  --app-text: #0F172A;
+  --app-text-sub: #475569;
+  --app-border: #E2E8F0;
 }
 
 /* Glassmorphism & Backdrop Blur for Modals */
@@ -17,4 +33,184 @@
 .lang-modal-content {
   backdrop-filter: blur(24px) !important;
   -webkit-backdrop-filter: blur(24px) !important;
+}
+
+/* ========================================================
+   FULL FUNCTION LIGHT THEME ADAPTATION (White Background Mode)
+   ======================================================== */
+
+[data-theme="light"] {
+  background-color: #F8FAFC !important;
+  color: #0F172A !important;
+}
+
+[data-theme="light"] html,
+[data-theme="light"] body,
+[data-theme="light"] #root {
+  background-color: #F8FAFC !important;
+  color: #0F172A !important;
+}
+
+/* Base Light Background Surfaces */
+[data-theme="light"] [style*="background-color: rgb(11, 14, 20)"],
+[data-theme="light"] [style*="background-color: rgb(7, 10, 19)"],
+[data-theme="light"] [style*="background-color: rgb(9, 13, 20)"],
+[data-theme="light"] [style*="background-color: rgb(10, 15, 26)"],
+[data-theme="light"] [style*="background-color: rgb(12, 17, 28)"],
+[data-theme="light"] [style*="background-color: rgb(10, 13, 20)"],
+[data-theme="light"] [style*="background-color: rgb(6, 9, 15)"],
+[data-theme="light"] [style*="background-color: rgb(9, 12, 18)"],
+[data-theme="light"] [style*="background-color: rgb(11, 15, 23)"],
+[data-theme="light"] [style*="background-color: rgb(13, 17, 23)"],
+[data-theme="light"] [style*="background-color: rgb(14, 19, 28)"],
+[data-theme="light"] [style*="background-color: rgb(21, 26, 35)"],
+[data-theme="light"] [style*="background-color: rgb(22, 27, 34)"],
+[data-theme="light"] [style*="background-color: rgb(0, 0, 0)"],
+[data-theme="light"] [style*="background-color: #0B0E14"],
+[data-theme="light"] [style*="background-color: #070A13"],
+[data-theme="light"] [style*="background-color: #090D14"],
+[data-theme="light"] [style*="background-color: #0A0F1A"],
+[data-theme="light"] [style*="background-color: #0C111C"],
+[data-theme="light"] [style*="background-color: #0A0D14"],
+[data-theme="light"] [style*="background-color: #06090F"],
+[data-theme="light"] [style*="background-color: #090C12"],
+[data-theme="light"] [style*="background-color: #0B0F17"],
+[data-theme="light"] [style*="background-color: #0D1117"],
+[data-theme="light"] [style*="background-color: #0E131C"],
+[data-theme="light"] [style*="background-color: #000000"] {
+  background-color: #F8FAFC !important;
+}
+
+/* Light Surface Cards & Panels */
+[data-theme="light"] [style*="background-color: rgb(15, 23, 42)"],
+[data-theme="light"] [style*="background-color: rgb(17, 24, 39)"],
+[data-theme="light"] [style*="background-color: rgb(13, 19, 34)"],
+[data-theme="light"] [style*="background-color: rgb(16, 22, 38)"],
+[data-theme="light"] [style*="background-color: rgb(17, 23, 38)"],
+[data-theme="light"] [style*="background-color: rgb(15, 22, 38)"],
+[data-theme="light"] [style*="background-color: rgb(18, 24, 36)"],
+[data-theme="light"] [style*="background-color: rgb(19, 25, 38)"],
+[data-theme="light"] [style*="background-color: rgb(21, 26, 35)"],
+[data-theme="light"] [style*="background-color: rgb(22, 27, 34)"],
+[data-theme="light"] [style*="background-color: rgb(22, 29, 43)"],
+[data-theme="light"] [style*="background-color: rgb(22, 31, 46)"],
+[data-theme="light"] [style*="background-color: rgb(24, 32, 48)"],
+[data-theme="light"] [style*="background-color: rgb(27, 36, 51)"],
+[data-theme="light"] [style*="background-color: rgb(30, 41, 59)"],
+[data-theme="light"] [style*="background-color: rgb(31, 41, 55)"],
+[data-theme="light"] [style*="background-color: #0F172A"],
+[data-theme="light"] [style*="background-color: #111827"],
+[data-theme="light"] [style*="background-color: #0D1322"],
+[data-theme="light"] [style*="background-color: #101626"],
+[data-theme="light"] [style*="background-color: #111726"],
+[data-theme="light"] [style*="background-color: #0F1626"],
+[data-theme="light"] [style*="background-color: #121824"],
+[data-theme="light"] [style*="background-color: #131926"],
+[data-theme="light"] [style*="background-color: #151A23"],
+[data-theme="light"] [style*="background-color: #161B22"],
+[data-theme="light"] [style*="background-color: #161D2B"],
+[data-theme="light"] [style*="background-color: #161F2E"],
+[data-theme="light"] [style*="background-color: #182030"],
+[data-theme="light"] [style*="background-color: #1B2433"],
+[data-theme="light"] [style*="background-color: #1E293B"],
+[data-theme="light"] [style*="background-color: #1F2937"] {
+  background-color: #FFFFFF !important;
+  border-color: #E2E8F0 !important;
+}
+
+/* Light Card Borders */
+[data-theme="light"] [style*="border-color: rgba(255, 255, 255"],
+[data-theme="light"] [style*="border-color: #1E2538"],
+[data-theme="light"] [style*="border-color: #2D3748"],
+[data-theme="light"] [style*="border-color: #1E293B"],
+[data-theme="light"] [style*="border-color: #21262D"],
+[data-theme="light"] [style*="border-color: #263346"],
+[data-theme="light"] [style*="border-color: #2A384C"],
+[data-theme="light"] [style*="border-color: #30363D"],
+[data-theme="light"] [style*="border-color: #334155"],
+[data-theme="light"] [style*="border-color: #374151"],
+[data-theme="light"] [style*="border-color: #1F2937"],
+[data-theme="light"] [style*="border-color: rgb(30, 37, 56)"] {
+  border-color: #E2E8F0 !important;
+}
+
+[data-theme="light"] [style*="border-top-color: rgba(255, 255, 255"],
+[data-theme="light"] [style*="border-top-color: #1E2538"],
+[data-theme="light"] [style*="border-top-color: #1F2937"],
+[data-theme="light"] [style*="border-top-color: #21262D"],
+[data-theme="light"] [style*="border-bottom-color: rgba(255, 255, 255"],
+[data-theme="light"] [style*="border-bottom-color: #1E2538"],
+[data-theme="light"] [style*="border-bottom-color: #21262D"],
+[data-theme="light"] [style*="border-bottom-color: #263346"] {
+  border-top-color: #E2E8F0 !important;
+  border-bottom-color: #E2E8F0 !important;
+}
+
+/* Light Headings & Primary Text */
+[data-theme="light"] [style*="color: rgb(255, 255, 255)"],
+[data-theme="light"] [style*="color: #FFFFFF"],
+[data-theme="light"] [style*="color: #ffffff"],
+[data-theme="light"] [style*="color: rgb(240, 246, 252)"],
+[data-theme="light"] [style*="color: #F0F6FC"],
+[data-theme="light"] [style*="color: rgb(249, 250, 251)"],
+[data-theme="light"] [style*="color: #F9FAFB"],
+[data-theme="light"] [style*="color: rgb(248, 250, 252)"],
+[data-theme="light"] [style*="color: #F8FAFC"],
+[data-theme="light"] [style*="color: rgb(230, 237, 243)"],
+[data-theme="light"] [style*="color: #E6EDF3"],
+[data-theme="light"] [style*="color: rgb(229, 231, 235)"],
+[data-theme="light"] [style*="color: #E5E7EB"] {
+  color: #0F172A !important;
+}
+
+/* Light Secondary & Muted Text */
+[data-theme="light"] [style*="color: rgb(148, 163, 184)"],
+[data-theme="light"] [style*="color: #94A3B8"],
+[data-theme="light"] [style*="color: rgb(156, 163, 175)"],
+[data-theme="light"] [style*="color: #9CA3AF"],
+[data-theme="light"] [style*="color: rgb(139, 148, 158)"],
+[data-theme="light"] [style*="color: #8B949E"],
+[data-theme="light"] [style*="color: rgb(203, 213, 225)"],
+[data-theme="light"] [style*="color: #CBD5E1"],
+[data-theme="light"] [style*="color: rgb(226, 232, 240)"],
+[data-theme="light"] [style*="color: #E2E8F0"] {
+  color: #475569 !important;
+}
+
+/* Subtle Pill Badges in Light Mode */
+[data-theme="light"] [style*="background-color: rgba(255, 255, 255, 0.0"],
+[data-theme="light"] [style*="background-color: rgba(255, 255, 255, 0.1"] {
+  background-color: rgba(15, 23, 42, 0.05) !important;
+  border-color: rgba(15, 23, 42, 0.08) !important;
+}
+
+/* Form Inputs in Light Mode */
+[data-theme="light"] input,
+[data-theme="light"] textarea {
+  background-color: #FFFFFF !important;
+  color: #0F172A !important;
+  border-color: #CBD5E1 !important;
+}
+
+/* Balance Card Selected States in Light Mode */
+[data-theme="light"] [style*="background-color: #0F1E24"],
+[data-theme="light"] [style*="background-color: rgb(15, 30, 36)"] {
+  background-color: #ECFDF5 !important;
+}
+
+[data-theme="light"] [style*="background-color: #1D1914"],
+[data-theme="light"] [style*="background-color: rgb(29, 25, 20)"] {
+  background-color: #FFFBEB !important;
+}
+
+[data-theme="light"] [style*="background-color: #121A28"],
+[data-theme="light"] [style*="background-color: rgb(18, 26, 40)"] {
+  background-color: #F0FDF4 !important;
+}
+
+/* Modals & Overlays */
+[data-theme="light"] [style*="background-color: rgba(5, 10, 20, 0.72)"],
+[data-theme="light"] [style*="background-color: rgba(0, 0, 0, 0.7"],
+[data-theme="light"] [style*="background-color: rgba(0, 0, 0, 0.8"] {
+  background-color: rgba(15, 23, 42, 0.45) !important;
 }

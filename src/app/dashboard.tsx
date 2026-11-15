@@ -16,6 +16,8 @@ import { api } from '@/services/api';
 import { BinaryTreeVisualizer } from '@/components/BinaryTreeVisualizer';
 import { StarRankIndicator } from '@/components/StarRankIndicator';
 import { LanguageSelector } from '@/components/LanguageSelector';
+import { ThemeToggle } from '@/components/ThemeToggle';
+import { useThemeMode } from '@/context/ThemeContext';
 import { useTranslation } from 'react-i18next';
 import { useIsMobile } from '@/hooks/useIsMobile';
 import { setAppLanguage } from '@/i18n';
@@ -261,6 +263,7 @@ export default function BitcoinMiningApp() {
   const router = useRouter();
   const isMobile = useIsMobile();
   const { t, i18n } = useTranslation();
+  const { isDark, colors } = useThemeMode();
 
   const [activeTab, setActiveTab] = useState<'packages' | 'binary' | 'referrals' | 'contracts'>('packages');
   const [loading, setLoading] = useState(true);
@@ -924,9 +927,18 @@ export default function BitcoinMiningApp() {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       {/* Top Header - Mobile Responsive */}
-      <View style={[styles.topHeader, isMobile && styles.topHeaderMobile]}>
+      <View
+        style={[
+          styles.topHeader,
+          isMobile && styles.topHeaderMobile,
+          {
+            backgroundColor: colors.header,
+            borderBottomColor: colors.border,
+          },
+        ]}
+      >
         {isMobile ? (
           /* MOBILE HEADER LAYOUT (Clean, Non-overlapping, Multi-row) */
           <View style={styles.mobileHeaderWrap}>
@@ -941,12 +953,13 @@ export default function BitcoinMiningApp() {
                   <Text style={styles.btcLogoChar}>₿</Text>
                 </View>
                 <View>
-                  <Text style={styles.brandTitleMobile}>BTCM // CLOUD MINING</Text>
-                  <Text style={styles.brandSubtitleMobile}>MineBest Industrial Infrastructure</Text>
+                  <Text style={[styles.brandTitleMobile, { color: colors.text }]}>BTCM // CLOUD MINING</Text>
+                  <Text style={[styles.brandSubtitleMobile, { color: colors.textSecondary }]}>MineBest Industrial Infrastructure</Text>
                 </View>
               </TouchableOpacity>
 
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                <ThemeToggle compact />
                 <LanguageSelector compact />
                 {user ? (
                   <TouchableOpacity style={styles.mobileSignOutBtn} onPress={handleLogout}>
@@ -1043,17 +1056,18 @@ export default function BitcoinMiningApp() {
                 <Text style={styles.btcLogoChar}>₿</Text>
               </View>
               <View>
-                <Text style={styles.brandTitle}>BTCM // CLOUD MINING</Text>
-                <Text style={styles.brandSubtitle}>MineBest Infrastructure & Binary Core</Text>
+                <Text style={[styles.brandTitle, { color: colors.text }]}>BTCM // CLOUD MINING</Text>
+                <Text style={[styles.brandSubtitle, { color: colors.textSecondary }]}>MineBest Infrastructure & Binary Core</Text>
               </View>
             </TouchableOpacity>
 
             <View style={styles.headerRightActions}>
+              <ThemeToggle />
               <LanguageSelector />
-              <View style={styles.marketPill}>
+              <View style={[styles.marketPill, { backgroundColor: colors.pillBg, borderColor: colors.border }]}>
                 <View style={styles.liveDot} />
-                <Text style={styles.marketLabel}>BTC/USDT</Text>
-                <Text style={styles.marketValue}>{btcPrice.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</Text>
+                <Text style={[styles.marketLabel, { color: colors.textSecondary }]}>BTC/USDT</Text>
+                <Text style={[styles.marketValue, { color: colors.text }]}>{btcPrice.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</Text>
                 <Text style={btcChange24h >= 0 ? styles.marketUp : styles.marketDown}>
                   {btcChange24h >= 0 ? `+${btcChange24h.toFixed(1)}%` : `${btcChange24h.toFixed(1)}%`}
                 </Text>

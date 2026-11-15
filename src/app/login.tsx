@@ -15,12 +15,15 @@ import { useTranslation } from 'react-i18next';
 import { api } from '@/services/api';
 import { useIsMobile } from '@/hooks/useIsMobile';
 import { LanguageSelector } from '@/components/LanguageSelector';
+import { ThemeToggle } from '@/components/ThemeToggle';
+import { useThemeMode } from '@/context/ThemeContext';
 import { setAppLanguage } from '@/i18n';
 
 export default function SignInScreen() {
   const router = useRouter();
   const isMobile = useIsMobile();
   const { t } = useTranslation();
+  const { isDark, colors } = useThemeMode();
 
   const [loginId, setLoginId] = useState('');
   const [password, setPassword] = useState('');
@@ -69,7 +72,8 @@ export default function SignInScreen() {
       <ScrollView contentContainerStyle={styles.scrollContent}>
         {/* Brand Header */}
         <View style={styles.brandContainer}>
-          <View style={{ width: '100%', flexDirection: 'row', justifyContent: 'flex-end', marginBottom: 10 }}>
+          <View style={{ width: '100%', flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'center', gap: 6, marginBottom: 10 }}>
+            <ThemeToggle compact />
             <LanguageSelector compact />
           </View>
           <TouchableOpacity onPress={() => router.replace('/')} style={styles.logoBadge}>

@@ -29,7 +29,10 @@
     "language": "언어",
     "selectLanguage": "언어 선택",
     "industrialInfra": "산업용 인프라 기반",
-    "openDashboard": "대시보드 열기"
+    "openDashboard": "대시보드 열기",
+    "theme": "테마",
+    "darkMode": "다크 모드",
+    "lightMode": "라이트 모드"
   },
   "auth": {
     "welcomeTitle": "탈중앙화 비트코인 클라우드 마이닝",

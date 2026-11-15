@@ -29,7 +29,10 @@
     "language": "Language",
     "selectLanguage": "Select Language",
     "industrialInfra": "Industrial Infrastructure",
-    "openDashboard": "Open Dashboard"
+    "openDashboard": "Open Dashboard",
+    "theme": "Theme",
+    "darkMode": "Dark Mode",
+    "lightMode": "Light Mode"
   },
   "auth": {
     "welcomeTitle": "Decentralized Bitcoin Cloud Mining",

@@ -29,7 +29,10 @@
     "language": "言語",
     "selectLanguage": "言語を選択",
     "industrialInfra": "産業用インフラ基盤",
-    "openDashboard": "ダッシュボードを開く"
+    "openDashboard": "ダッシュボードを開く",
+    "theme": "テーマ",
+    "darkMode": "ダークモード",
+    "lightMode": "ライトモード"
   },
   "auth": {
     "welcomeTitle": "分散型ビットコインクラウドマイニング",

@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { SUPPORTED_LANGUAGES, setAppLanguage } from '../i18n';
+import { useThemeMode } from '@/context/ThemeContext';
 
 interface LanguageSelectorProps {
   compact?: boolean;
@@ -18,6 +19,7 @@ interface LanguageSelectorProps {
 
 export const LanguageSelector: React.FC<LanguageSelectorProps> = ({ compact = false }) => {
   const { i18n, t } = useTranslation();
+  const { isDark, colors } = useThemeMode();
   const [modalVisible, setModalVisible] = useState(false);
 
   const currentLang =
@@ -33,15 +35,29 @@ export const LanguageSelector: React.FC<LanguageSelectorProps> = ({ compact = fa
   return (
     <>
       <TouchableOpacity
-        style={[styles.button, compact && styles.buttonCompact]}
+        style={[
+          styles.button,
+          compact && styles.buttonCompact,
+          {
+            backgroundColor: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.06)',
+            borderColor: isDark ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.12)',
+          },
+        ]}
         onPress={() => setModalVisible(true)}
         activeOpacity={0.7}
       >
-        <View style={styles.buttonFlagBadge}>
-          <Text style={styles.buttonFlagText}>{currentLang.flag}</Text>
+        <View
+          style={[
+            styles.buttonFlagBadge,
+            { backgroundColor: isDark ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.08)' },
+          ]}
+        >
+          <Text style={[styles.buttonFlagText, { color: colors.text }]}>{currentLang.flag}</Text>
         </View>
-        {!compact && <Text style={styles.langName}>{currentLang.nativeName}</Text>}
-        <Text style={styles.arrowIcon}>▾</Text>
+        {!compact && (
+          <Text style={[styles.langName, { color: colors.text }]}>{currentLang.nativeName}</Text>
+        )}
+        <Text style={[styles.arrowIcon, { color: colors.textSecondary }]}>▾</Text>
       </TouchableOpacity>
 
       <Modal
@@ -53,6 +69,7 @@ export const LanguageSelector: React.FC<LanguageSelectorProps> = ({ compact = fa
         <Pressable
           style={[
             styles.modalOverlay,
+            { backgroundColor: colors.modalOverlay },
             Platform.OS === 'web' && ({
               backdropFilter: 'blur(16px)',
               WebkitBackdropFilter: 'blur(16px)',
@@ -63,24 +80,44 @@ export const LanguageSelector: React.FC<LanguageSelectorProps> = ({ compact = fa
           <Pressable
             style={[
               styles.modalContent,
+              {
+                backgroundColor: colors.modalBg,
+                borderColor: isDark ? 'rgba(247, 147, 26, 0.45)' : 'rgba(217, 119, 6, 0.4)',
+              },
               Platform.OS === 'web' && ({
                 backdropFilter: 'blur(24px)',
                 WebkitBackdropFilter: 'blur(24px)',
+                boxShadow: isDark
+                  ? '0 25px 60px rgba(0,0,0,0.8), 0 0 35px rgba(247, 147, 26, 0.2)'
+                  : '0 20px 45px rgba(0,0,0,0.15), 0 0 25px rgba(217, 119, 6, 0.15)',
               } as any),
             ]}
             onPress={(e) => e.stopPropagation()}
           >
-            <View style={styles.modalHeader}>
+            <View
+              style={[
+                styles.modalHeader,
+                { borderBottomColor: isDark ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.08)' },
+              ]}
+            >
               <View style={styles.modalHeaderLeft}>
                 <Text style={styles.modalTitleIcon}>🌐</Text>
-                <Text style={styles.modalTitle}>{t('common.selectLanguage', 'Select Language')}</Text>
+                <Text style={[styles.modalTitle, { color: colors.text }]}>
+                  {t('common.selectLanguage', 'Select Language')}
+                </Text>
               </View>
               <TouchableOpacity
                 onPress={() => setModalVisible(false)}
-                style={styles.closeBtn}
+                style={[
+                  styles.closeBtn,
+                  {
+                    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.06)',
+                    borderColor: isDark ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.1)',
+                  },
+                ]}
                 hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
               >
-                <Text style={styles.closeBtnText}>✕</Text>
+                <Text style={[styles.closeBtnText, { color: colors.text }]}>✕</Text>
               </TouchableOpacity>
             </View>
 
@@ -93,28 +130,68 @@ export const LanguageSelector: React.FC<LanguageSelectorProps> = ({ compact = fa
                 return (
                   <TouchableOpacity
                     key={lang.code}
-                    style={[styles.langItem, isSelected && styles.langItemSelected]}
+                    style={[
+                      styles.langItem,
+                      {
+                        backgroundColor: isDark ? 'rgba(255, 255, 255, 0.04)' : 'rgba(0, 0, 0, 0.03)',
+                        borderColor: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.06)',
+                      },
+                      isSelected && (isDark ? styles.langItemSelected : styles.langItemSelectedLight),
+                    ]}
                     onPress={() => handleSelectLanguage(lang.code)}
                     activeOpacity={0.7}
                   >
                     <View style={styles.langItemLeft}>
-                      <View style={[styles.flagBadge, isSelected && styles.flagBadgeSelected]}>
-                        <Text style={[styles.flagBadgeText, isSelected && styles.flagBadgeTextSelected]}>
+                      <View
+                        style={[
+                          styles.flagBadge,
+                          {
+                            backgroundColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.06)',
+                            borderColor: isDark ? 'rgba(255, 255, 255, 0.18)' : 'rgba(0, 0, 0, 0.12)',
+                          },
+                          isSelected && (isDark ? styles.flagBadgeSelected : styles.flagBadgeSelectedLight),
+                        ]}
+                      >
+                        <Text
+                          style={[
+                            styles.flagBadgeText,
+                            { color: colors.text },
+                            isSelected && { color: isDark ? '#FFD700' : '#B45309' },
+                          ]}
+                        >
                           {lang.flag}
                         </Text>
                       </View>
                       <View style={styles.langItemTextGroup}>
-                        <Text style={[styles.langItemNative, isSelected && styles.langItemTextSelected]}>
+                        <Text
+                          style={[
+                            styles.langItemNative,
+                            { color: colors.text },
+                            isSelected && { color: isDark ? '#FFD700' : '#B45309' },
+                          ]}
+                        >
                           {lang.nativeName}
                         </Text>
-                        <Text style={[styles.langItemEnglish, isSelected && styles.langItemEnglishSelected]}>
+                        <Text
+                          style={[
+                            styles.langItemEnglish,
+                            { color: colors.textSecondary },
+                            isSelected && { color: isDark ? '#FDE047' : '#D97706' },
+                          ]}
+                        >
                           {lang.name}
                         </Text>
                       </View>
                     </View>
+
                     {isSelected && (
-                      <View style={styles.checkBadge}>
-                        <Text style={styles.checkIcon}>✓</Text>
+                      <View
+                        style={[
+                          styles.checkBadge,
+                          { backgroundColor: isDark ? '#FFD700' : '#D97706' },
+                        ]}
+                      >
+                        <Text style={[styles.checkIcon, { color: isDark ? '#0B0E14' : '#FFFFFF' }]}>✓</Text>
                       </View>
                     )}
                   </TouchableOpacity>
@@ -250,6 +327,11 @@ const styles = StyleSheet.create({
     borderColor: '#FFD700',
     borderWidth: 1.5,
   },
+  langItemSelectedLight: {
+    backgroundColor: 'rgba(217, 119, 6, 0.12)',
+    borderColor: '#D97706',
+    borderWidth: 1.5,
+  },
   langItemLeft: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -268,6 +350,10 @@ const styles = StyleSheet.create({
   flagBadgeSelected: {
     backgroundColor: 'rgba(255, 215, 0, 0.22)',
     borderColor: '#FFD700',
+  },
+  flagBadgeSelectedLight: {
+    backgroundColor: 'rgba(217, 119, 6, 0.18)',
+    borderColor: '#D97706',
   },
   flagBadgeText: {
     fontSize: 15,

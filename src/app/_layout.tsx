@@ -3,6 +3,7 @@ import { Slot } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, View, Platform, LogBox } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { ThemeProvider, useThemeMode } from '@/context/ThemeContext';
 import '../i18n';
 
 // Ignore React Native Web development-only touch responder sync warnings
@@ -55,7 +56,8 @@ if (Platform.OS === 'web' && typeof window !== 'undefined') {
           overflow-x: hidden;
           touch-action: manipulation;
           -webkit-overflow-scrolling: touch;
-          background-color: #0B0E14;
+          background-color: var(--app-bg, #0B0E14);
+          transition: background-color 0.25s ease, color 0.25s ease;
         }
       `;
       document.head.appendChild(styleEl);
@@ -63,13 +65,22 @@ if (Platform.OS === 'web' && typeof window !== 'undefined') {
   }
 }
 
+function RootAppContainer() {
+  const { isDark, colors } = useThemeMode();
+  return (
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <StatusBar style={isDark ? 'light' : 'dark'} />
+      <Slot />
+    </View>
+  );
+}
+
 export default function RootLayout() {
   return (
     <SafeAreaProvider>
-      <View style={styles.container}>
-        <StatusBar style="light" />
-        <Slot />
-      </View>
+      <ThemeProvider>
+        <RootAppContainer />
+      </ThemeProvider>
     </SafeAreaProvider>
   );
 }

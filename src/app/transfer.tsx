@@ -16,6 +16,8 @@ import { useTranslation } from 'react-i18next';
 import { api } from '../services/api';
 import { StarRankIndicator } from '../components/StarRankIndicator';
 import { LanguageSelector } from '../components/LanguageSelector';
+import { ThemeToggle } from '../components/ThemeToggle';
+import { useThemeMode } from '@/context/ThemeContext';
 import { useIsMobile } from '../hooks/useIsMobile';
 
 type TransferMode = 'transfer' | 'withdraw';
@@ -49,6 +51,7 @@ export default function TransferScreen() {
   const router = useRouter();
   const isMobile = useIsMobile();
   const { t } = useTranslation();
+  const { isDark, colors } = useThemeMode();
 
   // Active view states
   const [mode, setMode] = useState<TransferMode>('transfer');
@@ -369,12 +372,12 @@ export default function TransferScreen() {
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      style={styles.container}
+      style={[styles.container, { backgroundColor: colors.background }]}
     >
       {/* Top Navbar */}
-      <View style={[styles.navbar, isMobile && styles.navbarMobile]}>
+      <View style={[styles.navbar, { backgroundColor: colors.header, borderBottomColor: colors.border }, isMobile && styles.navbarMobile]}>
         <View style={styles.navLeft}>
-          <TouchableOpacity onPress={() => router.replace('/dashboard' as any)} style={styles.backBtn}>
+          <TouchableOpacity onPress={() => router.replace('/dashboard' as any)} style={[styles.backBtn, { backgroundColor: colors.cardAlt, borderColor: colors.border }]}>
             <Text style={styles.backBtnText}>← {t('common.dashboard')}</Text>
           </TouchableOpacity>
           <View style={styles.brandRow}>
@@ -382,21 +385,22 @@ export default function TransferScreen() {
               <Text style={styles.btcBadgeText}>⇄</Text>
             </View>
             <View>
-              <Text style={styles.brandTitle}>{t('transfer.title')}</Text>
-              <Text style={styles.brandSubtitle}>{t('transfer.subtitle')}</Text>
+              <Text style={[styles.brandTitle, { color: colors.text }]}>{t('transfer.title')}</Text>
+              <Text style={[styles.brandSubtitle, { color: colors.textSecondary }]}>{t('transfer.subtitle')}</Text>
             </View>
           </View>
         </View>
 
         <View style={[styles.navRight, isMobile && styles.navRightMobile]}>
+          <ThemeToggle compact />
           <LanguageSelector compact />
           {user && (
             <TouchableOpacity
-              style={styles.profileBadgeBtn}
+              style={[styles.profileBadgeBtn, { backgroundColor: colors.cardAlt, borderColor: colors.border }]}
               onPress={() => router.push('/profile' as any)}
             >
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                <Text style={styles.profileBadgeText}>👤 @{user.username}</Text>
+                <Text style={[styles.profileBadgeText, { color: colors.text }]}>👤 @{user.username}</Text>
                 {Boolean(user.isStarQualified || (user.starRank && user.starRank >= 1)) && (
                   <StarRankIndicator rank={user.starRank || 1} badge={user.starBadge || ((user.starRank || 0) >= 10 ? '3 CROWN' : (user.starRank || 0) === 9 ? '2 CROWN' : (user.starRank || 0) === 8 ? 'CROWN' : `${user.starRank || 1}★`)} size="xs" />
                 )}
@@ -424,7 +428,7 @@ export default function TransferScreen() {
       {loadingUser ? (
         <View style={styles.loadingBox}>
           <ActivityIndicator size="large" color="#F7931A" />
-          <Text style={styles.loadingText}>{t('transfer.connectingLedger')}</Text>
+          <Text style={[styles.loadingText, { color: colors.textSecondary }]}>{t('transfer.connectingLedger')}</Text>
         </View>
       ) : (
         <ScrollView style={styles.scrollArea} contentContainerStyle={styles.scrollContent}>
@@ -435,7 +439,8 @@ export default function TransferScreen() {
               activeOpacity={0.85}
               style={[
                 styles.balanceCard,
-                currency === 'USDT' && styles.balanceCardActiveUSDT,
+                { backgroundColor: colors.card, borderColor: colors.border },
+                currency === 'USDT' && (isDark ? styles.balanceCardActiveUSDT : { borderColor: '#00E676', backgroundColor: '#ECFDF5' }),
               ]}
               onPress={() => setCurrency('USDT')}
             >
@@ -444,15 +449,15 @@ export default function TransferScreen() {
                   <Text style={styles.coinIconText}>₮</Text>
                 </View>
                 <View>
-                  <Text style={styles.coinTitle}>{t('transfer.usdtTitle')}</Text>
-                  <Text style={styles.coinSubtitle}>{t('transfer.usdtSub')}</Text>
+                  <Text style={[styles.coinTitle, { color: colors.text }]}>{t('transfer.usdtTitle')}</Text>
+                  <Text style={[styles.coinSubtitle, { color: colors.textSecondary }]}>{t('transfer.usdtSub')}</Text>
                 </View>
                 {currency === 'USDT' && <View style={styles.activePill}><Text style={styles.activePillText}>{t('transfer.selected')}</Text></View>}
               </View>
               <Text style={styles.balanceAmountGreen}>
                 {availableUsdt.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USDT
               </Text>
-              <Text style={styles.balanceSubtext}>
+              <Text style={[styles.balanceSubtext, { color: colors.textMuted }]}>
                 {t('transfer.usdtNote')}
               </Text>
             </TouchableOpacity>
@@ -462,7 +467,8 @@ export default function TransferScreen() {
               activeOpacity={0.85}
               style={[
                 styles.balanceCard,
-                currency === 'BTC' && styles.balanceCardActiveBTC,
+                { backgroundColor: colors.card, borderColor: colors.border },
+                currency === 'BTC' && (isDark ? styles.balanceCardActiveBTC : { borderColor: '#F7931A', backgroundColor: '#FFFBEB' }),
               ]}
               onPress={() => setCurrency('BTC')}
             >
@@ -471,55 +477,61 @@ export default function TransferScreen() {
                   <Text style={styles.coinIconText}>₿</Text>
                 </View>
                 <View>
-                  <Text style={styles.coinTitle}>{t('transfer.btcTitle')}</Text>
-                  <Text style={styles.coinSubtitle}>{t('transfer.btcSub')}</Text>
+                  <Text style={[styles.coinTitle, { color: colors.text }]}>{t('transfer.btcTitle')}</Text>
+                  <Text style={[styles.coinSubtitle, { color: colors.textSecondary }]}>{t('transfer.btcSub')}</Text>
                 </View>
                 {currency === 'BTC' && <View style={styles.activePillGold}><Text style={styles.activePillTextGold}>{t('transfer.selected')}</Text></View>}
               </View>
               <Text style={styles.balanceAmountGold}>
                 ₿ {availableBtc.toFixed(8)} BTC
               </Text>
-              <Text style={styles.balanceSubtext}>
+              <Text style={[styles.balanceSubtext, { color: colors.textMuted }]}>
                 {t('transfer.btcMarketVal', { amount: (availableBtc * BTC_PRICE_USD).toFixed(2) })}
               </Text>
             </TouchableOpacity>
           </View>
 
           {/* Mode Switcher Tabs */}
-          <View style={styles.modeTabsWrapper}>
+          <View style={[styles.modeTabsWrapper, { backgroundColor: colors.cardAlt, borderColor: colors.border }]}>
             <TouchableOpacity
-              style={[styles.modeTab, mode === 'transfer' && styles.modeTabActive]}
+              style={[
+                styles.modeTab,
+                mode === 'transfer' && [styles.modeTabActive, { backgroundColor: colors.card, borderColor: colors.borderLight }],
+              ]}
               onPress={() => {
                 setMode('transfer');
                 setRecipientError('');
               }}
             >
-              <Text style={[styles.modeTabText, mode === 'transfer' && styles.modeTabTextActive]}>
+              <Text style={[styles.modeTabText, mode === 'transfer' ? styles.modeTabTextActive : { color: colors.textSecondary }]}>
                 {t('transfer.tabTransfer')}
               </Text>
-              <Text style={styles.modeTabSub}>{t('transfer.tabTransferSub')}</Text>
+              <Text style={[styles.modeTabSub, { color: colors.textMuted }]}>{t('transfer.tabTransferSub')}</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={[styles.modeTab, mode === 'withdraw' && styles.modeTabActive]}
+              style={[
+                styles.modeTab,
+                mode === 'withdraw' && [styles.modeTabActive, { backgroundColor: colors.card, borderColor: colors.borderLight }],
+              ]}
               onPress={() => setMode('withdraw')}
             >
-              <Text style={[styles.modeTabText, mode === 'withdraw' && styles.modeTabTextActive]}>
+              <Text style={[styles.modeTabText, mode === 'withdraw' ? styles.modeTabTextActive : { color: colors.textSecondary }]}>
                 {t('transfer.tabWithdraw')}
               </Text>
-              <Text style={styles.modeTabSub}>{t('transfer.tabWithdrawSub')}</Text>
+              <Text style={[styles.modeTabSub, { color: colors.textMuted }]}>{t('transfer.tabWithdrawSub')}</Text>
             </TouchableOpacity>
           </View>
 
           {/* MAIN TRANSACTION CARD */}
-          <View style={styles.mainCard}>
+          <View style={[styles.mainCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
             {/* Header info */}
             <View style={styles.cardTopHeader}>
               <View>
-                <Text style={styles.cardHeaderTitle}>
+                <Text style={[styles.cardHeaderTitle, { color: colors.text }]}>
                   {mode === 'transfer' ? t('transfer.sendToMember') : t('transfer.withdrawToWallet')}
                 </Text>
-                <Text style={styles.cardHeaderSub}>
+                <Text style={[styles.cardHeaderSub, { color: colors.textSecondary }]}>
                   {mode === 'transfer'
                     ? t('transfer.transferDesc')
                     : t('transfer.withdrawDesc')}
@@ -527,12 +539,12 @@ export default function TransferScreen() {
               </View>
 
               {/* Currency Picker Pills */}
-              <View style={styles.currencyPills}>
+              <View style={[styles.currencyPills, { backgroundColor: colors.cardAlt, borderColor: colors.border }]}>
                 <TouchableOpacity
                   style={[styles.currPill, currency === 'USDT' && styles.currPillActiveUSDT]}
                   onPress={() => setCurrency('USDT')}
                 >
-                  <Text style={[styles.currPillText, currency === 'USDT' && styles.currPillTextActive]}>
+                  <Text style={[styles.currPillText, currency === 'USDT' ? styles.currPillTextActive : { color: colors.textSecondary }]}>
                     USDT
                   </Text>
                 </TouchableOpacity>
@@ -540,7 +552,7 @@ export default function TransferScreen() {
                   style={[styles.currPill, currency === 'BTC' && styles.currPillActiveBTC]}
                   onPress={() => setCurrency('BTC')}
                 >
-                  <Text style={[styles.currPillText, currency === 'BTC' && styles.currPillTextActive]}>
+                  <Text style={[styles.currPillText, currency === 'BTC' ? styles.currPillTextActive : { color: colors.textSecondary }]}>
                     BTC
                   </Text>
                 </TouchableOpacity>
@@ -552,12 +564,16 @@ export default function TransferScreen() {
               <View style={styles.formContainer}>
                 {/* Recipient Input */}
                 <View style={styles.inputGroup}>
-                  <Text style={styles.inputLabel}>{t('transfer.recipientLabel')}</Text>
+                  <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>{t('transfer.recipientLabel')}</Text>
                   <View style={styles.searchRow}>
                     <TextInput
-                      style={[styles.textInput, styles.inputFlex]}
+                      style={[
+                        styles.textInput,
+                        styles.inputFlex,
+                        { backgroundColor: colors.inputBg, borderColor: colors.inputBorder, color: colors.text },
+                      ]}
                       placeholder={t('transfer.recipientPlaceholder')}
-                      placeholderTextColor="#4B5563"
+                      placeholderTextColor={isDark ? '#4B5563' : '#94A3B8'}
                       value={recipientInput}
                       onChangeText={(val) => {
                         setRecipientInput(val);
@@ -625,17 +641,17 @@ export default function TransferScreen() {
                 {/* Amount Input */}
                 <View style={styles.inputGroup}>
                   <View style={styles.amountLabelRow}>
-                    <Text style={styles.inputLabel}>{t('transfer.transferAmountLabel', { currency })}</Text>
+                    <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>{t('transfer.transferAmountLabel', { currency })}</Text>
                     <Text style={styles.availableLabel}>
                       {t('transfer.available', { amount: currentAvailable.toLocaleString(), currency })}
                     </Text>
                   </View>
 
-                  <View style={styles.amountInputRow}>
+                  <View style={[styles.amountInputRow, { backgroundColor: colors.inputBg, borderColor: colors.inputBorder }]}>
                     <TextInput
-                      style={styles.amountInput}
+                      style={[styles.amountInput, { color: colors.text }]}
                       placeholder={currency === 'USDT' ? '0.00' : '0.00000000'}
-                      placeholderTextColor="#4B5563"
+                      placeholderTextColor={isDark ? '#4B5563' : '#94A3B8'}
                       keyboardType="numeric"
                       value={transferAmount}
                       onChangeText={(val) => {
@@ -643,78 +659,78 @@ export default function TransferScreen() {
                         setTransferPercent(null);
                       }}
                     />
-                    <View style={styles.currencyBadge}>
-                      <Text style={styles.currencyBadgeText}>{currency}</Text>
+                    <View style={[styles.currencyBadge, { backgroundColor: colors.cardAlt }]}>
+                      <Text style={[styles.currencyBadgeText, { color: colors.text }]}>{currency}</Text>
                     </View>
                   </View>
 
                   {/* Quick percentage buttons */}
                   <View style={styles.quickPercentRow}>
                     <TouchableOpacity
-                      style={[styles.percentBtn, transferPercent === 25 && styles.percentBtnActive]}
+                      style={[styles.percentBtn, { backgroundColor: colors.cardAlt, borderColor: colors.border }, transferPercent === 25 && styles.percentBtnActive]}
                       onPress={() => handleSelectPercentage(0.25)}
                     >
-                      <Text style={[styles.percentBtnText, transferPercent === 25 && styles.percentBtnTextActive]}>25%</Text>
+                      <Text style={[styles.percentBtnText, { color: colors.textSecondary }, transferPercent === 25 && styles.percentBtnTextActive]}>25%</Text>
                     </TouchableOpacity>
                     <TouchableOpacity
-                      style={[styles.percentBtn, transferPercent === 50 && styles.percentBtnActive]}
+                      style={[styles.percentBtn, { backgroundColor: colors.cardAlt, borderColor: colors.border }, transferPercent === 50 && styles.percentBtnActive]}
                       onPress={() => handleSelectPercentage(0.5)}
                     >
-                      <Text style={[styles.percentBtnText, transferPercent === 50 && styles.percentBtnTextActive]}>50%</Text>
+                      <Text style={[styles.percentBtnText, { color: colors.textSecondary }, transferPercent === 50 && styles.percentBtnTextActive]}>50%</Text>
                     </TouchableOpacity>
                     <TouchableOpacity
-                      style={[styles.percentBtn, transferPercent === 75 && styles.percentBtnActive]}
+                      style={[styles.percentBtn, { backgroundColor: colors.cardAlt, borderColor: colors.border }, transferPercent === 75 && styles.percentBtnActive]}
                       onPress={() => handleSelectPercentage(0.75)}
                     >
-                      <Text style={[styles.percentBtnText, transferPercent === 75 && styles.percentBtnTextActive]}>75%</Text>
+                      <Text style={[styles.percentBtnText, { color: colors.textSecondary }, transferPercent === 75 && styles.percentBtnTextActive]}>75%</Text>
                     </TouchableOpacity>
                     <TouchableOpacity
-                      style={[styles.percentBtn, transferPercent === 100 && styles.percentBtnActive]}
+                      style={[styles.percentBtn, { backgroundColor: colors.cardAlt, borderColor: colors.border }, transferPercent === 100 && styles.percentBtnActive]}
                       onPress={() => handleSelectPercentage(1)}
                     >
-                      <Text style={[styles.percentBtnText, transferPercent === 100 && styles.percentBtnTextActive]}>{t('transfer.maxPercent')}</Text>
+                      <Text style={[styles.percentBtnText, { color: colors.textSecondary }, transferPercent === 100 && styles.percentBtnTextActive]}>{t('transfer.maxPercent')}</Text>
                     </TouchableOpacity>
                   </View>
                 </View>
 
                 {/* Optional Note */}
                 <View style={styles.inputGroup}>
-                  <Text style={styles.inputLabel}>{t('transfer.memoLabel')}</Text>
+                  <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>{t('transfer.memoLabel')}</Text>
                   <TextInput
-                    style={styles.textInput}
+                    style={[styles.textInput, { backgroundColor: colors.inputBg, borderColor: colors.inputBorder, color: colors.text }]}
                     placeholder={t('transfer.memoPlaceholder')}
-                    placeholderTextColor="#4B5563"
+                    placeholderTextColor={isDark ? '#4B5563' : '#94A3B8'}
                     value={transferNote}
                     onChangeText={setTransferNote}
                   />
                 </View>
 
                 {/* Transfer Breakdown Box */}
-                <View style={styles.breakdownBox}>
+                <View style={[styles.breakdownBox, { backgroundColor: colors.cardAlt, borderColor: colors.border }]}>
                   <View style={styles.breakdownRow}>
-                    <Text style={styles.breakdownLabel}>{t('transfer.recipientNode')}</Text>
+                    <Text style={[styles.breakdownLabel, { color: colors.textSecondary }]}>{t('transfer.recipientNode')}</Text>
                     <Text style={styles.breakdownValCyan}>
                       {verifiedRecipient ? `@${verifiedRecipient.username}` : t('transfer.notVerifiedYet')}
                     </Text>
                   </View>
                   <View style={styles.breakdownRow}>
-                    <Text style={styles.breakdownLabel}>{t('transfer.transferAmount')}</Text>
-                    <Text style={styles.breakdownValWhite}>
+                    <Text style={[styles.breakdownLabel, { color: colors.textSecondary }]}>{t('transfer.transferAmount')}</Text>
+                    <Text style={[styles.breakdownValWhite, { color: colors.text }]}>
                       {transferAmount || '0'} {currency}
                     </Text>
                   </View>
                   <View style={styles.breakdownRow}>
-                    <Text style={styles.breakdownLabel}>{t('transfer.estimatedValue')}</Text>
-                    <Text style={styles.breakdownValSub}>
+                    <Text style={[styles.breakdownLabel, { color: colors.textSecondary }]}>{t('transfer.estimatedValue')}</Text>
+                    <Text style={[styles.breakdownValSub, { color: colors.textMuted }]}>
                       ≈ {currentValuation.toFixed(2)} USDT
                     </Text>
                   </View>
                   <View style={styles.breakdownRow}>
-                    <Text style={styles.breakdownLabel}>{t('transfer.internalFee')}</Text>
+                    <Text style={[styles.breakdownLabel, { color: colors.textSecondary }]}>{t('transfer.internalFee')}</Text>
                     <Text style={styles.breakdownValGreen}>{t('transfer.freeFee', { currency })}</Text>
                   </View>
-                  <View style={[styles.breakdownRow, styles.breakdownRowTotal]}>
-                    <Text style={styles.breakdownTotalLabel}>{t('transfer.totalDeducted')}</Text>
+                  <View style={[styles.breakdownRow, styles.breakdownRowTotal, { borderTopColor: colors.border }]}>
+                    <Text style={[styles.breakdownTotalLabel, { color: colors.text }]}>{t('transfer.totalDeducted')}</Text>
                     <Text style={styles.breakdownTotalVal}>
                       {transferAmount || '0'} {currency}
                     </Text>
@@ -739,31 +755,31 @@ export default function TransferScreen() {
               <View style={styles.formContainer}>
                 {/* Network Selection */}
                 <View style={styles.inputGroup}>
-                  <Text style={styles.inputLabel}>{t('transfer.chooseNetwork')}</Text>
+                  <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>{t('transfer.chooseNetwork')}</Text>
                   {currency === 'USDT' ? (
                     <View style={styles.networkSelectRow}>
                       <TouchableOpacity
-                        style={[styles.networkBtn, withdrawNetwork === 'TRC20' && styles.networkBtnActive]}
+                        style={[styles.networkBtn, { backgroundColor: colors.cardAlt, borderColor: colors.border }, withdrawNetwork === 'TRC20' && styles.networkBtnActive]}
                         onPress={() => setWithdrawNetwork('TRC20')}
                       >
-                        <Text style={[styles.networkBtnText, withdrawNetwork === 'TRC20' && styles.networkBtnTextActive]}>
+                        <Text style={[styles.networkBtnText, { color: colors.textSecondary }, withdrawNetwork === 'TRC20' && styles.networkBtnTextActive]}>
                           TRC20 (Tron)
                         </Text>
                         <Text style={styles.networkBadge}>{t('transfer.recommended')}</Text>
                       </TouchableOpacity>
                       <TouchableOpacity
-                        style={[styles.networkBtn, withdrawNetwork === 'ERC20' && styles.networkBtnActive]}
+                        style={[styles.networkBtn, { backgroundColor: colors.cardAlt, borderColor: colors.border }, withdrawNetwork === 'ERC20' && styles.networkBtnActive]}
                         onPress={() => setWithdrawNetwork('ERC20')}
                       >
-                        <Text style={[styles.networkBtnText, withdrawNetwork === 'ERC20' && styles.networkBtnTextActive]}>
+                        <Text style={[styles.networkBtnText, { color: colors.textSecondary }, withdrawNetwork === 'ERC20' && styles.networkBtnTextActive]}>
                           ERC20 (Ethereum)
                         </Text>
                       </TouchableOpacity>
                       <TouchableOpacity
-                        style={[styles.networkBtn, withdrawNetwork === 'BEP20' && styles.networkBtnActive]}
+                        style={[styles.networkBtn, { backgroundColor: colors.cardAlt, borderColor: colors.border }, withdrawNetwork === 'BEP20' && styles.networkBtnActive]}
                         onPress={() => setWithdrawNetwork('BEP20')}
                       >
-                        <Text style={[styles.networkBtnText, withdrawNetwork === 'BEP20' && styles.networkBtnTextActive]}>
+                        <Text style={[styles.networkBtnText, { color: colors.textSecondary }, withdrawNetwork === 'BEP20' && styles.networkBtnTextActive]}>
                           BEP20 (BNB)
                         </Text>
                       </TouchableOpacity>
@@ -771,27 +787,27 @@ export default function TransferScreen() {
                   ) : (
                     <View style={styles.networkSelectRow}>
                       <TouchableOpacity
-                        style={[styles.networkBtn, withdrawNetwork === 'Native SegWit' && styles.networkBtnActive]}
+                        style={[styles.networkBtn, { backgroundColor: colors.cardAlt, borderColor: colors.border }, withdrawNetwork === 'Native SegWit' && styles.networkBtnActive]}
                         onPress={() => setWithdrawNetwork('Native SegWit')}
                       >
-                        <Text style={[styles.networkBtnText, withdrawNetwork === 'Native SegWit' && styles.networkBtnTextActive]}>
+                        <Text style={[styles.networkBtnText, { color: colors.textSecondary }, withdrawNetwork === 'Native SegWit' && styles.networkBtnTextActive]}>
                           Native SegWit (bc1)
                         </Text>
                         <Text style={styles.networkBadge}>{t('transfer.fastest')}</Text>
                       </TouchableOpacity>
                       <TouchableOpacity
-                        style={[styles.networkBtn, withdrawNetwork === 'Taproot' && styles.networkBtnActive]}
+                        style={[styles.networkBtn, { backgroundColor: colors.cardAlt, borderColor: colors.border }, withdrawNetwork === 'Taproot' && styles.networkBtnActive]}
                         onPress={() => setWithdrawNetwork('Taproot')}
                       >
-                        <Text style={[styles.networkBtnText, withdrawNetwork === 'Taproot' && styles.networkBtnTextActive]}>
+                        <Text style={[styles.networkBtnText, { color: colors.textSecondary }, withdrawNetwork === 'Taproot' && styles.networkBtnTextActive]}>
                           Taproot (bc1p)
                         </Text>
                       </TouchableOpacity>
                       <TouchableOpacity
-                        style={[styles.networkBtn, withdrawNetwork === 'Legacy' && styles.networkBtnActive]}
+                        style={[styles.networkBtn, { backgroundColor: colors.cardAlt, borderColor: colors.border }, withdrawNetwork === 'Legacy' && styles.networkBtnActive]}
                         onPress={() => setWithdrawNetwork('Legacy')}
                       >
-                        <Text style={[styles.networkBtnText, withdrawNetwork === 'Legacy' && styles.networkBtnTextActive]}>
+                        <Text style={[styles.networkBtnText, { color: colors.textSecondary }, withdrawNetwork === 'Legacy' && styles.networkBtnTextActive]}>
                           Legacy (1...)
                         </Text>
                       </TouchableOpacity>
@@ -802,20 +818,20 @@ export default function TransferScreen() {
                 {/* Destination Wallet Address Input */}
                 <View style={styles.inputGroup}>
                   <View style={styles.amountLabelRow}>
-                    <Text style={styles.inputLabel}>{t('transfer.destAddressLabel', { currency })}</Text>
+                    <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>{t('transfer.destAddressLabel', { currency })}</Text>
                     <TouchableOpacity onPress={handleUseSavedAddress}>
                       <Text style={styles.savedAddressLink}>{t('transfer.useSavedAddress')}</Text>
                     </TouchableOpacity>
                   </View>
                   <TextInput
-                    style={[styles.textInput, styles.monoInput]}
+                    style={[styles.textInput, styles.monoInput, { backgroundColor: colors.inputBg, borderColor: colors.inputBorder, color: colors.text }]}
                     placeholder={t('transfer.addressPlaceholder', { currency })}
-                    placeholderTextColor="#4B5563"
+                    placeholderTextColor={isDark ? '#4B5563' : '#94A3B8'}
                     value={withdrawAddress}
                     onChangeText={setWithdrawAddress}
                     autoCapitalize="none"
                   />
-                  <Text style={styles.fieldHint}>
+                  <Text style={[styles.fieldHint, { color: colors.textMuted }]}>
                     {t('transfer.addressHint')}
                   </Text>
                 </View>
@@ -823,17 +839,17 @@ export default function TransferScreen() {
                 {/* Amount Input */}
                 <View style={styles.inputGroup}>
                   <View style={styles.amountLabelRow}>
-                    <Text style={styles.inputLabel}>{t('transfer.withdrawAmountLabel', { currency })}</Text>
+                    <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>{t('transfer.withdrawAmountLabel', { currency })}</Text>
                     <Text style={styles.availableLabel}>
                       {t('transfer.available', { amount: currentAvailable.toLocaleString(), currency })}
                     </Text>
                   </View>
 
-                  <View style={styles.amountInputRow}>
+                  <View style={[styles.amountInputRow, { backgroundColor: colors.inputBg, borderColor: colors.inputBorder }]}>
                     <TextInput
-                      style={styles.amountInput}
+                      style={[styles.amountInput, { color: colors.text }]}
                       placeholder={currency === 'USDT' ? 'Min 10.00' : 'Min 0.00010000'}
-                      placeholderTextColor="#4B5563"
+                      placeholderTextColor={isDark ? '#4B5563' : '#94A3B8'}
                       keyboardType="numeric"
                       value={withdrawAmount}
                       onChangeText={(val) => {
@@ -841,66 +857,66 @@ export default function TransferScreen() {
                         setWithdrawPercent(null);
                       }}
                     />
-                    <View style={styles.currencyBadge}>
-                      <Text style={styles.currencyBadgeText}>{currency}</Text>
+                    <View style={[styles.currencyBadge, { backgroundColor: colors.cardAlt }]}>
+                      <Text style={[styles.currencyBadgeText, { color: colors.text }]}>{currency}</Text>
                     </View>
                   </View>
 
                   {/* Quick percentage buttons */}
                   <View style={styles.quickPercentRow}>
                     <TouchableOpacity
-                      style={[styles.percentBtn, withdrawPercent === 25 && styles.percentBtnActive]}
+                      style={[styles.percentBtn, { backgroundColor: colors.cardAlt, borderColor: colors.border }, withdrawPercent === 25 && styles.percentBtnActive]}
                       onPress={() => handleSelectPercentage(0.25)}
                     >
-                      <Text style={[styles.percentBtnText, withdrawPercent === 25 && styles.percentBtnTextActive]}>25%</Text>
+                      <Text style={[styles.percentBtnText, { color: colors.textSecondary }, withdrawPercent === 25 && styles.percentBtnTextActive]}>25%</Text>
                     </TouchableOpacity>
                     <TouchableOpacity
-                      style={[styles.percentBtn, withdrawPercent === 50 && styles.percentBtnActive]}
+                      style={[styles.percentBtn, { backgroundColor: colors.cardAlt, borderColor: colors.border }, withdrawPercent === 50 && styles.percentBtnActive]}
                       onPress={() => handleSelectPercentage(0.5)}
                     >
-                      <Text style={[styles.percentBtnText, withdrawPercent === 50 && styles.percentBtnTextActive]}>50%</Text>
+                      <Text style={[styles.percentBtnText, { color: colors.textSecondary }, withdrawPercent === 50 && styles.percentBtnTextActive]}>50%</Text>
                     </TouchableOpacity>
                     <TouchableOpacity
-                      style={[styles.percentBtn, withdrawPercent === 75 && styles.percentBtnActive]}
+                      style={[styles.percentBtn, { backgroundColor: colors.cardAlt, borderColor: colors.border }, withdrawPercent === 75 && styles.percentBtnActive]}
                       onPress={() => handleSelectPercentage(0.75)}
                     >
-                      <Text style={[styles.percentBtnText, withdrawPercent === 75 && styles.percentBtnTextActive]}>75%</Text>
+                      <Text style={[styles.percentBtnText, { color: colors.textSecondary }, withdrawPercent === 75 && styles.percentBtnTextActive]}>75%</Text>
                     </TouchableOpacity>
                     <TouchableOpacity
-                      style={[styles.percentBtn, withdrawPercent === 100 && styles.percentBtnActive]}
+                      style={[styles.percentBtn, { backgroundColor: colors.cardAlt, borderColor: colors.border }, withdrawPercent === 100 && styles.percentBtnActive]}
                       onPress={() => handleSelectPercentage(1)}
                     >
-                      <Text style={[styles.percentBtnText, withdrawPercent === 100 && styles.percentBtnTextActive]}>{t('transfer.maxPercent')}</Text>
+                      <Text style={[styles.percentBtnText, { color: colors.textSecondary }, withdrawPercent === 100 && styles.percentBtnTextActive]}>{t('transfer.maxPercent')}</Text>
                     </TouchableOpacity>
                   </View>
                 </View>
 
                 {/* Withdrawal Breakdown */}
-                <View style={styles.breakdownBox}>
+                <View style={[styles.breakdownBox, { backgroundColor: colors.cardAlt, borderColor: colors.border }]}>
                   <View style={styles.breakdownRow}>
-                    <Text style={styles.breakdownLabel}>{t('transfer.selectedNetwork')}</Text>
+                    <Text style={[styles.breakdownLabel, { color: colors.textSecondary }]}>{t('transfer.selectedNetwork')}</Text>
                     <Text style={styles.breakdownValCyan}>{withdrawNetwork}</Text>
                   </View>
                   <View style={styles.breakdownRow}>
-                    <Text style={styles.breakdownLabel}>{t('transfer.destinationAddress')}</Text>
-                    <Text style={styles.breakdownValWhite} numberOfLines={1}>
+                    <Text style={[styles.breakdownLabel, { color: colors.textSecondary }]}>{t('transfer.destinationAddress')}</Text>
+                    <Text style={[styles.breakdownValWhite, { color: colors.text }]} numberOfLines={1}>
                       {withdrawAddress
                         ? `${withdrawAddress.slice(0, 10)}...${withdrawAddress.slice(-6)}`
                         : t('transfer.noneKeyedIn')}
                     </Text>
                   </View>
                   <View style={styles.breakdownRow}>
-                    <Text style={styles.breakdownLabel}>{t('transfer.withdrawalAmount')}</Text>
-                    <Text style={styles.breakdownValWhite}>
+                    <Text style={[styles.breakdownLabel, { color: colors.textSecondary }]}>{t('transfer.withdrawalAmount')}</Text>
+                    <Text style={[styles.breakdownValWhite, { color: colors.text }]}>
                       {withdrawAmount || '0'} {currency}
                     </Text>
                   </View>
                   <View style={styles.breakdownRow}>
-                    <Text style={styles.breakdownLabel}>{t('transfer.poolSubsidyFee')}</Text>
+                    <Text style={[styles.breakdownLabel, { color: colors.textSecondary }]}>{t('transfer.poolSubsidyFee')}</Text>
                     <Text style={styles.breakdownValGreen}>{t('transfer.coveredFee', { currency })}</Text>
                   </View>
-                  <View style={[styles.breakdownRow, styles.breakdownRowTotal]}>
-                    <Text style={styles.breakdownTotalLabel}>{t('transfer.netAmountDispatched')}</Text>
+                  <View style={[styles.breakdownRow, styles.breakdownRowTotal, { borderTopColor: colors.border }]}>
+                    <Text style={[styles.breakdownTotalLabel, { color: colors.text }]}>{t('transfer.netAmountDispatched')}</Text>
                     <Text style={styles.breakdownTotalValGold}>
                       {withdrawAmount || '0'} {currency}
                     </Text>
@@ -925,10 +941,10 @@ export default function TransferScreen() {
           <View style={styles.ledgerSection}>
             <View style={styles.ledgerHeaderRow}>
               <View>
-                <Text style={styles.ledgerTitle}>
+                <Text style={[styles.ledgerTitle, { color: colors.text }]}>
                   {t('transfer.ledgerTitle', { count: filteredTransactions.length })}
                 </Text>
-                <Text style={styles.ledgerSubtitle}>
+                <Text style={[styles.ledgerSubtitle, { color: colors.textSecondary }]}>
                   {t('transfer.ledgerShowing', {
                     start: filteredTransactions.length > 0 ? (effectivePage - 1) * PAGE_SIZE + 1 : 0,
                     end: Math.min(effectivePage * PAGE_SIZE, filteredTransactions.length),
@@ -937,24 +953,24 @@ export default function TransferScreen() {
                 </Text>
               </View>
 
-              <View style={styles.ledgerFilterRow}>
+              <View style={[styles.ledgerFilterRow, { backgroundColor: colors.cardAlt, borderColor: colors.border }]}>
                 <TouchableOpacity
-                  style={[styles.ledgerFilterBtn, txFilter === 'ALL' && styles.ledgerFilterBtnActive]}
+                  style={[styles.ledgerFilterBtn, txFilter === 'ALL' && [styles.ledgerFilterBtnActive, { backgroundColor: colors.card }]]}
                   onPress={() => handleSetFilter('ALL')}
                 >
-                  <Text style={[styles.ledgerFilterText, txFilter === 'ALL' && styles.ledgerFilterTextActive]}>{t('transfer.filterAll')}</Text>
+                  <Text style={[styles.ledgerFilterText, txFilter === 'ALL' ? styles.ledgerFilterTextActive : { color: colors.textSecondary }]}>{t('transfer.filterAll')}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                  style={[styles.ledgerFilterBtn, txFilter === 'TRANSFER' && styles.ledgerFilterBtnActive]}
+                  style={[styles.ledgerFilterBtn, txFilter === 'TRANSFER' && [styles.ledgerFilterBtnActive, { backgroundColor: colors.card }]]}
                   onPress={() => handleSetFilter('TRANSFER')}
                 >
-                  <Text style={[styles.ledgerFilterText, txFilter === 'TRANSFER' && styles.ledgerFilterTextActive]}>{t('transfer.filterTransfers')}</Text>
+                  <Text style={[styles.ledgerFilterText, txFilter === 'TRANSFER' ? styles.ledgerFilterTextActive : { color: colors.textSecondary }]}>{t('transfer.filterTransfers')}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                  style={[styles.ledgerFilterBtn, txFilter === 'WITHDRAWAL' && styles.ledgerFilterBtnActive]}
+                  style={[styles.ledgerFilterBtn, txFilter === 'WITHDRAWAL' && [styles.ledgerFilterBtnActive, { backgroundColor: colors.card }]]}
                   onPress={() => handleSetFilter('WITHDRAWAL')}
                 >
-                  <Text style={[styles.ledgerFilterText, txFilter === 'WITHDRAWAL' && styles.ledgerFilterTextActive]}>{t('transfer.filterWithdrawals')}</Text>
+                  <Text style={[styles.ledgerFilterText, txFilter === 'WITHDRAWAL' ? styles.ledgerFilterTextActive : { color: colors.textSecondary }]}>{t('transfer.filterWithdrawals')}</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -962,10 +978,10 @@ export default function TransferScreen() {
             {loadingTx ? (
               <ActivityIndicator color="#F7931A" style={{ marginVertical: 20 }} />
             ) : filteredTransactions.length === 0 ? (
-              <View style={styles.emptyLedgerBox}>
+              <View style={[styles.emptyLedgerBox, { backgroundColor: colors.card, borderColor: colors.border }]}>
                 <Text style={styles.emptyLedgerIcon}>📂</Text>
-                <Text style={styles.emptyLedgerTitle}>{t('transfer.noHistoryFound')}</Text>
-                <Text style={styles.emptyLedgerSub}>
+                <Text style={[styles.emptyLedgerTitle, { color: colors.text }]}>{t('transfer.noHistoryFound')}</Text>
+                <Text style={[styles.emptyLedgerSub, { color: colors.textSecondary }]}>
                   {t('transfer.noHistorySub')}
                 </Text>
               </View>
@@ -1036,7 +1052,7 @@ export default function TransferScreen() {
                   const txHash = tx.metadata && typeof tx.metadata === 'object' && tx.metadata.txHash ? String(tx.metadata.txHash) : null;
 
                   return (
-                    <View key={txKey} style={styles.ledgerCard}>
+                    <View key={txKey} style={[styles.ledgerCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
                       <View style={styles.ledgerLeft}>
                         <View style={[styles.txIconBubble, isConfiscated ? { backgroundColor: 'rgba(239, 68, 68, 0.15)' } : (isIncome ? styles.bubbleGreen : styles.bubbleOrange)]}>
                           <Text style={[styles.txIconChar, isConfiscated ? { color: '#EF4444' } : null]}>
@@ -1044,13 +1060,13 @@ export default function TransferScreen() {
                           </Text>
                         </View>
                         <View style={styles.txMainInfo}>
-                          <Text style={styles.txTypeTitle}>
+                          <Text style={[styles.txTypeTitle, { color: colors.text }]}>
                             {getTxLabel(tx.type)}
                           </Text>
-                          <Text style={styles.txDesc} numberOfLines={2}>
+                          <Text style={[styles.txDesc, { color: colors.textSecondary }]} numberOfLines={2}>
                             {descriptionText}
                           </Text>
-                          <Text style={styles.txDate}>
+                          <Text style={[styles.txDate, { color: colors.textMuted }]}>
                             {formattedDate}
                           </Text>
                         </View>
@@ -1085,11 +1101,11 @@ export default function TransferScreen() {
             {totalPages > 1 && (
               <View style={styles.paginationRow}>
                 <TouchableOpacity
-                  style={[styles.pageNavBtn, effectivePage === 1 && styles.pageNavBtnDisabled]}
+                  style={[styles.pageNavBtn, { backgroundColor: colors.cardAlt, borderColor: colors.border }, effectivePage === 1 && styles.pageNavBtnDisabled]}
                   onPress={() => setCurrentPage((p) => Math.max(1, p - 1))}
                   disabled={effectivePage === 1}
                 >
-                  <Text style={[styles.pageNavBtnText, effectivePage === 1 && styles.pageNavBtnTextDisabled]}>
+                  <Text style={[styles.pageNavBtnText, { color: colors.text }, effectivePage === 1 && styles.pageNavBtnTextDisabled]}>
                     {t('transfer.previous')}
                   </Text>
                 </TouchableOpacity>
@@ -1101,12 +1117,16 @@ export default function TransferScreen() {
                       const showEllipsis = idx > 0 && p - arr[idx - 1] > 1;
                       return (
                         <React.Fragment key={p}>
-                          {showEllipsis && <Text style={styles.pageEllipsis}>...</Text>}
+                          {showEllipsis && <Text style={[styles.pageEllipsis, { color: colors.textMuted }]}>...</Text>}
                           <TouchableOpacity
-                            style={[styles.pageNumBtn, effectivePage === p && styles.pageNumBtnActive]}
+                            style={[
+                              styles.pageNumBtn,
+                              { backgroundColor: colors.cardAlt, borderColor: colors.border },
+                              effectivePage === p && [styles.pageNumBtnActive, { backgroundColor: colors.card, borderColor: '#00F0FF' }],
+                            ]}
                             onPress={() => setCurrentPage(p)}
                           >
-                            <Text style={[styles.pageNumText, effectivePage === p && styles.pageNumTextActive]}>
+                            <Text style={[styles.pageNumText, effectivePage === p ? styles.pageNumTextActive : { color: colors.textSecondary }]}>
                               {p}
                             </Text>
                           </TouchableOpacity>
@@ -1116,11 +1136,11 @@ export default function TransferScreen() {
                 </View>
 
                 <TouchableOpacity
-                  style={[styles.pageNavBtn, effectivePage === totalPages && styles.pageNavBtnDisabled]}
+                  style={[styles.pageNavBtn, { backgroundColor: colors.cardAlt, borderColor: colors.border }, effectivePage === totalPages && styles.pageNavBtnDisabled]}
                   onPress={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
                   disabled={effectivePage === totalPages}
                 >
-                  <Text style={[styles.pageNavBtnText, effectivePage === totalPages && styles.pageNavBtnTextDisabled]}>
+                  <Text style={[styles.pageNavBtnText, { color: colors.text }, effectivePage === totalPages && styles.pageNavBtnTextDisabled]}>
                     {t('transfer.next')}
                   </Text>
                 </TouchableOpacity>
@@ -1137,25 +1157,25 @@ export default function TransferScreen() {
         animationType="fade"
         onRequestClose={() => setConfirmModalVisible(false)}
       >
-        <View style={styles.modalOverlay}>
-          <View style={[styles.modalCard, isMobile && styles.modalCardMobile]}>
+        <View style={[styles.modalOverlay, { backgroundColor: colors.modalOverlay }]}>
+          <View style={[styles.modalCard, { backgroundColor: colors.card, borderColor: colors.border }, isMobile && styles.modalCardMobile]}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>
+              <Text style={[styles.modalTitle, { color: colors.text }]}>
                 {mode === 'transfer' ? t('transfer.confirmTransferTitle') : t('transfer.confirmWithdrawTitle')}
               </Text>
               <TouchableOpacity onPress={() => setConfirmModalVisible(false)}>
-                <Text style={styles.modalCloseText}>✕</Text>
+                <Text style={[styles.modalCloseText, { color: colors.textSecondary }]}>✕</Text>
               </TouchableOpacity>
             </View>
 
             <View style={styles.modalContent}>
-              <Text style={styles.modalNotice}>
+              <Text style={[styles.modalNotice, { color: colors.textSecondary }]}>
                 {t('transfer.confirmNotice')}
               </Text>
 
-              <View style={styles.modalDetailBox}>
+              <View style={[styles.modalDetailBox, { backgroundColor: colors.cardAlt, borderColor: colors.border }]}>
                 <View style={styles.modalDetailRow}>
-                  <Text style={styles.modalDetailLabel}>{t('transfer.txType')}</Text>
+                  <Text style={[styles.modalDetailLabel, { color: colors.textSecondary }]}>{t('transfer.txType')}</Text>
                   <Text style={styles.modalDetailValCyan}>
                     {mode === 'transfer' ? t('transfer.internalTransferType') : t('transfer.externalWithdrawType')}
                   </Text>
@@ -1163,20 +1183,20 @@ export default function TransferScreen() {
 
                 {mode === 'transfer' ? (
                   <View style={styles.modalDetailRow}>
-                    <Text style={styles.modalDetailLabel}>{t('transfer.recipient')}</Text>
-                    <Text style={styles.modalDetailValWhite}>
+                    <Text style={[styles.modalDetailLabel, { color: colors.textSecondary }]}>{t('transfer.recipient')}</Text>
+                    <Text style={[styles.modalDetailValWhite, { color: colors.text }]}>
                       @{verifiedRecipient?.username} ({verifiedRecipient?.fullName || 'Node'})
                     </Text>
                   </View>
                 ) : (
                   <>
                     <View style={styles.modalDetailRow}>
-                      <Text style={styles.modalDetailLabel}>{t('transfer.network')}</Text>
-                      <Text style={styles.modalDetailValWhite}>{withdrawNetwork}</Text>
+                      <Text style={[styles.modalDetailLabel, { color: colors.textSecondary }]}>{t('transfer.network')}</Text>
+                      <Text style={[styles.modalDetailValWhite, { color: colors.text }]}>{withdrawNetwork}</Text>
                     </View>
                     <View style={styles.modalDetailRow}>
-                      <Text style={styles.modalDetailLabel}>{t('transfer.destinationAddress')}</Text>
-                      <Text style={styles.modalDetailValWhite} numberOfLines={2}>
+                      <Text style={[styles.modalDetailLabel, { color: colors.textSecondary }]}>{t('transfer.destinationAddress')}</Text>
+                      <Text style={[styles.modalDetailValWhite, { color: colors.text }]} numberOfLines={2}>
                         {withdrawAddress}
                       </Text>
                     </View>
@@ -1184,30 +1204,30 @@ export default function TransferScreen() {
                 )}
 
                 <View style={styles.modalDetailRow}>
-                  <Text style={styles.modalDetailLabel}>{t('transfer.assetCurrency')}</Text>
+                  <Text style={[styles.modalDetailLabel, { color: colors.textSecondary }]}>{t('transfer.assetCurrency')}</Text>
                   <Text style={styles.modalDetailValGold}>{currency}</Text>
                 </View>
 
                 <View style={styles.modalDetailRow}>
-                  <Text style={styles.modalDetailLabel}>{t('transfer.authorizedAmount')}</Text>
-                  <Text style={styles.modalDetailValLarge}>
+                  <Text style={[styles.modalDetailLabel, { color: colors.textSecondary }]}>{t('transfer.authorizedAmount')}</Text>
+                  <Text style={[styles.modalDetailValLarge, { color: colors.text }]}>
                     {mode === 'transfer' ? transferAmount : withdrawAmount} {currency}
                   </Text>
                 </View>
 
                 <View style={styles.modalDetailRow}>
-                  <Text style={styles.modalDetailLabel}>{t('transfer.estimatedValuation')}</Text>
-                  <Text style={styles.modalDetailValSub}>≈ {currentValuation.toFixed(2)} USDT</Text>
+                  <Text style={[styles.modalDetailLabel, { color: colors.textSecondary }]}>{t('transfer.estimatedValuation')}</Text>
+                  <Text style={[styles.modalDetailValSub, { color: colors.textMuted }]}>≈ {currentValuation.toFixed(2)} USDT</Text>
                 </View>
               </View>
 
               <View style={styles.modalActionRow}>
                 <TouchableOpacity
-                  style={styles.modalCancelBtn}
+                  style={[styles.modalCancelBtn, { backgroundColor: colors.cardAlt, borderColor: colors.border }]}
                   onPress={() => setConfirmModalVisible(false)}
                   disabled={submitting}
                 >
-                  <Text style={styles.modalCancelBtnText}>{t('common.cancel')}</Text>
+                  <Text style={[styles.modalCancelBtnText, { color: colors.textSecondary }]}>{t('common.cancel')}</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity

@@ -16,6 +16,8 @@ import { api } from '@/services/api';
 import { StarRankIndicator } from '@/components/StarRankIndicator';
 import { QRCodeView, generateQrDataUri } from '@/components/QRCodeView';
 import { LanguageSelector } from '@/components/LanguageSelector';
+import { ThemeToggle } from '@/components/ThemeToggle';
+import { useThemeMode } from '@/context/ThemeContext';
 import { useIsMobile } from '@/hooks/useIsMobile';
 
 interface KycInfo {
@@ -79,6 +81,7 @@ export default function UserProfileScreen() {
   const router = useRouter();
   const isMobile = useIsMobile();
   const { t } = useTranslation();
+  const { isDark, colors } = useThemeMode();
 
   const [activeTab, setActiveTab] = useState<'info' | 'kyc' | 'payout' | 'mlm' | 'security' | 'stats'>('info');
   const [loading, setLoading] = useState(true);
@@ -344,10 +347,16 @@ export default function UserProfileScreen() {
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      style={styles.container}
+      style={[styles.container, { backgroundColor: colors.background }]}
     >
       {/* Top Navbar */}
-      <View style={[styles.navbar, isMobile && styles.navbarMobile]}>
+      <View
+        style={[
+          styles.navbar,
+          isMobile && styles.navbarMobile,
+          { backgroundColor: colors.header, borderBottomColor: colors.border },
+        ]}
+      >
         <View style={styles.navLeft}>
           <TouchableOpacity onPress={() => router.replace('/dashboard' as any)} style={styles.backBtn}>
             <Text style={styles.backBtnText}>← {t('common.dashboard')}</Text>
@@ -357,14 +366,15 @@ export default function UserProfileScreen() {
               <Text style={styles.btcBadgeText}>₿</Text>
             </View>
             <View>
-              <Text style={styles.brandTitle}>BTCM // {t('profile.title').toUpperCase()}</Text>
-              <Text style={styles.brandSubtitle}>{t('profile.subtitle')}</Text>
+              <Text style={[styles.brandTitle, { color: colors.text }]}>BTCM // {t('profile.title').toUpperCase()}</Text>
+              <Text style={[styles.brandSubtitle, { color: colors.textSecondary }]}>{t('profile.subtitle')}</Text>
             </View>
           </View>
         </View>
 
         {/* Actions */}
         <View style={[styles.navRight, isMobile && styles.navRightMobile]}>
+          <ThemeToggle compact />
           <LanguageSelector compact />
           {user?.role === 'admin' && (
             <TouchableOpacity style={styles.adminBtn} onPress={() => router.push('/admin' as any)}>

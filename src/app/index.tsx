@@ -12,6 +12,8 @@ import { api } from '@/services/api';
 import { MineBestHomeScreen } from '@/components/MineBestHomeScreen';
 import { StarRankIndicator } from '@/components/StarRankIndicator';
 import { LanguageSelector } from '@/components/LanguageSelector';
+import { ThemeToggle } from '@/components/ThemeToggle';
+import { useThemeMode } from '@/context/ThemeContext';
 import { useIsMobile } from '@/hooks/useIsMobile';
 import { setAppLanguage } from '@/i18n';
 
@@ -19,6 +21,7 @@ export default function MainHomePage() {
   const router = useRouter();
   const isMobile = useIsMobile();
   const { t } = useTranslation();
+  const { isDark, colors } = useThemeMode();
 
   const [user, setUser] = useState<any>(null);
   const [loadingUser, setLoadingUser] = useState(true);
@@ -73,9 +76,18 @@ export default function MainHomePage() {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       {/* 1. TOP MAIN HEADER */}
-      <View style={[styles.topHeader, isMobile && styles.topHeaderMobile]}>
+      <View
+        style={[
+          styles.topHeader,
+          isMobile && styles.topHeaderMobile,
+          {
+            backgroundColor: colors.header,
+            borderBottomColor: colors.border,
+          },
+        ]}
+      >
         {isMobile ? (
           /* MOBILE HEADER LAYOUT (Clean Non-Overlapping Multi-Row) */
           <View style={styles.mobileHeaderWrap}>
@@ -86,12 +98,13 @@ export default function MainHomePage() {
                   <Text style={styles.btcLogoChar}>₿</Text>
                 </View>
                 <View>
-                  <Text style={styles.brandTitleMobile}>{t('common.appName')}</Text>
-                  <Text style={styles.brandSubtitleMobile}>{t('common.industrialInfra')}</Text>
+                  <Text style={[styles.brandTitleMobile, { color: colors.text }]}>{t('common.appName')}</Text>
+                  <Text style={[styles.brandSubtitleMobile, { color: colors.textSecondary }]}>{t('common.industrialInfra')}</Text>
                 </View>
               </View>
 
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                <ThemeToggle compact />
                 <LanguageSelector compact />
                 {user ? (
                   <TouchableOpacity style={styles.mobileSignOutBtn} onPress={handleLogout}>
@@ -118,10 +131,10 @@ export default function MainHomePage() {
 
             {/* Row 2: Live BTC Price Ticker & User Profile Badge */}
             <View style={styles.mobileHeaderRow2}>
-              <View style={styles.mobileMarketPill}>
+              <View style={[styles.mobileMarketPill, { backgroundColor: colors.pillBg, borderColor: colors.border }]}>
                 <View style={styles.liveDot} />
-                <Text style={styles.marketLabel}>BTC/USDT</Text>
-                <Text style={styles.marketValue}>{btcPrice.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</Text>
+                <Text style={[styles.marketLabel, { color: colors.textSecondary }]}>BTC/USDT</Text>
+                <Text style={[styles.marketValue, { color: colors.text }]}>{btcPrice.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</Text>
                 <Text style={btcChange24h >= 0 ? styles.marketUp : styles.marketDown}>
                   {btcChange24h >= 0 ? `+${btcChange24h.toFixed(1)}%` : `${btcChange24h.toFixed(1)}%`}
                 </Text>
@@ -129,10 +142,10 @@ export default function MainHomePage() {
 
               {user && (
                 <TouchableOpacity
-                  style={styles.mobileProfileBadgeBtn}
+                  style={[styles.mobileProfileBadgeBtn, { backgroundColor: colors.pillBg, borderColor: colors.border }]}
                   onPress={() => router.push('/profile' as any)}
                 >
-                  <Text style={styles.profileBadgeText}>👤 @{user.username}</Text>
+                  <Text style={[styles.profileBadgeText, { color: colors.text }]}>👤 @{user.username}</Text>
                   {Boolean(user.starRank && user.starRank >= 1) && (
                     <StarRankIndicator
                       rank={user.starRank}
@@ -163,20 +176,21 @@ export default function MainHomePage() {
                 <Text style={styles.btcLogoChar}>₿</Text>
               </View>
               <View>
-                <Text style={styles.brandTitle}>{t('common.appName')}</Text>
-                <Text style={styles.brandSubtitle}>{t('common.industrialInfra')}</Text>
+                <Text style={[styles.brandTitle, { color: colors.text }]}>{t('common.appName')}</Text>
+                <Text style={[styles.brandSubtitle, { color: colors.textSecondary }]}>{t('common.industrialInfra')}</Text>
               </View>
             </View>
 
             {/* Right Header Navigation & Actions */}
             <View style={styles.headerRightActions}>
+              <ThemeToggle />
               <LanguageSelector />
 
               {/* Live Bitcoin Market Ticker */}
-              <View style={styles.marketPill}>
+              <View style={[styles.marketPill, { backgroundColor: colors.pillBg, borderColor: colors.border }]}>
                 <View style={styles.liveDot} />
-                <Text style={styles.marketLabel}>BTC/USDT</Text>
-                <Text style={styles.marketValue}>{btcPrice.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</Text>
+                <Text style={[styles.marketLabel, { color: colors.textSecondary }]}>BTC/USDT</Text>
+                <Text style={[styles.marketValue, { color: colors.text }]}>{btcPrice.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</Text>
                 <Text style={btcChange24h >= 0 ? styles.marketUp : styles.marketDown}>
                   {btcChange24h >= 0 ? `+${btcChange24h.toFixed(1)}%` : `${btcChange24h.toFixed(1)}%`}
                 </Text>
@@ -186,10 +200,10 @@ export default function MainHomePage() {
               {user ? (
                 <View style={styles.userActionsRow}>
                   <TouchableOpacity
-                    style={styles.profileBadgeBtn}
+                    style={[styles.profileBadgeBtn, { backgroundColor: colors.pillBg, borderColor: colors.border }]}
                     onPress={() => router.push('/profile' as any)}
                   >
-                    <Text style={styles.profileBadgeText}>👤 @{user.username}</Text>
+                    <Text style={[styles.profileBadgeText, { color: colors.text }]}>👤 @{user.username}</Text>
                     {Boolean(user.starRank && user.starRank >= 1) && (
                       <StarRankIndicator
                         rank={user.starRank}

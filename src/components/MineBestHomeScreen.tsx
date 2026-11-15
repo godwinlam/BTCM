@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useIsMobile } from '@/hooks/useIsMobile';
+import { useThemeMode } from '@/context/ThemeContext';
 
 const DatacenterImg = require('../../assets/images/facility_datacenter.jpg');
 const AsicHardwareImg = require('../../assets/images/asic_hardware.jpg');
@@ -53,6 +54,7 @@ export const MineBestHomeScreen: React.FC<MineBestHomeScreenProps> = ({
 }) => {
   const isMobile = useIsMobile();
   const { t } = useTranslation();
+  const { isDark, colors } = useThemeMode();
 
   const [selectedPlanTier, setSelectedPlanTier] = useState<number>(1000);
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(0);
@@ -86,7 +88,7 @@ export const MineBestHomeScreen: React.FC<MineBestHomeScreenProps> = ({
   ];
 
   return (
-    <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
+    <ScrollView contentContainerStyle={[styles.container, { backgroundColor: colors.background }]} showsVerticalScrollIndicator={false}>
       {/* 1. HERO SECTION */}
       <View style={[styles.heroSection, isMobile && styles.heroSectionMobile]}>
         <View style={styles.heroBadgeRow}>

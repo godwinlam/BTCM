@@ -15,12 +15,15 @@ import { useTranslation } from 'react-i18next';
 import { api } from '@/services/api';
 import { useIsMobile } from '@/hooks/useIsMobile';
 import { LanguageSelector } from '@/components/LanguageSelector';
+import { ThemeToggle } from '@/components/ThemeToggle';
+import { useThemeMode } from '@/context/ThemeContext';
 
 export default function SignUpScreen() {
   const router = useRouter();
   const searchParams = useLocalSearchParams<{ ref?: string; parent?: string; positionParent?: string }>();
   const isMobile = useIsMobile();
   const { t, i18n } = useTranslation();
+  const { isDark, colors } = useThemeMode();
 
   const [fullName, setFullName] = useState('');
   const [username, setUsername] = useState('');
@@ -156,25 +159,26 @@ export default function SignUpScreen() {
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      style={styles.container}
+      style={[styles.container, { backgroundColor: colors.background }]}
     >
       <ScrollView contentContainerStyle={styles.scrollContent}>
         {/* Brand Header */}
         <View style={styles.brandContainer}>
-          <View style={{ width: '100%', flexDirection: 'row', justifyContent: 'flex-end', marginBottom: 10 }}>
+          <View style={{ width: '100%', flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'center', gap: 6, marginBottom: 10 }}>
+            <ThemeToggle compact />
             <LanguageSelector compact />
           </View>
           <TouchableOpacity onPress={() => router.replace('/')} style={styles.logoBadge}>
             <Text style={styles.logoChar}>₿</Text>
           </TouchableOpacity>
-          <Text style={styles.brandTitle}>{t('common.appName')}</Text>
-          <Text style={styles.brandSubtitle}>{t('auth.welcomeSub')}</Text>
+          <Text style={[styles.brandTitle, { color: colors.text }]}>{t('common.appName')}</Text>
+          <Text style={[styles.brandSubtitle, { color: colors.textSecondary }]}>{t('auth.welcomeSub')}</Text>
         </View>
 
         {/* Sign Up Card */}
-        <View style={[styles.card, isMobile && styles.cardMobile]}>
+        <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }, isMobile && styles.cardMobile]}>
           <View style={styles.cardHeader}>
-            <Text style={styles.cardTitle}>
+            <Text style={[styles.cardTitle, { color: colors.text }]}>
               {activeLoggedInUser ? t('register.title') : t('register.createAccount')}
             </Text>
           </View>
@@ -193,15 +197,15 @@ export default function SignUpScreen() {
           )}
 
           {/* Section 1: Basic Info */}
-          <Text style={styles.sectionDivider}>{t('register.personalCredentials')}</Text>
+          <Text style={[styles.sectionDivider, { borderBottomColor: colors.border }]}>{t('register.personalCredentials')}</Text>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>{t('register.fullNameLabel')}</Text>
-            <View style={styles.inputWrapper}>
+            <Text style={[styles.label, { color: colors.textSecondary }]}>{t('register.fullNameLabel')}</Text>
+            <View style={[styles.inputWrapper, { backgroundColor: colors.inputBg, borderColor: colors.inputBorder }]}>
               <TextInput
-                style={styles.input}
+                style={[styles.input, { color: colors.text }]}
                 placeholder={t('register.fullNamePlaceholder')}
-                placeholderTextColor="#64748B"
+                placeholderTextColor={isDark ? '#64748B' : '#94A3B8'}
                 value={fullName}
                 onChangeText={setFullName}
               />
@@ -210,12 +214,12 @@ export default function SignUpScreen() {
 
           <View style={styles.inputRow}>
             <View style={[styles.inputGroup, styles.inputFlex]}>
-              <Text style={styles.label}>{t('register.usernameLabel')}</Text>
-              <View style={styles.inputWrapper}>
+              <Text style={[styles.label, { color: colors.textSecondary }]}>{t('register.usernameLabel')}</Text>
+              <View style={[styles.inputWrapper, { backgroundColor: colors.inputBg, borderColor: colors.inputBorder }]}>
                 <TextInput
-                  style={styles.input}
+                  style={[styles.input, { color: colors.text }]}
                   placeholder={t('register.usernamePlaceholder')}
-                  placeholderTextColor="#64748B"
+                  placeholderTextColor={isDark ? '#64748B' : '#94A3B8'}
                   value={username}
                   onChangeText={(val) => {
                     setUsername(val.toLowerCase());
@@ -228,12 +232,12 @@ export default function SignUpScreen() {
             </View>
 
             <View style={[styles.inputGroup, styles.inputFlex]}>
-              <Text style={styles.label}>{t('register.emailLabel')}</Text>
-              <View style={styles.inputWrapper}>
+              <Text style={[styles.label, { color: colors.textSecondary }]}>{t('register.emailLabel')}</Text>
+              <View style={[styles.inputWrapper, { backgroundColor: colors.inputBg, borderColor: colors.inputBorder }]}>
                 <TextInput
-                  style={styles.input}
+                  style={[styles.input, { color: colors.text }]}
                   placeholder={t('register.emailPlaceholder')}
-                  placeholderTextColor="#64748B"
+                  placeholderTextColor={isDark ? '#64748B' : '#94A3B8'}
                   value={email}
                   onChangeText={(val) => {
                     setEmail(val);
@@ -250,18 +254,18 @@ export default function SignUpScreen() {
           <View style={styles.inputRow}>
             <View style={[styles.inputGroup, styles.inputFlex]}>
               <View style={styles.labelRow}>
-                <Text style={styles.label}>{t('register.passwordLabel')}</Text>
+                <Text style={[styles.label, { color: colors.textSecondary }]}>{t('register.passwordLabel')}</Text>
                 <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
                   <Text style={styles.showPassToggle}>
                     {showPassword ? t('register.hide') : t('register.show')}
                   </Text>
                 </TouchableOpacity>
               </View>
-              <View style={styles.inputWrapper}>
+              <View style={[styles.inputWrapper, { backgroundColor: colors.inputBg, borderColor: colors.inputBorder }]}>
                 <TextInput
-                  style={styles.input}
+                  style={[styles.input, { color: colors.text }]}
                   placeholder={t('register.passwordPlaceholder')}
-                  placeholderTextColor="#64748B"
+                  placeholderTextColor={isDark ? '#64748B' : '#94A3B8'}
                   value={password}
                   onChangeText={(val) => {
                     setPassword(val);
@@ -274,12 +278,12 @@ export default function SignUpScreen() {
             </View>
 
             <View style={[styles.inputGroup, styles.inputFlex]}>
-              <Text style={styles.label}>{t('register.confirmPasswordLabel')}</Text>
-              <View style={styles.inputWrapper}>
+              <Text style={[styles.label, { color: colors.textSecondary }]}>{t('register.confirmPasswordLabel')}</Text>
+              <View style={[styles.inputWrapper, { backgroundColor: colors.inputBg, borderColor: colors.inputBorder }]}>
                 <TextInput
-                  style={styles.input}
+                  style={[styles.input, { color: colors.text }]}
                   placeholder={t('register.confirmPasswordPlaceholder')}
-                  placeholderTextColor="#64748B"
+                  placeholderTextColor={isDark ? '#64748B' : '#94A3B8'}
                   value={confirmPassword}
                   onChangeText={(val) => {
                     setConfirmPassword(val);
@@ -293,19 +297,19 @@ export default function SignUpScreen() {
           </View>
 
           {/* Section 2: Sponsor & Referral Details */}
-          <Text style={styles.sectionDivider}>{t('register.sponsorDetails')}</Text>
+          <Text style={[styles.sectionDivider, { borderBottomColor: colors.border }]}>{t('register.sponsorDetails')}</Text>
 
           {(!!referralCode || !!placementUsername) && (
-            <View style={styles.autoFilledNoticeBanner}>
+            <View style={[styles.autoFilledNoticeBanner, !isDark && { backgroundColor: 'rgba(247, 147, 26, 0.08)' }]}>
               <Text style={styles.autoFilledNoticeIcon}>🤝</Text>
               <View style={{ flex: 1 }}>
                 <Text style={styles.autoFilledNoticeTitle}>{t('register.sponsorInvitationDetected')}</Text>
-                <Text style={styles.autoFilledNoticeText}>
+                <Text style={[styles.autoFilledNoticeText, { color: colors.textSecondary }]}>
                   {placementUsername ? (
-                    <>{t('register.sponsorBy')} <Text style={styles.autoFilledBold}>@{placementUsername}</Text></>
+                    <>{t('register.sponsorBy')} <Text style={[styles.autoFilledBold, { color: colors.text }]}>@{placementUsername}</Text></>
                   ) : null}
                   {referralCode ? (
-                    <>{placementUsername ? ' • ' : ''}{t('register.referralCode')} <Text style={styles.autoFilledBold}>{referralCode}</Text></>
+                    <>{placementUsername ? ' • ' : ''}{t('register.referralCode')} <Text style={[styles.autoFilledBold, { color: colors.text }]}>{referralCode}</Text></>
                   ) : null}
                   {t('register.joiningDirectTeam')}
                 </Text>
@@ -315,58 +319,66 @@ export default function SignUpScreen() {
 
           <View style={styles.inputGroup}>
             <View style={styles.labelRowWithBadge}>
-              <Text style={styles.label}>{t('register.sponsorReferralCodeLabel')}</Text>
+              <Text style={[styles.label, { color: colors.textSecondary }]}>{t('register.sponsorReferralCodeLabel')}</Text>
               {!!referralCode && (
                 <View style={styles.autoFilledBadge}>
                   <Text style={styles.autoFilledBadgeText}>{t('register.currentLoginUser')}</Text>
                 </View>
               )}
             </View>
-            <View style={[styles.inputWrapper, !!referralCode && styles.inputWrapperFilled]}>
+            <View style={[
+              styles.inputWrapper,
+              { backgroundColor: colors.inputBg, borderColor: colors.inputBorder },
+              !!referralCode && (isDark ? styles.inputWrapperFilled : { borderColor: '#F7931A', backgroundColor: '#FFFBEB' })
+            ]}>
               <TextInput
-                style={styles.input}
+                style={[styles.input, { color: colors.text }]}
                 placeholder={t('register.referralCodePlaceholder')}
-                placeholderTextColor="#64748B"
+                placeholderTextColor={isDark ? '#64748B' : '#94A3B8'}
                 value={referralCode}
                 onChangeText={(val) => setReferralCode(val.toUpperCase())}
                 autoCapitalize="characters"
               />
             </View>
-            <Text style={styles.fieldHint}>
+            <Text style={[styles.fieldHint, { color: colors.textMuted }]}>
               {t('register.directRewardHint')}
             </Text>
           </View>
 
           <View style={styles.inputGroup}>
             <View style={styles.labelRowWithBadge}>
-              <Text style={styles.label}>{t('register.specificPlacementParentLabel')}</Text>
+              <Text style={[styles.label, { color: colors.textSecondary }]}>{t('register.specificPlacementParentLabel')}</Text>
               {!!placementUsername && (
                 <View style={styles.autoFilledBadge}>
                   <Text style={styles.autoFilledBadgeText}>{t('register.currentLoginUser')}</Text>
                 </View>
               )}
             </View>
-            <View style={[styles.inputWrapper, !!placementUsername && styles.inputWrapperFilled]}>
+            <View style={[
+              styles.inputWrapper,
+              { backgroundColor: colors.inputBg, borderColor: colors.inputBorder },
+              !!placementUsername && (isDark ? styles.inputWrapperFilled : { borderColor: '#F7931A', backgroundColor: '#FFFBEB' })
+            ]}>
               <TextInput
-                style={styles.input}
+                style={[styles.input, { color: colors.text }]}
                 placeholder={t('register.placementPlaceholder')}
-                placeholderTextColor="#64748B"
+                placeholderTextColor={isDark ? '#64748B' : '#94A3B8'}
                 value={placementUsername}
                 onChangeText={setPlacementUsername}
                 autoCapitalize="none"
               />
             </View>
-            <Text style={styles.fieldHint}>
+            <Text style={[styles.fieldHint, { color: colors.textMuted }]}>
               {t('register.placementParentHint', { parent: placementUsername || 'root' })}
             </Text>
           </View>
 
           {/* Placement Notice Banner */}
-          <View style={styles.placementRuleBox}>
+          <View style={[styles.placementRuleBox, !isDark && { backgroundColor: 'rgba(247, 147, 26, 0.06)' }]}>
             <Text style={styles.placementRuleTitle}>
               {t('register.placementRequirementTitle')}
             </Text>
-            <Text style={styles.placementRuleText}>
+            <Text style={[styles.placementRuleText, { color: colors.textSecondary }]}>
               {t('register.placementRequirementText')}
             </Text>
           </View>
@@ -390,7 +402,7 @@ export default function SignUpScreen() {
 
           {/* Links */}
           <View style={styles.cardFooter}>
-            <Text style={styles.footerPrompt}>{t('register.alreadyHaveAccount')}</Text>
+            <Text style={[styles.footerPrompt, { color: colors.textSecondary }]}>{t('register.alreadyHaveAccount')}</Text>
             <TouchableOpacity
               style={styles.loginLinkBtn}
               onPress={() => router.push('/login' as any)}
@@ -402,14 +414,14 @@ export default function SignUpScreen() {
               style={styles.backLinkBtn}
               onPress={() => router.replace('/')}
             >
-              <Text style={styles.backLinkText}>{t('register.returnHome')}</Text>
+              <Text style={[styles.backLinkText, { color: colors.textMuted }]}>{t('register.returnHome')}</Text>
             </TouchableOpacity>
           </View>
         </View>
 
         {/* Trust Badges */}
         <View style={styles.trustFooter}>
-          <Text style={styles.trustText}>
+          <Text style={[styles.trustText, { color: colors.textMuted }]}>
             {t('register.trustFooter')}
           </Text>
         </View>

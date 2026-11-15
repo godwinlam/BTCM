@@ -29,7 +29,10 @@
     "language": "语言",
     "selectLanguage": "选择语言",
     "industrialInfra": "工业级实体基础设施",
-    "openDashboard": "打开控制台"
+    "openDashboard": "打开控制台",
+    "theme": "主题",
+    "darkMode": "深色模式",
+    "lightMode": "浅色模式"
   },
   "auth": {
     "welcomeTitle": "去中心化比特币云端算力中心",

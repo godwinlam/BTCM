@@ -29,7 +29,10 @@
     "language": "語言",
     "selectLanguage": "選擇語言",
     "industrialInfra": "工業級實體基礎設施",
-    "openDashboard": "開啟控制台"
+    "openDashboard": "開啟控制台",
+    "theme": "主題",
+    "darkMode": "深色模式",
+    "lightMode": "淺色模式"
   },
   "auth": {
     "welcomeTitle": "去中心化比特幣雲端算力中心",

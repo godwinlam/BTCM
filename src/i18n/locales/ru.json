@@ -29,7 +29,10 @@
     "language": "Язык",
     "selectLanguage": "Выбрать язык",
     "industrialInfra": "Промышленная Инфраструктура",
-    "openDashboard": "Открыть Панель"
+    "openDashboard": "Открыть Панель",
+    "theme": "Тема",
+    "darkMode": "Темная тема",
+    "lightMode": "Светлая тема"
   },
   "auth": {
     "welcomeTitle": "Децентрализованный облачный майнинг Биткоин",
