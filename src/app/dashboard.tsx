@@ -661,7 +661,7 @@ export default function BitcoinMiningApp() {
     name: depositCurrency === 'BTC' ? 'Bitcoin' : depositCurrency === 'USDC' ? 'USD Coin' : 'Tether USD',
     network:
       depositCurrency === 'BTC'
-        ? 'BTC (Native SegWit Network)'
+        ? 'BTC (Taproot Network)'
         : depositCurrency === 'USDC'
           ? 'BNB (Binance Network)'
           : 'TRC20 (Tron Network)',
