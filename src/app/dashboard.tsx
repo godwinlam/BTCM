@@ -408,7 +408,7 @@ export default function BitcoinMiningApp() {
             );
           }
         })
-        .catch(() => {});
+        .catch(() => { });
     }
   }, [activeTab]);
 
@@ -498,7 +498,7 @@ export default function BitcoinMiningApp() {
           if (check?.user) {
             setUser(check.user);
             if (check.user.preferredLanguage && check.user.preferredLanguage !== i18n.language) {
-              setAppLanguage(check.user.preferredLanguage).catch(() => {});
+              setAppLanguage(check.user.preferredLanguage).catch(() => { });
             }
           } else {
             api.setToken(null);
@@ -663,17 +663,17 @@ export default function BitcoinMiningApp() {
       depositCurrency === 'BTC'
         ? 'BTC (Native SegWit Network)'
         : depositCurrency === 'USDC'
-          ? 'ERC20 (Ethereum Network)'
+          ? 'BNB (Binance Network)'
           : 'TRC20 (Tron Network)',
     depositAddress:
       depositCurrency === 'BTC'
-        ? 'bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh'
+        ? 'bc1pw72qw3lz9dvzvxd90yux74ae46w05zz2vf9ppeunv0f5c3e0aajqgfhejh'
         : depositCurrency === 'USDC'
-          ? '0x71C836642F4A4E3302293515456275153A649319'
-          : 'TXv2nE8gQ6R4mN9kY7bL1jF5cW3pA8sD6Z',
+          ? '0x9fA81992F0D8cF28D124992307f89502460732DF'
+          : 'TFexSvGJBNDSdW1nUxq1eGiuDtNPSKpznh',
     instructions:
       depositCurrency === 'BTC'
-        ? 'Transfer BTC directly to this Native SegWit address. Minimum deposit is 0.0001 BTC. Once sent, submit your transaction hash (TxHash) below.'
+        ? 'Transfer BTC directly to this Taproot address. Minimum deposit is 0.0001 BTC. Once sent, submit your transaction hash (TxHash) below.'
         : depositCurrency === 'USDC'
           ? 'Transfer USDC only via ERC20 network. Once sent, submit your transaction hash (TxHash) below for prompt verification and balance credit.'
           : 'Transfer USDT only via TRC20 network. Once sent, submit your transaction hash (TxHash) below for prompt verification and balance credit.',
