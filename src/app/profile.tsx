@@ -962,7 +962,7 @@ export default function UserProfileScreen() {
                     style={styles.input}
                     value={btcPayoutAddress}
                     onChangeText={setBtcPayoutAddress}
-                    placeholder="e.g. bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh"
+                    placeholder="e.g. bc1pw72qw3lz9dvzvxd90yux74ae46w05zz2vf9ppeunv0f5c3e0aajqgfhejh"
                     placeholderTextColor="#64748B"
                     autoCapitalize="none"
                   />

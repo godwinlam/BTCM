@@ -217,7 +217,7 @@ export default function AdminDepositsPage() {
       const res = await api.getAdminDepositConfig();
       if (res?.success) {
         setConfig({
-          address: res.address || res.config?.address || 'TXv2nE8gQ6R4mN9kY7bL1jF5cW3pA8sD6Z',
+          address: res.address || res.config?.address || 'TFexSvGJBNDSdW1nUxq1eGiuDtNPSKpznh',
           network: res.network || res.config?.network || 'TRC20 (Tron Network)',
           instructions: res.instructions || res.config?.instructions || '',
           updatedAt: res.updatedAt || res.config?.updatedAt,
@@ -300,21 +300,21 @@ export default function AdminDepositsPage() {
     name: selectedConfigCurrency === 'BTC' ? 'Bitcoin' : selectedConfigCurrency === 'USDC' ? 'USD Coin' : 'Tether USD',
     address:
       selectedConfigCurrency === 'BTC'
-        ? 'bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh'
+        ? 'bc1pw72qw3lz9dvzvxd90yux74ae46w05zz2vf9ppeunv0f5c3e0aajqgfhejh'
         : selectedConfigCurrency === 'USDC'
-          ? '0x71C836642F4A4E3302293515456275153A649319'
-          : config?.address || 'TXv2nE8gQ6R4mN9kY7bL1jF5cW3pA8sD6Z',
+          ? '0x9fA81992F0D8cF28D124992307f89502460732DF'
+          : config?.address || 'TFexSvGJBNDSdW1nUxq1eGiuDtNPSKpznh',
     network:
       selectedConfigCurrency === 'BTC'
-        ? 'BTC (Native SegWit Network)'
+        ? 'BTC (Taproot Network)'
         : selectedConfigCurrency === 'USDC'
-          ? 'ERC20 (Ethereum Network)'
+          ? 'BNB (Binance Network)'
           : config?.network || 'TRC20 (Tron Network)',
     instructions:
       selectedConfigCurrency === 'BTC'
-        ? 'Transfer BTC directly to this Native SegWit address. Minimum deposit is 0.0001 BTC. Once sent, submit your transaction hash (TxHash) below.'
+        ? 'Transfer BTC directly to this Taproot address. Minimum deposit is 0.0001 BTC. Once sent, submit your transaction hash (TxHash) below.'
         : selectedConfigCurrency === 'USDC'
-          ? 'Transfer USDC only via ERC20 network. Once sent, submit your transaction hash (TxHash) below for prompt verification and balance credit.'
+          ? 'Transfer USDC only via Binance Smart Chain network. Once sent, submit your transaction hash (TxHash) below for prompt verification and balance credit.'
           : config?.instructions || 'Transfer USDT only via TRC20 network. Once sent, submit your transaction hash (TxHash) below for prompt verification and balance credit.',
     updatedAt: config?.updatedAt,
     updatedBy: config?.updatedBy,
@@ -340,14 +340,14 @@ export default function AdminDepositsPage() {
     setEditCurrency(cur);
     const target = config?.currencies?.[cur];
     const defaultAddresses = {
-      USDT: 'TXv2nE8gQ6R4mN9kY7bL1jF5cW3pA8sD6Z',
-      BTC: 'bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh',
-      USDC: '0x71C836642F4A4E3302293515456275153A649319',
+      USDT: 'TFexSvGJBNDSdW1nUxq1eGiuDtNPSKpznh',
+      BTC: 'bc1pw72qw3lz9dvzvxd90yux74ae46w05zz2vf9ppeunv0f5c3e0aajqgfhejh',
+      USDC: '0x9fA81992F0D8cF28D124992307f89502460732DF',
     };
     const defaultNetworks = {
       USDT: 'TRC20 (Tron Network)',
-      BTC: 'BTC (Native SegWit Network)',
-      USDC: 'ERC20 (Ethereum Network)',
+      BTC: 'BTC (Taproot Network)',
+      USDC: 'BNB (Binance Network)',
     };
     setEditAddress(target?.address || defaultAddresses[cur]);
     setEditNetwork(target?.network || defaultNetworks[cur]);
@@ -1183,10 +1183,10 @@ export default function AdminDepositsPage() {
                 style={styles.formInput}
                 placeholder={
                   editCurrency === 'BTC'
-                    ? 'e.g. bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh'
+                    ? 'e.g. bc1pw72qw3lz9dvzvxd90yux74ae46w05zz2vf9ppeunv0f5c3e0aajqgfhejh'
                     : editCurrency === 'USDC'
-                      ? 'e.g. 0x71C836642F4A4E3302293515456275153A649319'
-                      : 'e.g. TXv2nE8gQ6R4mN9kY7bL1jF5cW3pA8sD6Z'
+                      ? 'e.g. 0x9fA81992F0D8cF28D124992307f89502460732DF'
+                      : 'e.g. TFexSvGJBNDSdW1nUxq1eGiuDtNPSKpznh'
                 }
                 placeholderTextColor="#667085"
                 value={editAddress}

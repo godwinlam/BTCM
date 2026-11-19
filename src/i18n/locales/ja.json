@@ -597,13 +597,13 @@
     "rejectionReason": "却下理由：",
     "instructions": {
       "USDT": "TRC20ネットワーク経由でのみUSDTを送金してください。送金後、迅速な確認と残高反映のために以下にトランザクションハッシュ（TxHash）を送信してください。",
-      "BTC": "このNative SegWitアドレスに直接BTCを送金してください。最低入金額は0.0001 BTCです。送金後、以下にTxHashを送信してください。",
-      "USDC": "ERC20ネットワーク経由でのみUSDCを送金してください。送金後、迅速な確認と残高反映のために以下にTxHashを送信してください。"
+      "BTC": "このTaprootアドレスに直接BTCを送金してください。最低入金額は0.0001 BTCです。送金後、以下にTxHashを送信してください。",
+      "USDC": "Binance Smart Chain（BNB）ネットワーク経由でのみUSDCを送金してください。送金後、迅速な確認と残高反映のために以下にTxHashを送信してください。"
     },
     "networks": {
       "USDT": "TRC20 (Tron ネットワーク)",
-      "BTC": "BTC (Native SegWit ネットワーク)",
-      "USDC": "ERC20 (Ethereum ネットワーク)"
+      "BTC": "BTC (Taproot ネットワーク)",
+      "USDC": "BNB (Binance ネットワーク)"
     },
     "placeholderBtcAmount": "例：0.01",
     "placeholderUsdtAmount": "例：1000",

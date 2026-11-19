@@ -614,27 +614,6 @@ export default function BitcoinMiningApp() {
     }
   };
 
-
-  const handleSettleDailyBinary = async () => {
-    try {
-      setSettlingBinary(true);
-      const res = await api.settleDailyBinary();
-      await refreshAllData();
-      if (res.result?.settled) {
-        const { pairsPaid, rewardUsd, pairsConfiscated, confiscatedVolume, starName } = res.result;
-        showNotification(
-          `⭐ Next Day Daily Settlement Complete: ${pairsPaid} pair paid (+${rewardUsd} USDT). ${pairsConfiscated > 0 ? `⚠️ ${pairsConfiscated} pair (${confiscatedVolume} USDT volume) confiscated under ${starName || 'Star'} Rule (limit: ${summary?.starRanking?.maxDailyPairs || 1} pair/day).` : 'No excess pairings confiscated.'}`
-        );
-      } else {
-        showNotification(`⭐ Settlement Notice: ${res.message || 'No ready pairing to settle.'}`);
-      }
-    } catch (err: any) {
-      showNotification(`Settlement error: ${err.message}`);
-    } finally {
-      setSettlingBinary(false);
-    }
-  };
-
   const loadDepositDetails = async () => {
     try {
       const res = await api.getDepositInfo();
@@ -655,31 +634,64 @@ export default function BitcoinMiningApp() {
     }
   };
 
-  const activeCurrencyConfig = depositInfo?.currencies?.[depositCurrency] || {
-    currency: depositCurrency,
-    symbol: depositCurrency,
-    name: depositCurrency === 'BTC' ? 'Bitcoin' : depositCurrency === 'USDC' ? 'USD Coin' : 'Tether USD',
-    network:
-      depositCurrency === 'BTC'
-        ? 'BTC (Taproot Network)'
-        : depositCurrency === 'USDC'
-          ? 'BNB (Binance Network)'
-          : 'TRC20 (Tron Network)',
-    depositAddress:
-      depositCurrency === 'BTC'
-        ? 'bc1pw72qw3lz9dvzvxd90yux74ae46w05zz2vf9ppeunv0f5c3e0aajqgfhejh'
-        : depositCurrency === 'USDC'
-          ? '0x9fA81992F0D8cF28D124992307f89502460732DF'
-          : 'TFexSvGJBNDSdW1nUxq1eGiuDtNPSKpznh',
-    instructions:
-      depositCurrency === 'BTC'
-        ? 'Transfer BTC directly to this Taproot address. Minimum deposit is 0.0001 BTC. Once sent, submit your transaction hash (TxHash) below.'
-        : depositCurrency === 'USDC'
-          ? 'Transfer USDC only via Binance Smart Chain network. Once sent, submit your transaction hash (TxHash) below for prompt verification and balance credit.'
-          : 'Transfer USDT only via TRC20 network. Once sent, submit your transaction hash (TxHash) below for prompt verification and balance credit.',
-    minDeposit: depositCurrency === 'BTC' ? 0.0001 : 10,
-    decimals: depositCurrency === 'BTC' ? 8 : 2,
+  const DEFAULT_CURRENCY_CONFIG: Record<string, {
+    currency: 'USDT' | 'BTC' | 'USDC';
+    symbol: string;
+    name: string;
+    network: string;
+    depositAddress: string;
+    instructions: string;
+    minDeposit: number;
+    decimals: number;
+  }> = {
+    USDT: {
+      currency: 'USDT',
+      symbol: '₮',
+      name: 'Tether USD',
+      network: 'TRC20 (Tron Network)',
+      depositAddress: 'TFexSvGJBNDSdW1nUxq1eGiuDtNPSKpznh',
+      instructions: 'Transfer USDT only via TRC20 network. Once sent, submit your transaction hash (TxHash) below for prompt verification and balance credit.',
+      minDeposit: 10,
+      decimals: 2,
+    },
+    BTC: {
+      currency: 'BTC',
+      symbol: '₿',
+      name: 'Bitcoin',
+      network: 'BTC (Taproot Network)',
+      depositAddress: 'bc1pw72qw3lz9dvzvxd90yux74ae46w05zz2vf9ppeunv0f5c3e0aajqgfhejh',
+      instructions: 'Transfer BTC directly to this Taproot address. Minimum deposit is 0.0001 BTC. Once sent, submit your transaction hash (TxHash) below.',
+      minDeposit: 0.0001,
+      decimals: 8,
+    },
+    USDC: {
+      currency: 'USDC',
+      symbol: '$',
+      name: 'USD Coin',
+      network: 'BNB (Binance Network)',
+      depositAddress: '0x9fA81992F0D8cF28D124992307f89502460732DF',
+      instructions: 'Transfer USDC only via Binance Smart Chain network. Once sent, submit your transaction hash (TxHash) below for prompt verification and balance credit.',
+      minDeposit: 10,
+      decimals: 2,
+    },
   };
+
+  const rawServerConfig = depositInfo?.currencies?.[depositCurrency];
+  const isLegacyDummyAddress =
+    rawServerConfig?.depositAddress === 'TXv2nE8gQ6R4mN9kY7bL1jF5cW3pA8sD6Z' ||
+    rawServerConfig?.depositAddress === 'bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh' ||
+    Boolean(rawServerConfig?.depositAddress?.startsWith('0x71C8')) ||
+    Boolean(rawServerConfig?.depositAddress?.startsWith('0x71C2'));
+
+  const activeCurrencyConfig = (!rawServerConfig || isLegacyDummyAddress)
+    ? DEFAULT_CURRENCY_CONFIG[depositCurrency]
+    : {
+        ...DEFAULT_CURRENCY_CONFIG[depositCurrency],
+        ...rawServerConfig,
+        depositAddress: rawServerConfig.depositAddress || DEFAULT_CURRENCY_CONFIG[depositCurrency].depositAddress,
+        network: rawServerConfig.network || DEFAULT_CURRENCY_CONFIG[depositCurrency].network,
+        instructions: rawServerConfig.instructions || DEFAULT_CURRENCY_CONFIG[depositCurrency].instructions,
+      };
 
   const handleSelectDepositCurrency = (cur: 'USDT' | 'BTC' | 'USDC') => {
     setDepositCurrency(cur);
@@ -692,9 +704,12 @@ export default function BitcoinMiningApp() {
 
   const getDepositNetwork = () => {
     const net = activeCurrencyConfig.network;
-    const isStandard = !net || net.includes('TRC20') || net.includes('SegWit') || net.includes('ERC20');
+    const isStandard = !net || net.includes('TRC20') || net.includes('Taproot') || net.includes('BNB');
     if (isStandard) {
-      return t(`depositModal.networks.${depositCurrency}`);
+      const translated = t(`depositModal.networks.${depositCurrency}`);
+      if (translated && !translated.startsWith('depositModal.networks')) {
+        return translated;
+      }
     }
     return net;
   };
@@ -707,7 +722,10 @@ export default function BitcoinMiningApp() {
       custom.includes('Transfer BTC directly') ||
       custom.includes('Transfer USDC only');
     if (isStandard) {
-      return t(`depositModal.instructions.${depositCurrency}`);
+      const translated = t(`depositModal.instructions.${depositCurrency}`);
+      if (translated && !translated.startsWith('depositModal.instructions')) {
+        return translated;
+      }
     }
     return custom;
   };

@@ -597,13 +597,13 @@
     "rejectionReason": "驳回原因：",
     "instructions": {
       "USDT": "仅支持通过 TRC20 网络向此地址充值 USDT。转账完成后，请在下方提交区块链交易哈希（TxHash），以便系统快速审核与充值到账。",
-      "BTC": "请向此原生隔离见证（Native SegWit）地址直接充值 BTC。最低充值金额为 0.0001 BTC。转账完成后，请在下方提交交易哈希（TxHash）。",
-      "USDC": "仅支持通过 ERC20 网络向此地址充值 USDC。转账完成后，请在下方提交区块链交易哈希（TxHash），以便系统审核入账。"
+      "BTC": "请向此 Taproot 地址直接充值 BTC。最低充值金额为 0.0001 BTC。转账完成后，请在下方提交交易哈希（TxHash）。",
+      "USDC": "仅支持通过币安智能链（Binance Smart Chain）网络向此地址充值 USDC。转账完成后，请在下方提交区块链交易哈希（TxHash），以便系统审核入账。"
     },
     "networks": {
       "USDT": "TRC20 (波场 TRON 网络)",
-      "BTC": "BTC (原生隔离见证 SegWit 网络)",
-      "USDC": "ERC20 (以太坊 Ethereum 网络)"
+      "BTC": "BTC (Taproot 网络)",
+      "USDC": "BNB (币安 Binance 网络)"
     },
     "placeholderBtcAmount": "例如：0.01",
     "placeholderUsdtAmount": "例如：1000",

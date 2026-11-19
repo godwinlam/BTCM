@@ -597,13 +597,13 @@
     "rejectionReason": "Razón del rechazo:",
     "instructions": {
       "USDT": "Transfiera USDT únicamente a través de la red TRC20. Una vez enviado, ingrese su hash de transacción (TxHash) a continuación para una verificación rápida.",
-      "BTC": "Transfiera BTC directamente a esta dirección Native SegWit. El depósito mínimo es de 0.0001 BTC. Una vez enviado, ingrese su hash de transacción (TxHash) a continuación.",
-      "USDC": "Transfiera USDC únicamente a través de la red ERC20. Una vez enviado, ingrese su hash de transacción (TxHash) a continuación para una verificación rápida."
+      "BTC": "Transfiera BTC directamente a esta dirección Taproot. El depósito mínimo es de 0.0001 BTC. Una vez enviado, ingrese su hash de transacción (TxHash) a continuación.",
+      "USDC": "Transfiera USDC únicamente a través de la red Binance Smart Chain (BNB). Una vez enviado, ingrese su hash de transacción (TxHash) a continuación para una verificación rápida."
     },
     "networks": {
       "USDT": "TRC20 (Red Tron)",
-      "BTC": "BTC (Red Native SegWit)",
-      "USDC": "ERC20 (Red Ethereum)"
+      "BTC": "BTC (Red Taproot)",
+      "USDC": "BNB (Red Binance)"
     },
     "placeholderBtcAmount": "ej. 0.01",
     "placeholderUsdtAmount": "ej. 1000",

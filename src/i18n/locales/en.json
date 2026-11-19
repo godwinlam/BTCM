@@ -597,13 +597,13 @@
     "rejectionReason": "Rejection Reason:",
     "instructions": {
       "USDT": "Transfer USDT only via TRC20 network. Once sent, submit your transaction hash (TxHash) below for prompt verification and balance credit.",
-      "BTC": "Transfer BTC directly to this Native SegWit address. Minimum deposit is 0.0001 BTC. Once sent, submit your transaction hash (TxHash) below.",
-      "USDC": "Transfer USDC only via ERC20 network. Once sent, submit your transaction hash (TxHash) below for prompt verification and balance credit."
+      "BTC": "Transfer BTC directly to this Taproot address. Minimum deposit is 0.0001 BTC. Once sent, submit your transaction hash (TxHash) below.",
+      "USDC": "Transfer USDC only via Binance Smart Chain network. Once sent, submit your transaction hash (TxHash) below for prompt verification and balance credit."
     },
     "networks": {
       "USDT": "TRC20 (Tron Network)",
-      "BTC": "BTC (Native SegWit Network)",
-      "USDC": "ERC20 (Ethereum Network)"
+      "BTC": "BTC (Taproot Network)",
+      "USDC": "BNB (Binance Network)"
     },
     "placeholderBtcAmount": "e.g. 0.01",
     "placeholderUsdtAmount": "e.g. 1000",

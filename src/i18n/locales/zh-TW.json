@@ -597,13 +597,13 @@
     "rejectionReason": "駁回原因：",
     "instructions": {
       "USDT": "僅支援透過 TRC20 網絡向此地址充值 USDT。轉賬完成後，請在下方提交區塊鏈交易哈希（TxHash），以便系統快速審核與入賬。",
-      "BTC": "請向此原生隔離見證（Native SegWit）地址直接充值 BTC。最低充值金額為 0.0001 BTC。轉賬完成後，請在下方提交交易哈希（TxHash）。",
-      "USDC": "僅支援透過 ERC20 網絡向此地址充值 USDC。轉賬完成後，請在下方提交區塊鏈交易哈希（TxHash），以便系統審核入賬。"
+      "BTC": "請向此 Taproot 地址直接充值 BTC。最低充值金額為 0.0001 BTC。轉賬完成後，請在下方提交交易哈希（TxHash）。",
+      "USDC": "僅支援透過幣安智能鏈（Binance Smart Chain）網絡向此地址充值 USDC。轉賬完成後，請在下方提交區塊鏈交易哈希（TxHash），以便系統審核入賬。"
     },
     "networks": {
       "USDT": "TRC20 (波場 TRON 網絡)",
-      "BTC": "BTC (原生隔離見證 SegWit 網絡)",
-      "USDC": "ERC20 (以太坊 Ethereum 網絡)"
+      "BTC": "BTC (Taproot 網絡)",
+      "USDC": "BNB (幣安 Binance 網絡)"
     },
     "placeholderBtcAmount": "例如：0.01",
     "placeholderUsdtAmount": "例如：1000",

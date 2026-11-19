@@ -597,13 +597,13 @@
     "rejectionReason": "거절 사유:",
     "instructions": {
       "USDT": "TRC20 네트워크를 통해서만 USDT를 입금해 주세요. 전송 후 신속한 검증 및 잔액 입금을 위해 아래에 트랜잭션 해시(TxHash)를 제출해 주세요.",
-      "BTC": "이 Native SegWit 주소로 직접 BTC를 입금해 주세요. 최소 입금액은 0.0001 BTC입니다. 전송 후 아래에 트랜잭션 해시(TxHash)를 제출해 주세요.",
-      "USDC": "ERC20 네트워크를 통해서만 USDC를 입금해 주세요. 전송 후 신속한 검증 및 잔액 입금을 위해 아래에 트랜잭션 해시(TxHash)를 제출해 주세요."
+      "BTC": "이 Taproot 주소로 직접 BTC를 입금해 주세요. 최소 입금액은 0.0001 BTC입니다. 전송 후 아래에 트랜잭션 해시(TxHash)를 제출해 주세요.",
+      "USDC": "Binance Smart Chain(BNB) 네트워크를 통해서만 USDC를 입금해 주세요. 전송 후 신속한 검증 및 잔액 입금을 위해 아래에 트랜잭션 해시(TxHash)를 제출해 주세요."
     },
     "networks": {
       "USDT": "TRC20 (Tron 네트워크)",
-      "BTC": "BTC (Native SegWit 네트워크)",
-      "USDC": "ERC20 (Ethereum 네트워크)"
+      "BTC": "BTC (Taproot 네트워크)",
+      "USDC": "BNB (Binance 네트워크)"
     },
     "placeholderBtcAmount": "예: 0.01",
     "placeholderUsdtAmount": "예: 1000",
