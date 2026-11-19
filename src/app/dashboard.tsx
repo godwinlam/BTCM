@@ -675,7 +675,7 @@ export default function BitcoinMiningApp() {
       depositCurrency === 'BTC'
         ? 'Transfer BTC directly to this Taproot address. Minimum deposit is 0.0001 BTC. Once sent, submit your transaction hash (TxHash) below.'
         : depositCurrency === 'USDC'
-          ? 'Transfer USDC only via ERC20 network. Once sent, submit your transaction hash (TxHash) below for prompt verification and balance credit.'
+          ? 'Transfer USDC only via Binance Smart Chain network. Once sent, submit your transaction hash (TxHash) below for prompt verification and balance credit.'
           : 'Transfer USDT only via TRC20 network. Once sent, submit your transaction hash (TxHash) below for prompt verification and balance credit.',
     minDeposit: depositCurrency === 'BTC' ? 0.0001 : 10,
     decimals: depositCurrency === 'BTC' ? 8 : 2,
