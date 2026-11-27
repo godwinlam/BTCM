@@ -304,17 +304,76 @@ export default function AdminUserDetailPage() {
   return (
     <View style={[styles.container, { backgroundColor: bg }]}>
       {/* Header Bar */}
-      <View style={[styles.topBar, { backgroundColor: cardBg, borderBottomColor: borderCol }]}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-          <TouchableOpacity
-            style={[styles.backBtn, { backgroundColor: subCardBg, borderColor: borderCol }]}
-            onPress={() => router.push('/admin')}
+      <View
+        style={[
+          styles.topBar,
+          {
+            backgroundColor: cardBg,
+            borderBottomColor: borderCol,
+            flexDirection: isMobile ? 'column' : 'row',
+            alignItems: isMobile ? 'stretch' : 'center',
+            paddingHorizontal: isMobile ? 14 : 20,
+          },
+        ]}
+      >
+        <View
+          style={{
+            flexDirection: isMobile ? 'column' : 'row',
+            alignItems: isMobile ? 'flex-start' : 'center',
+            gap: isMobile ? 10 : 12,
+            flex: isMobile ? undefined : 1,
+            minWidth: 0,
+          }}
+        >
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              width: isMobile ? '100%' : 'auto',
+              gap: 8,
+            }}
           >
-            <Text style={[styles.backBtnText, { color: textPrimary }]}>← Back to Users</Text>
-          </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.backBtn, { backgroundColor: subCardBg, borderColor: borderCol }]}
+              onPress={() => router.push('/admin')}
+            >
+              <Text style={[styles.backBtnText, { color: textPrimary }]}>← Back to Users</Text>
+            </TouchableOpacity>
 
-          <View>
-            <Text style={[styles.headerTitle, { color: textPrimary }]}>
+            {isMobile && (
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                <TouchableOpacity
+                  style={[styles.backBtn, { backgroundColor: subCardBg, borderColor: borderCol }]}
+                  onPress={toggleTheme}
+                >
+                  <Text style={{ color: textPrimary, fontSize: 12, fontWeight: '700' }}>
+                    {isDark ? '☀️ Light' : '🌙 Dark'}
+                  </Text>
+                </TouchableOpacity>
+
+                {user && (
+                  <TouchableOpacity
+                    style={[
+                      styles.quickStatusBtn,
+                      {
+                        backgroundColor: isSuspended ? 'rgba(0,230,118,0.14)' : 'rgba(239,68,68,0.14)',
+                        borderColor: isSuspended ? '#00E676' : '#EF4444',
+                      },
+                    ]}
+                    onPress={handleToggleQuickStatus}
+                  >
+                    <Text style={{ color: isSuspended ? '#00E676' : '#EF4444', fontWeight: '800', fontSize: 12 }}>
+                      {isSuspended ? '✓ Activate' : '⛔ Suspend'}
+                    </Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+            )}
+          </View>
+
+          <View style={{ flexShrink: 1, minWidth: 0, width: isMobile ? '100%' : 'auto' }}>
+            <Text style={[styles.headerTitle, { color: textPrimary, fontSize: isMobile ? 16 : 18 }]}>
               {user ? `${user.fullName || user.username} (@${user.username})` : 'Loading User...'}
             </Text>
             <Text style={{ color: textSecondary, fontSize: 12 }}>
@@ -323,33 +382,35 @@ export default function AdminUserDetailPage() {
           </View>
         </View>
 
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-          <TouchableOpacity
-            style={[styles.backBtn, { backgroundColor: subCardBg, borderColor: borderCol }]}
-            onPress={toggleTheme}
-          >
-            <Text style={{ color: textPrimary, fontSize: 12, fontWeight: '700' }}>
-              {isDark ? '☀️ Light' : '🌙 Dark'}
-            </Text>
-          </TouchableOpacity>
-
-          {user && (
+        {!isMobile && (
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
             <TouchableOpacity
-              style={[
-                styles.quickStatusBtn,
-                {
-                  backgroundColor: isSuspended ? 'rgba(0,230,118,0.14)' : 'rgba(239,68,68,0.14)',
-                  borderColor: isSuspended ? '#00E676' : '#EF4444',
-                },
-              ]}
-              onPress={handleToggleQuickStatus}
+              style={[styles.backBtn, { backgroundColor: subCardBg, borderColor: borderCol }]}
+              onPress={toggleTheme}
             >
-              <Text style={{ color: isSuspended ? '#00E676' : '#EF4444', fontWeight: '800', fontSize: 12 }}>
-                {isSuspended ? '✓ Activate User' : '⛔ Suspend User'}
+              <Text style={{ color: textPrimary, fontSize: 12, fontWeight: '700' }}>
+                {isDark ? '☀️ Light' : '🌙 Dark'}
               </Text>
             </TouchableOpacity>
-          )}
-        </View>
+
+            {user && (
+              <TouchableOpacity
+                style={[
+                  styles.quickStatusBtn,
+                  {
+                    backgroundColor: isSuspended ? 'rgba(0,230,118,0.14)' : 'rgba(239,68,68,0.14)',
+                    borderColor: isSuspended ? '#00E676' : '#EF4444',
+                  },
+                ]}
+                onPress={handleToggleQuickStatus}
+              >
+                <Text style={{ color: isSuspended ? '#00E676' : '#EF4444', fontWeight: '800', fontSize: 12 }}>
+                  {isSuspended ? '✓ Activate User' : '⛔ Suspend User'}
+                </Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        )}
       </View>
 
       {bannerNotice && (
