@@ -48,7 +48,7 @@ export default function SignInScreen() {
       const res = await api.login(id, pass);
       if (res.token) {
         if (res.user?.preferredLanguage) {
-          setAppLanguage(res.user.preferredLanguage).catch(() => {});
+          setAppLanguage(res.user.preferredLanguage).catch(() => { });
         }
         setSuccessMessage(`Welcome back, ${res.user?.fullName || res.user?.username || 'Miner'}! Redirecting...`);
         setTimeout(() => {
@@ -111,7 +111,7 @@ export default function SignInScreen() {
             <View style={styles.inputWrapper}>
               <TextInput
                 style={styles.input}
-                placeholder="e.g. godwin_miner or user@example.com"
+                placeholder="e.g. user@example.com"
                 placeholderTextColor="#64748B"
                 value={loginId}
                 onChangeText={(val) => {

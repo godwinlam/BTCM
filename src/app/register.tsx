@@ -345,7 +345,7 @@ export default function SignUpScreen() {
             </Text>
           </View>
 
-          <View style={styles.inputGroup}>
+          {/* <View style={styles.inputGroup}>
             <View style={styles.labelRowWithBadge}>
               <Text style={[styles.label, { color: colors.textSecondary }]}>{t('register.specificPlacementParentLabel')}</Text>
               {!!placementUsername && (
@@ -371,7 +371,7 @@ export default function SignUpScreen() {
             <Text style={[styles.fieldHint, { color: colors.textMuted }]}>
               {t('register.placementParentHint', { parent: placementUsername || 'root' })}
             </Text>
-          </View>
+          </View> */}
 
           {/* Placement Notice Banner */}
           <View style={[styles.placementRuleBox, !isDark && { backgroundColor: 'rgba(247, 147, 26, 0.06)' }]}>

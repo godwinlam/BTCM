@@ -12,6 +12,8 @@ import ja from './locales/ja.json';
 import ko from './locales/ko.json';
 import es from './locales/es.json';
 import ru from './locales/ru.json';
+import th from './locales/th.json';
+import vi from './locales/vi.json';
 
 export const LANGUAGE_STORAGE_KEY = 'btcm_app_language';
 
@@ -30,6 +32,8 @@ export const SUPPORTED_LANGUAGES: SupportedLanguage[] = [
   { code: 'ko', name: 'Korean', nativeName: '한국어', flag: '🇰🇷' },
   { code: 'es', name: 'Spanish', nativeName: 'Español', flag: '🇪🇸' },
   { code: 'ru', name: 'Russian', nativeName: 'Русский', flag: '🇷🇺' },
+  { code: 'th', name: 'Thai', nativeName: 'ไทย', flag: '🇹🇭' },
+  { code: 'vi', name: 'Vietnamese', nativeName: 'Tiếng Việt', flag: '🇻🇳' },
 ];
 
 export const resources = {
@@ -40,6 +44,8 @@ export const resources = {
   ko: { translation: ko },
   es: { translation: es },
   ru: { translation: ru },
+  th: { translation: th },
+  vi: { translation: vi },
 } as const;
 
 /**
@@ -62,6 +68,8 @@ export function getDeviceLanguage(): string {
       if (tag.startsWith('ko')) return 'ko';
       if (tag.startsWith('es')) return 'es';
       if (tag.startsWith('ru')) return 'ru';
+      if (tag.startsWith('th')) return 'th';
+      if (tag.startsWith('vi')) return 'vi';
     }
 
     // 2. Native Environment (iOS / Android) - Safely use expo-localization if available
@@ -83,6 +91,8 @@ export function getDeviceLanguage(): string {
           if (code === 'ko') return 'ko';
           if (code === 'es') return 'es';
           if (code === 'ru') return 'ru';
+          if (code === 'th') return 'th';
+          if (code === 'vi') return 'vi';
         }
       } catch {
         // ignore native locale failure

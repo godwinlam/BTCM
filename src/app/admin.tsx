@@ -48,6 +48,8 @@ interface ManagedUser {
   starBadge?: string;
   sponsorId?: number;
   sponsorUsername?: string;
+  sponsorFullName?: string;
+  sponsor?: { _id?: string; username?: string; fullName?: string } | null;
   parentUsername?: string;
   binaryPosition?: 'A' | 'B';
   activeContractsCount: number;
@@ -121,33 +123,6 @@ export default function AdminUserManagement() {
     setBannerNotice({ text: msg, type });
     setTimeout(() => setBannerNotice(null), 5000);
   };
-
-  // Modals state
-  const [selectedUser, setSelectedUser] = useState<ManagedUser | null>(null);
-  const [viewModalVisible, setViewModalVisible] = useState(false);
-  const [detailedUserLoading, setDetailedUserLoading] = useState(false);
-  const [detailedUser, setDetailedUser] = useState<any>(null);
-
-  // Edit User State
-  const [editFullName, setEditFullName] = useState('');
-  const [editEmail, setEditEmail] = useState('');
-  const [editRole, setEditRole] = useState<'admin' | 'user'>('user');
-  const [editStatus, setEditStatus] = useState<'ACTIVE' | 'SUSPENDED'>('ACTIVE');
-  const [editStarRank, setEditStarRank] = useState('0');
-  const [isUpdatingUser, setIsUpdatingUser] = useState(false);
-
-  // Wallet Adjust Modal
-  const [walletModalVisible, setWalletModalVisible] = useState(false);
-  const [walletCurrency, setWalletCurrency] = useState<'USDT' | 'BTC'>('USDT');
-  const [walletAdjustType, setWalletAdjustType] = useState<'CREDIT' | 'DEBIT'>('CREDIT');
-  const [walletAmount, setWalletAmount] = useState('');
-  const [walletReason, setWalletReason] = useState('');
-  const [isAdjustingWallet, setIsAdjustingWallet] = useState(false);
-
-  // Reset Password Modal
-  const [resetPwdModalVisible, setResetPwdModalVisible] = useState(false);
-  const [newPassword, setNewPassword] = useState('');
-  const [isResettingPwd, setIsResettingPwd] = useState(false);
 
   // Create User Modal
   const [createModalVisible, setCreateModalVisible] = useState(false);
@@ -282,138 +257,6 @@ export default function AdminUserManagement() {
     setStatusFilter(status);
     setPage(1);
     loadUsers(1, searchQuery, roleFilter, status);
-  };
-
-  // Open User Detail & Edit Modal
-  const handleOpenUserDetail = async (user: ManagedUser) => {
-    setSelectedUser(user);
-    setEditFullName(user.fullName || '');
-    setEditEmail(user.email || '');
-    setEditRole(user.role || 'user');
-    setEditStatus(user.status || 'ACTIVE');
-    setEditStarRank(String(user.starRank || 0));
-    setViewModalVisible(true);
-
-    setDetailedUserLoading(true);
-    try {
-      const res = await api.getAdminUser(user.id);
-      if (res?.success) {
-        setDetailedUser(res);
-      }
-    } catch (err: any) {
-      showNotice('Failed to fetch user full details: ' + err.message, 'error');
-    } finally {
-      setDetailedUserLoading(false);
-    }
-  };
-
-  // Submit User Details Edit
-  const handleSaveUserDetails = async () => {
-    if (!selectedUser) return;
-    setIsUpdatingUser(true);
-    try {
-      const res = await api.updateAdminUser(selectedUser.id, {
-        fullName: editFullName.trim(),
-        email: editEmail.trim(),
-        role: editRole,
-        status: editStatus,
-        starRank: parseInt(editStarRank, 10) || 0,
-      });
-
-      if (res?.success) {
-        showNotice(`User @${selectedUser.username} updated successfully!`, 'success');
-        setViewModalVisible(false);
-        loadUsers();
-        loadStats();
-      }
-    } catch (err: any) {
-      showNotice(err.message || 'Failed to update user', 'error');
-    } finally {
-      setIsUpdatingUser(false);
-    }
-  };
-
-  // Toggle User Status Quick Action (Suspend / Activate)
-  const handleToggleStatus = async (user: ManagedUser) => {
-    const nextStatus = user.status === 'ACTIVE' ? 'SUSPENDED' : 'ACTIVE';
-    try {
-      const res = await api.updateAdminUser(user.id, { status: nextStatus });
-      if (res?.success) {
-        showNotice(`@${user.username} is now ${nextStatus}`, 'success');
-        loadUsers();
-        loadStats();
-      }
-    } catch (err: any) {
-      showNotice(err.message || 'Failed to toggle status', 'error');
-    }
-  };
-
-  // Open Wallet Adjustment Modal
-  const handleOpenWalletModal = (user: ManagedUser) => {
-    setSelectedUser(user);
-    setWalletCurrency('USDT');
-    setWalletAdjustType('CREDIT');
-    setWalletAmount('');
-    setWalletReason('');
-    setWalletModalVisible(true);
-  };
-
-  const handleConfirmWalletAdjust = async () => {
-    if (!selectedUser) return;
-    const numAmt = parseFloat(walletAmount);
-    if (!numAmt || numAmt <= 0) {
-      showNotice('Please enter a valid amount greater than 0', 'error');
-      return;
-    }
-
-    setIsAdjustingWallet(true);
-    try {
-      const res = await api.adjustUserWallet(selectedUser.id, {
-        currency: walletCurrency,
-        type: walletAdjustType,
-        amount: numAmt,
-        reason: walletReason.trim() || undefined,
-      });
-
-      if (res?.success) {
-        showNotice(res.message, 'success');
-        setWalletModalVisible(false);
-        loadUsers();
-        loadStats();
-      }
-    } catch (err: any) {
-      showNotice(err.message || 'Failed to adjust wallet balance', 'error');
-    } finally {
-      setIsAdjustingWallet(false);
-    }
-  };
-
-  // Open Reset Password Modal
-  const handleOpenResetPwdModal = (user: ManagedUser) => {
-    setSelectedUser(user);
-    setNewPassword('');
-    setResetPwdModalVisible(true);
-  };
-
-  const handleConfirmResetPwd = async () => {
-    if (!selectedUser) return;
-    if (!newPassword || newPassword.length < 6) {
-      showNotice('Password must be at least 6 characters', 'error');
-      return;
-    }
-
-    setIsResettingPwd(true);
-    try {
-      const res = await api.resetUserPassword(selectedUser.id, newPassword);
-      if (res?.success) {
-        showNotice(`Password for @${selectedUser.username} successfully reset!`, 'success');
-        setResetPwdModalVisible(false);
-      }
-    } catch (err: any) {
-      showNotice(err.message || 'Failed to reset password', 'error');
-    } finally {
-      setIsResettingPwd(false);
-    }
   };
 
   // Submit Create New User
@@ -787,7 +630,7 @@ export default function AdminUserManagement() {
                 {/* Table Header Row */}
                 <View style={styles.tableHeaderRow}>
                   <Text style={[styles.th, { width: 60 }]}>ID</Text>
-                  <Text style={[styles.th, { width: 180 }]}>USER / EMAIL</Text>
+                  <Text style={[styles.th, { width: 200 }]}>NAME / USER / EMAIL</Text>
                   <Text style={[styles.th, { width: 90 }]}>ROLE</Text>
                   <Text style={[styles.th, { width: 95 }]}>STATUS</Text>
                   <Text style={[styles.th, { width: 100 }]}>STAR RANK</Text>
@@ -795,8 +638,7 @@ export default function AdminUserManagement() {
                   <Text style={[styles.th, { width: 140 }]}>BITCOIN (ROI)</Text>
                   <Text style={[styles.th, { width: 110 }]}>INVESTED</Text>
                   <Text style={[styles.th, { width: 85 }]}>RIGS</Text>
-                  <Text style={[styles.th, { width: 120 }]}>SPONSOR</Text>
-                  <Text style={[styles.th, { width: 280 }]}>ACTIONS</Text>
+                  <Text style={[styles.th, { width: 150 }]}>SPONSOR</Text>
                 </View>
 
                 {/* Table Body Rows */}
@@ -805,10 +647,18 @@ export default function AdminUserManagement() {
                   const isSuspended = u.status === 'SUSPENDED';
 
                   return (
-                    <View key={u.id} style={styles.tableRow}>
+                    <TouchableOpacity
+                      key={u._id || u.id}
+                      style={styles.tableRow}
+                      activeOpacity={0.75}
+                      onPress={() => router.push(`/admin-user?id=${u._id || u.id}`)}
+                    >
                       <Text style={[styles.td, { width: 60, color: '#64748B', fontWeight: '700' }]}>#{u.id}</Text>
-                      <View style={{ width: 180, gap: 2 }}>
+                      <View style={{ width: 200, gap: 2 }}>
                         <Text style={[styles.td, { color: '#FFFFFF', fontWeight: '800' }]} numberOfLines={1}>
+                          {u.fullName || u.username}
+                        </Text>
+                        <Text style={{ color: '#00F0FF', fontSize: 11, fontWeight: '700' }} numberOfLines={1}>
                           @{u.username}
                         </Text>
                         <Text style={{ color: '#8A99AD', fontSize: 10 }} numberOfLines={1}>
@@ -875,34 +725,23 @@ export default function AdminUserManagement() {
                       </Text>
 
                       {/* Sponsor */}
-                      <Text style={[styles.td, { width: 120, color: '#8A99AD' }]} numberOfLines={1}>
-                        {u.sponsorUsername ? `@${u.sponsorUsername}` : 'Direct Root'}
-                      </Text>
-
-                      {/* Actions Cluster */}
-                      <View style={{ width: 280, flexDirection: 'row', gap: 6 }}>
-                        <TouchableOpacity style={styles.actionBtnInspect} onPress={() => handleOpenUserDetail(u)}>
-                          <Text style={styles.actionBtnInspectText}>👁️ Inspect</Text>
-                        </TouchableOpacity>
-
-                        <TouchableOpacity style={styles.actionBtnWallet} onPress={() => handleOpenWalletModal(u)}>
-                          <Text style={styles.actionBtnWalletText}>💰 Wallet</Text>
-                        </TouchableOpacity>
-
-                        <TouchableOpacity style={styles.actionBtnPwd} onPress={() => handleOpenResetPwdModal(u)}>
-                          <Text style={styles.actionBtnPwdText}>🔑 Pwd</Text>
-                        </TouchableOpacity>
-
-                        <TouchableOpacity
-                          style={isSuspended ? styles.actionBtnActivate : styles.actionBtnSuspend}
-                          onPress={() => handleToggleStatus(u)}
-                        >
-                          <Text style={isSuspended ? styles.actionBtnActivateText : styles.actionBtnSuspendText}>
-                            {isSuspended ? 'Unban' : 'Suspend'}
+                      <View style={{ width: 150, gap: 2 }}>
+                        {u.sponsorUsername || u.sponsor?.username ? (
+                          <>
+                            <Text style={[styles.td, { color: '#FFFFFF', fontWeight: '700' }]} numberOfLines={1}>
+                              {u.sponsorFullName || u.sponsor?.fullName || u.sponsorUsername || u.sponsor?.username}
+                            </Text>
+                            <Text style={{ color: '#00F0FF', fontSize: 10, fontWeight: '600' }} numberOfLines={1}>
+                              @{u.sponsorUsername || u.sponsor?.username}
+                            </Text>
+                          </>
+                        ) : (
+                          <Text style={[styles.td, { color: '#8A99AD' }]} numberOfLines={1}>
+                            Direct Root
                           </Text>
-                        </TouchableOpacity>
+                        )}
                       </View>
-                    </View>
+                    </TouchableOpacity>
                   );
                 })}
               </View>
@@ -939,374 +778,7 @@ export default function AdminUserManagement() {
       </ScrollView>
 
       {/* ========================================================= */}
-      {/* MODAL 1: VIEW & EDIT USER PROFILE DETAILS */}
-      {/* ========================================================= */}
-      <Modal visible={viewModalVisible} transparent animationType="fade">
-        <View style={styles.modalOverlay}>
-          <View style={[styles.modalBoxLarge, isMobile && styles.modalBoxMobile]}>
-            <View style={styles.modalHeader}>
-              <View>
-                <Text style={styles.modalTitle}>User Profile & Placement Inspection</Text>
-                <Text style={styles.modalSub}>
-                  Deep audit of @{selectedUser?.username} (ID: #{selectedUser?.id})
-                </Text>
-              </View>
-              <TouchableOpacity style={styles.modalCloseBtn} onPress={() => setViewModalVisible(false)}>
-                <Text style={styles.modalCloseBtnText}>✕</Text>
-              </TouchableOpacity>
-            </View>
-
-            <ScrollView style={{ maxHeight: 520 }}>
-              {detailedUserLoading ? (
-                <View style={{ padding: 40, alignItems: 'center' }}>
-                  <ActivityIndicator size="large" color="#00F0FF" />
-                  <Text style={{ color: '#8A99AD', marginTop: 10 }}>Fetching complete audit ledger & tree data...</Text>
-                </View>
-              ) : (
-                <View style={{ gap: 16 }}>
-                  {/* Editable Core Fields */}
-                  <View style={styles.editCard}>
-                    <Text style={styles.editCardTitle}>Core Profile & Access Role</Text>
-                    <View style={styles.formRow}>
-                      <View style={styles.formCol}>
-                        <Text style={styles.fieldLabel}>Full Name</Text>
-                        <TextInput
-                          style={styles.formInput}
-                          value={editFullName}
-                          onChangeText={setEditFullName}
-                          placeholder="Full Name"
-                          placeholderTextColor="#64748B"
-                        />
-                      </View>
-                      <View style={styles.formCol}>
-                        <Text style={styles.fieldLabel}>Email Address</Text>
-                        <TextInput
-                          style={styles.formInput}
-                          value={editEmail}
-                          onChangeText={setEditEmail}
-                          placeholder="Email"
-                          placeholderTextColor="#64748B"
-                          autoCapitalize="none"
-                        />
-                      </View>
-                    </View>
-
-                    <View style={styles.formRow}>
-                      <View style={styles.formCol}>
-                        <Text style={styles.fieldLabel}>Role Privilege</Text>
-                        <View style={{ flexDirection: 'row', gap: 8 }}>
-                          <TouchableOpacity
-                            style={[styles.roleSelectBtn, editRole === 'user' && styles.roleSelectBtnActive]}
-                            onPress={() => setEditRole('user')}
-                          >
-                            <Text style={styles.roleSelectBtnText}>Member ('user')</Text>
-                          </TouchableOpacity>
-                          <TouchableOpacity
-                            style={[styles.roleSelectBtn, editRole === 'admin' && styles.roleSelectBtnActiveCyan]}
-                            onPress={() => setEditRole('admin')}
-                          >
-                            <Text style={[styles.roleSelectBtnText, editRole === 'admin' && { color: '#00F0FF' }]}>
-                              🛡️ Administrator ('admin')
-                            </Text>
-                          </TouchableOpacity>
-                        </View>
-                      </View>
-
-                      <View style={styles.formCol}>
-                        <Text style={styles.fieldLabel}>Account Status</Text>
-                        <View style={{ flexDirection: 'row', gap: 8 }}>
-                          <TouchableOpacity
-                            style={[styles.roleSelectBtn, editStatus === 'ACTIVE' && styles.roleSelectBtnActiveGreen]}
-                            onPress={() => setEditStatus('ACTIVE')}
-                          >
-                            <Text style={[styles.roleSelectBtnText, editStatus === 'ACTIVE' && { color: '#00E676' }]}>
-                              🟢 ACTIVE
-                            </Text>
-                          </TouchableOpacity>
-                          <TouchableOpacity
-                            style={[styles.roleSelectBtn, editStatus === 'SUSPENDED' && styles.roleSelectBtnActiveRed]}
-                            onPress={() => setEditStatus('SUSPENDED')}
-                          >
-                            <Text style={[styles.roleSelectBtnText, editStatus === 'SUSPENDED' && { color: '#EF4444' }]}>
-                              ⛔ SUSPENDED
-                            </Text>
-                          </TouchableOpacity>
-                        </View>
-                      </View>
-                    </View>
-
-                    <View style={styles.formRow}>
-                      <View style={styles.formCol}>
-                        <Text style={styles.fieldLabel}>Star Rank Override (0 = Standard, 1..7 = Stars, 8 = Crown, 9 = 2 Crown, 10 = 3 Crown)</Text>
-                        <TextInput
-                          style={styles.formInput}
-                          value={editStarRank}
-                          onChangeText={setEditStarRank}
-                          keyboardType="numeric"
-                          placeholder="Star Rank (0 - 10)"
-                          placeholderTextColor="#64748B"
-                        />
-                      </View>
-                    </View>
-
-                    <TouchableOpacity
-                      style={styles.saveChangesBtn}
-                      disabled={isUpdatingUser}
-                      onPress={handleSaveUserDetails}
-                    >
-                      <Text style={styles.saveChangesBtnText}>
-                        {isUpdatingUser ? 'Saving Changes...' : '💾 Save Profile & Role Changes'}
-                      </Text>
-                    </TouchableOpacity>
-                  </View>
-
-                  {/* Network Placement & Leg Volumes */}
-                  <View style={styles.detailSectionCard}>
-                    <Text style={styles.detailSectionTitle}>🌲 Binary Placement & Leg Sales Volumes</Text>
-                    <View style={styles.treeInfoGrid}>
-                      <View style={styles.treeInfoItem}>
-                        <Text style={styles.treeInfoLabel}>SPONSOR</Text>
-                        <Text style={styles.treeInfoValue}>
-                          {detailedUser?.user?.sponsor ? `@${detailedUser.user.sponsor.username}` : 'None (Direct Root)'}
-                        </Text>
-                      </View>
-                      <View style={styles.treeInfoItem}>
-                        <Text style={styles.treeInfoLabel}>BINARY PARENT</Text>
-                        <Text style={styles.treeInfoValue}>
-                          {detailedUser?.user?.binaryParent ? `@${detailedUser.user.binaryParent.username} (${detailedUser.user.binaryPosition || 'A'})` : 'Root Node'}
-                        </Text>
-                      </View>
-                      <View style={styles.treeInfoItem}>
-                        <Text style={styles.treeInfoLabel}>LEG A (LEFT) VOLUME</Text>
-                        <Text style={[styles.treeInfoValue, { color: '#38BDF8' }]}>
-                          ${(detailedUser?.user?.binaryLegs?.legATotal || 0).toLocaleString()}
-                        </Text>
-                      </View>
-                      <View style={styles.treeInfoItem}>
-                        <Text style={styles.treeInfoLabel}>LEG B (RIGHT) VOLUME</Text>
-                        <Text style={[styles.treeInfoValue, { color: '#F59E0B' }]}>
-                          ${(detailedUser?.user?.binaryLegs?.legBTotal || 0).toLocaleString()}
-                        </Text>
-                      </View>
-                      <View style={styles.treeInfoItem}>
-                        <Text style={styles.treeInfoLabel}>BINARY PAIRS PAID</Text>
-                        <Text style={[styles.treeInfoValue, { color: '#00E676' }]}>
-                          {detailedUser?.user?.binaryLegs?.pairsCount || 0} pairs
-                        </Text>
-                      </View>
-                      <View style={styles.treeInfoItem}>
-                        <Text style={styles.treeInfoLabel}>CONFISCATED VOLUME</Text>
-                        <Text style={[styles.treeInfoValue, { color: '#EF4444' }]}>
-                          ${detailedUser?.user?.totalBinaryConfiscated || 0}
-                        </Text>
-                      </View>
-                    </View>
-                  </View>
-
-                  {/* Active Mining Contracts */}
-                  <View style={styles.detailSectionCard}>
-                    <Text style={styles.detailSectionTitle}>
-                      ⚡ Active Mining Contracts ({detailedUser?.contracts?.length || 0})
-                    </Text>
-                    {detailedUser?.contracts?.length === 0 ? (
-                      <Text style={{ color: '#8A99AD', fontSize: 12 }}>No mining contracts active for this user.</Text>
-                    ) : (
-                      detailedUser?.contracts?.map((c: any) => (
-                        <View key={c.id} style={styles.contractMiniRow}>
-                          <View style={{ flex: 1 }}>
-                            <Text style={{ color: '#FFFFFF', fontWeight: '800', fontSize: 12 }}>
-                              {c.package_name} ({c.tier} USDT Tier)
-                            </Text>
-                            <Text style={{ color: '#8A99AD', fontSize: 10 }}>
-                              Status: <Text style={{ color: '#00E676' }}>{c.status}</Text> • Day {c.days_completed}/{c.max_days || 1500}
-                            </Text>
-                          </View>
-                          <Text style={{ color: '#F7931A', fontWeight: '800', fontSize: 12 }}>
-                            ₿ {parseFloat(c.daily_btc_yield || 0).toFixed(6)} / day
-                          </Text>
-                        </View>
-                      ))
-                    )}
-                  </View>
-                </View>
-              )}
-            </ScrollView>
-          </View>
-        </View>
-      </Modal>
-
-      {/* ========================================================= */}
-      {/* MODAL 2: ADJUST USER WALLET (CREDIT / DEBIT) */}
-      {/* ========================================================= */}
-      <Modal visible={walletModalVisible} transparent animationType="fade">
-        <View style={styles.modalOverlay}>
-          <View style={[styles.modalBox, isMobile && styles.modalBoxMobile]}>
-            <View style={styles.modalHeader}>
-              <View>
-                <Text style={styles.modalTitle}>Adjust User Balance</Text>
-                <Text style={styles.modalSub}>
-                  Crediting / Debiting wallet for @{selectedUser?.username}
-                </Text>
-              </View>
-              <TouchableOpacity style={styles.modalCloseBtn} onPress={() => setWalletModalVisible(false)}>
-                <Text style={styles.modalCloseBtnText}>✕</Text>
-              </TouchableOpacity>
-            </View>
-
-            <View style={{ gap: 14 }}>
-              {/* Current Balances Box */}
-              <View style={styles.currentBalancePillRow}>
-                <View style={styles.currentBalancePill}>
-                  <Text style={styles.currentBalancePillLabel}>CURRENT USDT:</Text>
-                  <Text style={styles.currentBalancePillVal}>
-                    ${(selectedUser?.wallet?.usdBalance || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                  </Text>
-                </View>
-                <View style={styles.currentBalancePill}>
-                  <Text style={styles.currentBalancePillLabel}>CURRENT BTC:</Text>
-                  <Text style={[styles.currentBalancePillVal, { color: '#F7931A' }]}>
-                    ₿ {(selectedUser?.wallet?.btcBalance || 0).toFixed(8)}
-                  </Text>
-                </View>
-              </View>
-
-              {/* Currency Selector */}
-              <View>
-                <Text style={styles.fieldLabel}>Currency</Text>
-                <View style={{ flexDirection: 'row', gap: 10 }}>
-                  <TouchableOpacity
-                    style={[styles.toggleBtn, walletCurrency === 'USDT' && styles.toggleBtnActiveGreen]}
-                    onPress={() => setWalletCurrency('USDT')}
-                  >
-                    <Text style={[styles.toggleBtnText, walletCurrency === 'USDT' && { color: '#00E676' }]}>
-                      💵 USDT (Mining Balance)
-                    </Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={[styles.toggleBtn, walletCurrency === 'BTC' && styles.toggleBtnActiveOrange]}
-                    onPress={() => setWalletCurrency('BTC')}
-                  >
-                    <Text style={[styles.toggleBtnText, walletCurrency === 'BTC' && { color: '#F7931A' }]}>
-                      ₿ Bitcoin (BTC)
-                    </Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-
-              {/* Action Type: Credit or Debit */}
-              <View>
-                <Text style={styles.fieldLabel}>Adjustment Operation</Text>
-                <View style={{ flexDirection: 'row', gap: 10 }}>
-                  <TouchableOpacity
-                    style={[styles.toggleBtn, walletAdjustType === 'CREDIT' && styles.toggleBtnActiveGreen]}
-                    onPress={() => setWalletAdjustType('CREDIT')}
-                  >
-                    <Text style={[styles.toggleBtnText, walletAdjustType === 'CREDIT' && { color: '#00E676' }]}>
-                      ➕ CREDIT (Deposit to User)
-                    </Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={[styles.toggleBtn, walletAdjustType === 'DEBIT' && styles.toggleBtnActiveRed]}
-                    onPress={() => setWalletAdjustType('DEBIT')}
-                  >
-                    <Text style={[styles.toggleBtnText, walletAdjustType === 'DEBIT' && { color: '#EF4444' }]}>
-                      ➖ DEBIT (Deduct from User)
-                    </Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-
-              {/* Amount */}
-              <View>
-                <Text style={styles.fieldLabel}>Amount to {walletAdjustType}</Text>
-                <TextInput
-                  style={styles.formInput}
-                  value={walletAmount}
-                  onChangeText={setWalletAmount}
-                  keyboardType="numeric"
-                  placeholder={walletCurrency === 'USDT' ? 'e.g. 500.00' : 'e.g. 0.00500000'}
-                  placeholderTextColor="#64748B"
-                />
-              </View>
-
-              {/* Reason / Memo */}
-              <View>
-                <Text style={styles.fieldLabel}>Audit Memo / Reason</Text>
-                <TextInput
-                  style={styles.formInput}
-                  value={walletReason}
-                  onChangeText={setWalletReason}
-                  placeholder="e.g. Compensation bonus, OTC deposit, manual correction"
-                  placeholderTextColor="#64748B"
-                />
-              </View>
-
-              <TouchableOpacity
-                style={[
-                  styles.confirmActionBtn,
-                  walletAdjustType === 'DEBIT' ? { backgroundColor: '#EF4444' } : { backgroundColor: '#00E676' },
-                ]}
-                disabled={isAdjustingWallet}
-                onPress={handleConfirmWalletAdjust}
-              >
-                <Text style={styles.confirmActionBtnText}>
-                  {isAdjustingWallet
-                    ? 'Processing...'
-                    : `Confirm ${walletAdjustType} of ${walletAmount || '0'} ${walletCurrency}`}
-                </Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
-
-      {/* ========================================================= */}
-      {/* MODAL 3: RESET USER PASSWORD */}
-      {/* ========================================================= */}
-      <Modal visible={resetPwdModalVisible} transparent animationType="fade">
-        <View style={styles.modalOverlay}>
-          <View style={[styles.modalBox, isMobile && styles.modalBoxMobile]}>
-            <View style={styles.modalHeader}>
-              <View>
-                <Text style={styles.modalTitle}>Reset User Password</Text>
-                <Text style={styles.modalSub}>
-                  Assign a new password for @{selectedUser?.username}
-                </Text>
-              </View>
-              <TouchableOpacity style={styles.modalCloseBtn} onPress={() => setResetPwdModalVisible(false)}>
-                <Text style={styles.modalCloseBtnText}>✕</Text>
-              </TouchableOpacity>
-            </View>
-
-            <View style={{ gap: 14 }}>
-              <View>
-                <Text style={styles.fieldLabel}>New Password (min 6 characters)</Text>
-                <TextInput
-                  style={styles.formInput}
-                  value={newPassword}
-                  onChangeText={setNewPassword}
-                  placeholder="Enter new secure password"
-                  placeholderTextColor="#64748B"
-                  secureTextEntry
-                />
-              </View>
-
-              <TouchableOpacity
-                style={styles.saveChangesBtn}
-                disabled={isResettingPwd}
-                onPress={handleConfirmResetPwd}
-              >
-                <Text style={styles.saveChangesBtnText}>
-                  {isResettingPwd ? 'Resetting Password...' : '🔑 Update Password'}
-                </Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
-
-      {/* ========================================================= */}
-      {/* MODAL 4: CREATE NEW USER OR ADMIN */}
+      {/* MODAL: CREATE NEW USER OR ADMIN */}
       {/* ========================================================= */}
       <Modal visible={createModalVisible} transparent animationType="fade">
         <View style={styles.modalOverlay}>
